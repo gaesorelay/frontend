@@ -33,7 +33,7 @@ frontend/
 │   ├── hooks/                  # [커스텀 훅]
 │   │   ├── useGameLogic.ts     # 게임 진행 로직
 │   │   ├── useSocket.ts        # 소켓 연결 관리
-│   │   └── useToast.ts         # 알림 표시 훅 (New!)
+│   │   └── useToast.ts         # 알림 표시 훅 
 │   │
 │   ├── lib/                    # [설정 및 유틸]
 │   │   ├── axios.ts            # Axios 인스턴스 설정
@@ -66,3 +66,4 @@ frontend/
 ├── tailwind.config.js
 ├── tsconfig.json
 └── vite.config.ts
+```
