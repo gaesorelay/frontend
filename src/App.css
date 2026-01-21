@@ -1,44 +1,10 @@
-/* 1. 폰트 불러오기 */
-@import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Pen+Script&display=swap');
-
-/* 기본 여백 초기화 및 배경색 설정 */
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden;
-  background-color: #f8f8f8;
-}
-
 #root {
-  width: 100%;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
   text-align: center;
-  /* 기본 폰트: 나눔손글씨 펜 */
-  font-family: 'Nanum Pen Script', cursive;
-  display: flex;
-  flex-direction: column;
 }
 
-/* 2. 굵은 느낌이 필요한 제목/버튼용 클래스 */
-.title-font {
-  font-family: 'Jua', sans-serif;
-}
-
-/* 3. 버튼과 입력창 폰트 강제 적용 (손글씨 테마) */
-button, input, select, textarea {
-  font-family: 'Nanum Pen Script', cursive;
-}
-
-/* 제목 버튼 등 특정 요소는 주아체로 */
-.btn-font {
-  font-family: 'Jua', sans-serif;
-}
-
-/* --- 애니메이션 및 기타 스타일 --- */
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -48,22 +14,29 @@ button, input, select, textarea {
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
 
-@keyframes float {
-  0% {
-    transform: translateY(0);
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
   }
-  50% {
-    transform: translateY(-6px);
-  }
-  100% {
-    transform: translateY(0);
+  to {
+    transform: rotate(360deg);
   }
 }
 
-
 @media (prefers-reduced-motion: no-preference) {
-  .logo-react {
+  a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }
