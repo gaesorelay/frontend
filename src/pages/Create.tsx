@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useGameStore } from '../store/useGameStore';
 
 /* =========================
-   데코 이미지 import
+   데코 이미지 import (팀원 디자인)
 ========================= */
 import background from '@/assets/background.png';
 import logo from '@/assets/logo.png';
@@ -15,12 +16,11 @@ import pencilBlue from '@/assets/decorations/pencil_blue.png';
 import pencilGreen from '@/assets/decorations/pencil_green.png';
 
 /* =========================
-   애니메이션 & 폰트 스타일
+   애니메이션 & 폰트 스타일 (팀원 디자인)
 ========================= */
 const animationStyles = `
 @import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Pen+Script&display=swap');
 
-/* 기존 애니메이션 */
 @keyframes float {
   0% { transform: translateY(0px) rotate(var(--base-rotation)); }
   50% { transform: translateY(-12px) rotate(calc(var(--base-rotation) + 6deg)); }
@@ -36,25 +36,20 @@ const animationStyles = `
   50% { transform: rotate(calc(var(--base-rotation) + 4deg)); }
   100% { transform: rotate(calc(var(--base-rotation) - 4deg)); }
 }
-
-/* 로고 전용 bounce 애니메이션 */
 @keyframes logoBounce {
   0%, 100% { transform: translateY(0) rotate(-1deg); }
   50% { transform: translateY(-15px) rotate(1deg); }
 }
-
 .create-btn:active {
   transform: scale(0.98);
   box-shadow: 2px 2px 0px #000 !important;
 }
-
-/* 폰트 일괄 적용을 위한 클래스 */
 .font-jua { font-family: 'Jua', sans-serif; }
 .font-pen { font-family: 'Nanum Pen Script', cursive; }
 `;
 
 /* =========================
-   장식 컴포넌트 (DecoItem) (원본 유지)
+   장식 컴포넌트 (팀원 디자인)
 ========================= */
 interface DecoProps {
   src: string; x?: number; y?: number; right?: number; bottom?: number;
@@ -86,14 +81,14 @@ const DecoItem = ({ src, x, y, right, bottom, rotate = 0, size = 80, delay = 0, 
 );
 
 /* =========================
-   숫자 컨트롤 (HandControl)
+   숫자 컨트롤 (팀원 디자인 + 내 로직 max/min 추가)
 ========================= */
-const HandControl = ({ value, setValue, unit = '', step = 1 }: any) => (
+const HandControl = ({ value, setValue, unit = '', step = 1, min = 1, max = 100 }: any) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <div 
       className="font-pen"
       style={{
-        width: '60px', height: '36px', backgroundColor: 'white', border: '2.5px solid #222',
+        width: '70px', height: '36px', backgroundColor: 'white', border: '2.5px solid #222',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontWeight: 'bold', fontSize: '22px', borderRadius: '12px 6px 14px 4px',
       }}
@@ -102,11 +97,11 @@ const HandControl = ({ value, setValue, unit = '', step = 1 }: any) => (
     </div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
       <button 
-        onClick={() => setValue(value + step)} 
+        onClick={() => setValue(Math.min(max, value + step))} 
         style={{ cursor: 'pointer', border: 'none', background: 'none', color: '#ff6b6b', fontSize: '14px', fontWeight: '900', padding: 0 }}
       >▲</button>
       <button 
-        onClick={() => setValue(Math.max(1, value - step))} 
+        onClick={() => setValue(Math.max(min, value - step))} 
         style={{ cursor: 'pointer', border: 'none', background: 'none', color: '#54a0ff', fontSize: '14px', fontWeight: '900', padding: 0 }}
       >▼</button>
     </div>
@@ -118,11 +113,40 @@ const HandControl = ({ value, setValue, unit = '', step = 1 }: any) => (
 ========================= */
 function Create() {
   const navigate = useNavigate();
-  const [roomName, setRoomName] = useState('');
-  const [maxPlayers, setMaxPlayers] = useState(30);
-  const [storytellers, setStorytellers] = useState(4);
-  const [rounds, setRounds] = useState(5);
+  const setRoomConfig = useGameStore((state) => state.setRoomConfig);
+
+  // [내 로직 변수명 사용]
+  const [title, setTitle] = useState("");
+  const [maxPlayers, setMaxPlayers] = useState(10);
+  const [storytellerCount, setStorytellerCount] = useState(4); 
+  const [totalRounds, setTotalRounds] = useState(3);
+  const [roundTime, setRoundTime] = useState(60);
   const [voteTime, setVoteTime] = useState(30);
+
+  // [내 로직 함수]
+  const handleNext = () => {
+    if (!title.trim()) return alert("방 제목을 입력해주세요!");
+
+    // 이야기꾼 수 유효성 검사
+    if (maxPlayers < storytellerCount * 2) {
+      if (!window.confirm(`인원이 부족합니다. (이야기꾼 ${storytellerCount}명 x 2팀 = 최소 ${storytellerCount * 2}명 필요)\n그래도 진행할까요?`)) return;
+    }
+
+    // 그림 개수 분리 로직
+    const imageCount = storytellerCount; 
+
+    setRoomConfig({
+      title,
+      maxPlayers,
+      totalRounds,
+      roundTime,
+      voteTime,
+      storytellerCount,
+      imageCount
+    });
+
+    navigate('/setup');
+  };
 
   return (
     <div
@@ -135,9 +159,8 @@ function Create() {
     >
       <style>{animationStyles}</style>
 
-      {/* ===== 풍부해진 낙서 레이어 (원본 절대 유지) ===== */}
+      {/* ===== 배경 낙서 레이어 (팀원 디자인 유지) ===== */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        {/* ...기존 DecoItems (코드 생략 없이 유지됨)... */}
         <DecoItem src={pencilRed} x={2} y={5} size={130} rotate={-25} duration={4} />
         <DecoItem src={star} x={10} y={4} size={45} type="wiggle" delay={0.5} />
         <DecoItem src={heart} x={18} y={10} size={30} type="floatReverse" delay={0.2} />
@@ -177,10 +200,8 @@ function Create() {
         <DecoItem src={heart} right={30} bottom={20} size={25} type="floatReverse" delay={1.8} />
       </div>
 
-      {/* 로고와 카드 박스를 감싸는 컨테이너 */}
+      {/* 로고와 카드 박스 */}
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        
-        {/* 로고 이미지 - bounce 애니메이션 추가 */}
         <img 
           src={logo} 
           alt="방 만들기" 
@@ -189,11 +210,10 @@ function Create() {
             zIndex: 11, 
             marginBottom: '-35px', 
             filter: 'drop-shadow(6px 6px 0px rgba(0,0,0,0.1))',
-            animation: 'logoBounce 3s ease-in-out infinite' // 통통 튀는 애니메이션 적용
+            animation: 'logoBounce 3s ease-in-out infinite'
           }} 
         />
 
-        {/* UI 카드 박스 */}
         <div
           style={{
             position: 'relative', zIndex: 10, background: 'white', padding: '50px 55px 35px 55px',
@@ -202,11 +222,12 @@ function Create() {
             boxShadow: '10px 10px 0px rgba(0,0,0,0.08)',
           }}
         >
+          {/* 방 제목 입력 */}
           <div style={{ textAlign: 'left', marginBottom: '28px' }}>
             <label className="font-jua" style={{ fontSize: '26px', color: '#222', display: 'block', marginBottom: '10px' }}>방 이름</label>
             <input
               className="font-pen"
-              value={roomName} onChange={(e) => setRoomName(e.target.value)}
+              value={title} onChange={(e) => setTitle(e.target.value)}
               placeholder="방 이름을 적어줘!"
               style={{
                 width: '100%', padding: '14px 22px', fontSize: '24px',
@@ -216,12 +237,19 @@ function Create() {
             />
           </div>
 
+          {/* 컨트롤 패널 (변수명 통합됨) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             {[
-              { label: '최대 인원', value: maxPlayers, setValue: setMaxPlayers, unit: '명' },
-              { label: '이야기꾼 수', value: storytellers, setValue: setStorytellers, unit: '명' },
-              { label: '목표 라운드', value: rounds, setValue: setRounds, unit: 'R' },
-              { label: '투표 시간', value: voteTime, setValue: setVoteTime, unit: '초', step: 10 },
+              // 1. 이야기꾼 수 (4~8명)
+              { label: '이야기꾼 수', value: storytellerCount, setValue: setStorytellerCount, unit: '명', min: 4, max: 8 },
+              // 2. 최대 인원 (이야기꾼*2 ~ 50)
+              { label: '최대 인원', value: maxPlayers, setValue: setMaxPlayers, unit: '명', min: storytellerCount * 2, max: 50 },
+              // 3. 목표 라운드 (1~5)
+              { label: '목표 라운드', value: totalRounds, setValue: setTotalRounds, unit: 'R', min: 1, max: 5 },
+              // 4. 글쓰기 시간 (30~180) - [추가된 항목]
+              { label: '글쓰기 시간', value: roundTime, setValue: setRoundTime, unit: '초', step: 10, min: 30, max: 180 },
+              // 5. 투표 시간 (10~60)
+              { label: '투표 시간', value: voteTime, setValue: setVoteTime, unit: '초', step: 10, min: 10, max: 60 },
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span className="font-jua" style={{ fontSize: '24px', color: '#333' }}>{item.label}</span>
@@ -246,7 +274,7 @@ function Create() {
           돌아가기
         </button>
         <button 
-          onClick={() => alert('방 생성!')} 
+          onClick={handleNext} 
           className="create-btn font-jua"
           style={{
             flex: 1.2, padding: '14px', fontSize: '24px', background: '#FFD93D',
@@ -259,6 +287,6 @@ function Create() {
       </div>
     </div>
   );
-}
+};
 
 export default Create;
