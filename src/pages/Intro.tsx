@@ -1,11 +1,18 @@
+import { useNavigate } from 'react-router-dom';
 
-const Intro = () => {
+function Intro() {
+  const navigate = useNavigate();
+
   return (
-    <div className="text-center p-10">
-      <h1 className="text-2xl font-bold">인트로</h1>
-      <p>처음 접속시 화면</p>
+    <div className="h-screen flex items-center justify-center">
+      <button
+        onClick={() => navigate('/create')}
+        className="px-8 py-4 text-xl font-bold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"
+      >
+        방 만들기
+      </button>
     </div>
   );
-};
+}
 
-export default Intro; 
+export default Intro;
