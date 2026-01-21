@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Intro from './pages/Intro.tsx';
+import { Intro } from './pages/Intro.tsx';
 import Create from './pages/Create.tsx';
 import Setup from './pages/Setup.tsx';
 import GameRoom from './pages/GameRoom.tsx';
