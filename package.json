@@ -13,7 +13,7 @@
     "autoprefixer": "^10.4.23",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.27.0",
+    "framer-motion": "^12.27.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.562.0",
     "postcss": "^8.5.6",
