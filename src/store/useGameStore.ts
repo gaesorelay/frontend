@@ -1,31 +1,30 @@
 import { create } from 'zustand';
 
 interface GameState {
-  roomId: string | null;
-  currentRound: number;
-  timeLeft: number;
-  isGameStarted: boolean;
+  // 방 설정 정보 (방장용)
+  roomConfig: {
+    title: string;
+    maxPlayers: number;
+    totalRounds: number;
+    roundTime: number;
+    voteTime: number;
+    storytellerCount: number; // 팀별 이야기꾼 수
+    imageCount: number;       // 사용할 그림 개수 (변수로 분리, 나중에 테스트할때 바꿔가면서)
+  } | null;
+
+  joinCode: string | null;
   
-  // Actions
-  setRoomId: (id: string) => void;
-  updateTimer: (time: number) => void;
-  startGame: () => void;
-  resetGame: () => void;
+  setRoomConfig: (config: GameState['roomConfig']) => void;
+  setJoinCode: (code: string) => void;
+  reset: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
-  roomId: null,
-  currentRound: 1,
-  timeLeft: 0,
-  isGameStarted: false,
-
-  setRoomId: (id) => set({ roomId: id }),
-  updateTimer: (time) => set({ timeLeft: time }),
-  startGame: () => set({ isGameStarted: true }),
-  resetGame: () => set({ 
-    roomId: null, 
-    currentRound: 1, 
-    timeLeft: 0, 
-    isGameStarted: false 
-  }),
+  roomConfig: null,
+  joinCode: null,
+  
+  setRoomConfig: (config) => set({ roomConfig: config }),
+  setJoinCode: (code) => set({ joinCode: code }),
+  
+  reset: () => set({ roomConfig: null, joinCode: null }),
 }));
