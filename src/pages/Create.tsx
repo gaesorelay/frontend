@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGameStore } from '../store/useGameStore';
 
 /* =========================
-   데코 이미지 import (팀원 디자인)
+   데코 이미지 import (유지)
 ========================= */
 import background from '@/assets/background.png';
 import logo from '@/assets/logo.png';
@@ -16,11 +15,9 @@ import pencilBlue from '@/assets/decorations/pencil_blue.png';
 import pencilGreen from '@/assets/decorations/pencil_green.png';
 
 /* =========================
-   애니메이션 & 폰트 스타일 (팀원 디자인)
+   애니메이션 및 스타일
 ========================= */
 const animationStyles = `
-@import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Pen+Script&display=swap');
-
 @keyframes float {
   0% { transform: translateY(0px) rotate(var(--base-rotation)); }
   50% { transform: translateY(-12px) rotate(calc(var(--base-rotation) + 6deg)); }
@@ -36,20 +33,30 @@ const animationStyles = `
   50% { transform: rotate(calc(var(--base-rotation) + 4deg)); }
   100% { transform: rotate(calc(var(--base-rotation) - 4deg)); }
 }
-@keyframes logoBounce {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50% { transform: translateY(-15px) rotate(1deg); }
+
+/* ✨ [변경] 지글지글 낙서(Jitter) 애니메이션 정의 */
+@keyframes logoJitter {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(2deg); }
+  50% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+  100% { transform: rotate(0deg); }
 }
+
 .create-btn:active {
   transform: scale(0.98);
-  box-shadow: 2px 2px 0px #000 !important;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25) !important; 
 }
-.font-jua { font-family: 'Jua', sans-serif; }
-.font-pen { font-family: 'Nanum Pen Script', cursive; }
+
+/* 숫자 조절 버튼 눌렀을 때 효과 */
+.control-btn:active {
+  filter: brightness(0.95);
+  transform: scale(0.95);
+}
 `;
 
 /* =========================
-   장식 컴포넌트 (팀원 디자인)
+   장식 컴포넌트 (DecoItem) (유지)
 ========================= */
 interface DecoProps {
   src: string; x?: number; y?: number; right?: number; bottom?: number;
@@ -81,29 +88,73 @@ const DecoItem = ({ src, x, y, right, bottom, rotate = 0, size = 80, delay = 0, 
 );
 
 /* =========================
-   숫자 컨트롤 (팀원 디자인 + 내 로직 max/min 추가)
+   숫자 컨트롤 - 차분한 마카롱 톤 (유지)
 ========================= */
-const HandControl = ({ value, setValue, unit = '', step = 1, min = 1, max = 100 }: any) => (
+const HandControl = ({ value, setValue, unit = '', step = 1 }: any) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-    <div 
-      className="font-pen"
+    <div
       style={{
-        width: '70px', height: '36px', backgroundColor: 'white', border: '2.5px solid #222',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontWeight: 'bold', fontSize: '22px', borderRadius: '12px 6px 14px 4px',
+        width: '60px',
+        height: '42px',
+        backgroundColor: 'white',
+        border: '2.5px solid #222',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold',
+        fontSize: '22px',
+        borderRadius: '10px',
+        fontFamily: 'inherit',
+        boxShadow: '3px 3px 0px rgba(0,0,0,0.1)',
       }}
     >
       {value}{unit}
     </div>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
-      <button 
-        onClick={() => setValue(Math.min(max, value + step))} 
-        style={{ cursor: 'pointer', border: 'none', background: 'none', color: '#ff6b6b', fontSize: '14px', fontWeight: '900', padding: 0 }}
-      >▲</button>
-      <button 
-        onClick={() => setValue(Math.max(min, value - step))} 
-        style={{ cursor: 'pointer', border: 'none', background: 'none', color: '#54a0ff', fontSize: '14px', fontWeight: '900', padding: 0 }}
-      >▼</button>
+    
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      {/* ▲ 올리기 버튼 (부드러운 메론색) */}
+      <button
+        className="control-btn"
+        onClick={() => setValue(value + step)}
+        style={{
+          width: '28px',
+          height: '19px',
+          cursor: 'pointer',
+          border: '2px solid #222',
+          backgroundColor: '#C1E1C1', 
+          borderRadius: '6px 6px 2px 2px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '10px',
+          padding: 0,
+          fontFamily: 'inherit',
+          color: '#222',
+          boxShadow: '1px 1px 0px rgba(0,0,0,0.1)',
+        }}
+      >
+        ▲
+      </button>
+      
+      {/* ▼ 내리기 버튼 (부드러운 살구색) */}
+      <button
+        className="control-btn"
+        onClick={() => setValue(Math.max(1, value - step))}
+        style={{
+          width: '28px',
+          height: '19px',
+          cursor: 'pointer',
+          border: '2px solid #222',
+          backgroundColor: '#FFD1D1', 
+          borderRadius: '2px 2px 6px 6px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '10px',
+          padding: 0,
+          fontFamily: 'inherit',
+          color: '#222',
+          boxShadow: '1px 1px 0px rgba(0,0,0,0.1)',
+        }}
+      >
+        ▼
+      </button>
     </div>
   </div>
 );
@@ -113,40 +164,20 @@ const HandControl = ({ value, setValue, unit = '', step = 1, min = 1, max = 100 
 ========================= */
 function Create() {
   const navigate = useNavigate();
-  const setRoomConfig = useGameStore((state) => state.setRoomConfig);
-
-  // [내 로직 변수명 사용]
-  const [title, setTitle] = useState("");
-  const [maxPlayers, setMaxPlayers] = useState(10);
-  const [storytellerCount, setStorytellerCount] = useState(4); 
-  const [totalRounds, setTotalRounds] = useState(3);
-  const [roundTime, setRoundTime] = useState(60);
+  const [roomName, setRoomName] = useState('');
+  const [maxPlayers, setMaxPlayers] = useState(30);
+  const [storytellers, setStorytellers] = useState(4);
+  const [rounds, setRounds] = useState(5);
   const [voteTime, setVoteTime] = useState(30);
 
-  // [내 로직 함수]
-  const handleNext = () => {
-    if (!title.trim()) return alert("방 제목을 입력해주세요!");
-
-    // 이야기꾼 수 유효성 검사
-    if (maxPlayers < storytellerCount * 2) {
-      if (!window.confirm(`인원이 부족합니다. (이야기꾼 ${storytellerCount}명 x 2팀 = 최소 ${storytellerCount * 2}명 필요)\n그래도 진행할까요?`)) return;
-    }
-
-    // 그림 개수 분리 로직
-    const imageCount = storytellerCount; 
-
-    setRoomConfig({
-      title,
-      maxPlayers,
-      totalRounds,
-      roundTime,
-      voteTime,
-      storytellerCount,
-      imageCount
-    });
-
-    navigate('/setup');
+  // 공통 낙서 테두리 스타일
+  const sketchBorderStyle = {
+    border: '3.5px solid #222',
+    borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
   };
+
+  // 그림자 색상 변수 (투명도 25% 검정)
+  const shadowColor = 'rgba(0, 0, 0, 0.25)';
 
   return (
     <div
@@ -155,11 +186,12 @@ function Create() {
         justifyContent: 'center', alignItems: 'center',
         backgroundImage: `url(${background})`, backgroundSize: 'cover',
         overflow: 'hidden',
+        fontFamily: 'inherit',
       }}
     >
       <style>{animationStyles}</style>
 
-      {/* ===== 배경 낙서 레이어 (팀원 디자인 유지) ===== */}
+      {/* ===== 풍부해진 낙서 레이어 ===== */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <DecoItem src={pencilRed} x={2} y={5} size={130} rotate={-25} duration={4} />
         <DecoItem src={star} x={10} y={4} size={45} type="wiggle" delay={0.5} />
@@ -200,59 +232,61 @@ function Create() {
         <DecoItem src={heart} right={30} bottom={20} size={25} type="floatReverse" delay={1.8} />
       </div>
 
-      {/* 로고와 카드 박스 */}
+      {/* 로고 + 카드 */}
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <img 
-          src={logo} 
-          alt="방 만들기" 
-          style={{ 
-            width: '420px', 
-            zIndex: 11, 
-            marginBottom: '-35px', 
+        <img
+          src={logo}
+          alt="방 만들기"
+          style={{
+            width: '420px',
+            zIndex: 11,
+            marginBottom: '-5px',
             filter: 'drop-shadow(6px 6px 0px rgba(0,0,0,0.1))',
-            animation: 'logoBounce 3s ease-in-out infinite'
-          }} 
+            // ✨ [변경] 지글지글(Jitter) 애니메이션 적용 (빠르고 반복적으로)
+            animation: 'logoJitter 0.3s linear infinite',
+          }}
         />
 
         <div
           style={{
-            position: 'relative', zIndex: 10, background: 'white', padding: '50px 55px 35px 55px',
-            width: '540px', boxSizing: 'border-box', border: '3.5px solid #222',
-            borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
+            position: 'relative',
+            zIndex: 10,
+            background: 'white',
+            padding: '40px 45px 25px 45px',
+            width: '450px',
+            boxSizing: 'border-box',
             boxShadow: '10px 10px 0px rgba(0,0,0,0.08)',
+            ...sketchBorderStyle,
           }}
         >
-          {/* 방 제목 입력 */}
-          <div style={{ textAlign: 'left', marginBottom: '28px' }}>
-            <label className="font-jua" style={{ fontSize: '26px', color: '#222', display: 'block', marginBottom: '10px' }}>방 이름</label>
-            <input
-              className="font-pen"
-              value={title} onChange={(e) => setTitle(e.target.value)}
-              placeholder="방 이름을 적어줘!"
-              style={{
-                width: '100%', padding: '14px 22px', fontSize: '24px',
-                border: '2.5px solid #333', borderRadius: '40px 10px 45px 8px / 8px 45px 10px 40px',
-                outline: 'none', boxSizing: 'border-box'
-              }}
-            />
-          </div>
+          <label style={{ fontSize: '26px', display: 'block', marginBottom: '10px' }}>
+            방 이름
+          </label>
+          <input
+            value={roomName}
+            onChange={(e) => setRoomName(e.target.value)}
+            placeholder="방 이름을 적어줘!"
+            style={{
+              width: '100%',
+              padding: '14px 22px',
+              fontSize: '24px',
+              border: '2.5px solid #333',
+              borderRadius: '40px 10px 45px 8px / 8px 45px 10px 40px',
+              outline: 'none',
+              boxSizing: 'border-box',
+              fontFamily: 'inherit',
+            }}
+          />
 
-          {/* 컨트롤 패널 (변수명 통합됨) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginTop: '24px' }}>
             {[
-              // 1. 이야기꾼 수 (4~8명)
-              { label: '이야기꾼 수', value: storytellerCount, setValue: setStorytellerCount, unit: '명', min: 4, max: 8 },
-              // 2. 최대 인원 (이야기꾼*2 ~ 50)
-              { label: '최대 인원', value: maxPlayers, setValue: setMaxPlayers, unit: '명', min: storytellerCount * 2, max: 50 },
-              // 3. 목표 라운드 (1~5)
-              { label: '목표 라운드', value: totalRounds, setValue: setTotalRounds, unit: 'R', min: 1, max: 5 },
-              // 4. 글쓰기 시간 (30~180) - [추가된 항목]
-              { label: '글쓰기 시간', value: roundTime, setValue: setRoundTime, unit: '초', step: 10, min: 30, max: 180 },
-              // 5. 투표 시간 (10~60)
-              { label: '투표 시간', value: voteTime, setValue: setVoteTime, unit: '초', step: 10, min: 10, max: 60 },
+              { label: '최대 인원', value: maxPlayers, setValue: setMaxPlayers, unit: '명' },
+              { label: '이야기꾼 수', value: storytellers, setValue: setStorytellers, unit: '명' },
+              { label: '목표 라운드', value: rounds, setValue: setRounds, unit: 'R' },
+              { label: '투표 시간', value: voteTime, setValue: setVoteTime, unit: '초', step: 10 },
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="font-jua" style={{ fontSize: '24px', color: '#333' }}>{item.label}</span>
+                <span style={{ fontSize: '24px' }}>{item.label}</span>
                 <HandControl {...item} />
               </div>
             ))}
@@ -260,26 +294,38 @@ function Create() {
         </div>
       </div>
 
-      {/* 하단 버튼 세트 */}
-      <div style={{ display: 'flex', width: '540px', gap: '22px', marginTop: '35px', zIndex: 10 }}>
-        <button 
-          onClick={() => navigate(-1)} 
-          className="create-btn font-jua"
+      {/* 하단 버튼 */}
+      <div style={{ display: 'flex', width: '450px', gap: '22px', marginTop: '35px', zIndex: 10 }}>
+        <button
+          onClick={() => navigate(-1)}
+          className="create-btn"
           style={{
-            flex: 0.8, padding: '14px', fontSize: '22px', background: '#f5f5f5',
-            border: '3.5px solid #222', borderRadius: '18px 10px 15px 12px', cursor: 'pointer',
-            boxShadow: '5px 5px 0px #000', color: '#666'
+            flex: 0.8,
+            padding: '14px',
+            fontSize: '22px',
+            background: '#E3F2FD', // 돌아가기: 파스텔 블루 (유지)
+            color: '#666',
+            cursor: 'pointer',
+            boxShadow: `5px 5px 0px ${shadowColor}`,
+            fontFamily: 'inherit',
+            ...sketchBorderStyle,
           }}
         >
           돌아가기
         </button>
-        <button 
-          onClick={handleNext} 
-          className="create-btn font-jua"
+        <button
+          onClick={() => alert('방 생성!')}
+          className="create-btn"
           style={{
-            flex: 1.2, padding: '14px', fontSize: '24px', background: '#FFD93D',
-            border: '3.5px solid #222', borderRadius: '10px 18px 12px 15px', cursor: 'pointer',
-            boxShadow: '6px 6px 0px #000', color: '#000'
+            flex: 1.2,
+            padding: '14px',
+            fontSize: '24px',
+            background: '#FFE066', // 방 만들기: 버터 옐로우 (유지)
+            color: '#000',
+            cursor: 'pointer',
+            boxShadow: `6px 6px 0px ${shadowColor}`,
+            fontFamily: 'inherit',
+            ...sketchBorderStyle,
           }}
         >
           이대로 방 만들기!
@@ -287,6 +333,6 @@ function Create() {
       </div>
     </div>
   );
-};
+}
 
 export default Create;
