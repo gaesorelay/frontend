@@ -1,4 +1,4 @@
-import { io, Socket } from 'socket.io-client';
+﻿import { io, Socket } from 'socket.io-client';
 
 // .env 파일에서 백엔드 주소를 가져옵니다 (없으면 로컬호스트)
 const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';

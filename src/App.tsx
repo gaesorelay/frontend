@@ -1,14 +1,27 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Intro } from './pages/Intro.tsx';
 import Create from './pages/Create.tsx';
 import Setup from './pages/Setup.tsx';
 import GameRoom from './pages/GameRoom.tsx';
 import NotFound from './pages/NotFound';
+import { socket } from './lib/socket';
+import { initSocketHandlers } from './lib/socketHandlers';
 
 // 임시 페이지 컴포넌트 (나중에 src/pages/.. 로 분리하세요)
 const TempResult = () => <div className="p-10 text-2xl font-bold">결과 화면</div>;
 
 function App() {
+  useEffect(() => {
+    socket.connect();
+    const cleanup = initSocketHandlers();
+
+    return () => {
+      cleanup();
+      socket.disconnect();
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
