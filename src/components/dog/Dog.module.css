@@ -1,13 +1,11 @@
 .wrapper {
-  position: absolute; /* 🔑 Background 기준 */
   z-index: var(--z-dog);
+  pointer-events: none; /* 클릭 방해 방지 */
 }
 
 .dog {
-  width: 150px;
+  width: 200px; /* 💡 강아지 크기를 큰 사이즈로 증가! */
+  height: auto;
   display: block;
-  pointer-events: auto;
   user-select: none;
 }
-
-
