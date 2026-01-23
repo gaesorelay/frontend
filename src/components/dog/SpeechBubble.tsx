@@ -10,8 +10,18 @@ export const SpeechBubble = ({ text }: Props) => {
     <motion.div
       className={styles.bubble}
       initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.2 }}
+      animate={{ 
+        scale: 1, 
+        opacity: 1,
+        y: [0, -5, 0],
+      }}
+      transition={{ 
+        duration: 0.2,
+        y: {
+          duration: 3,
+          repeat: Infinity,
+        }
+      }}
     >
       {text}
     </motion.div>
