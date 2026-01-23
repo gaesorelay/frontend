@@ -1,0 +1,122 @@
+pipeline {
+  agent none
+
+  environment {
+    // Frontend-specific image name
+    IMAGE_NAME = "zhy2on/gaesorelay-frontend"
+    REGISTRY_CREDENTIAL_ID   = "dockerhub-auth"
+    DEPLOY_SSH_CREDENTIAL_ID = "deploy-server-ssh"
+
+    DEPLOY_USER = "ubuntu"
+    DEPLOY_DIR  = "/home/${DEPLOY_USER}/gaesorelay/backend/deploy"
+  }
+
+  stages {
+
+    stage('CI: Build & Test') {
+      when {
+        anyOf {
+          branch 'develop'
+          expression { return env.CHANGE_ID && env.CHANGE_TARGET == 'develop' }
+        }
+      }
+      agent {
+        docker {
+          image 'node:20-alpine'
+          args '-u root'
+        }
+      }
+      steps {
+        checkout scm
+
+        script {
+          env.TAG = "sha-${env.GIT_COMMIT.take(7)}"
+          echo "TAG=${env.TAG}"
+        }
+
+        sh 'npm ci'
+        sh 'npm run build'
+
+        stash name: 'ws', includes: '**/*', useDefaultExcludes: false
+      }
+    }
+
+    stage('CD: Image & Deploy') {
+      when {
+        allOf {
+          branch 'develop'
+          expression { return !env.CHANGE_ID }
+        }
+      }
+      agent any
+
+      stages {
+
+        stage('Prepare Workspace') {
+          steps {
+            deleteDir()
+            unstash 'ws'
+            script {
+              if (!env.TAG) {
+                if (!env.GIT_COMMIT) {
+                  checkout scm
+                }
+                env.TAG = "sha-${env.GIT_COMMIT.take(7)}"
+              }
+              echo "Deploy TAG=${env.TAG}"
+            }
+          }
+        }
+
+        stage('Build & Push Docker Image') {
+          steps {
+            script {
+              docker.withRegistry("", "${REGISTRY_CREDENTIAL_ID}") {
+                // Build using local deploy/Dockerfile (which copies deploy/nginx.conf)
+                def img = docker.build("${IMAGE_NAME}:${env.TAG}", "-f deploy/Dockerfile .")
+                img.push()
+                img.push("latest")
+              }
+            }
+          }
+        }
+
+        stage('Deploy (pull & run on EC2)') {
+          steps {
+            sshagent(credentials: ["${DEPLOY_SSH_CREDENTIAL_ID}"]) {
+              withCredentials([
+                usernamePassword(
+                  credentialsId: "${REGISTRY_CREDENTIAL_ID}",
+                  usernameVariable: 'REG_USER',
+                  passwordVariable: 'REG_PASS'
+                ),
+                string(
+                  credentialsId: 'deploy-server-ip',
+                  variable: 'DEPLOY_SERVER_IP'
+                )
+              ]) {
+                sh """
+                  set -e
+
+                  ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER_IP} '
+                    set -e
+                    cd ${DEPLOY_DIR}
+
+                    echo "${REG_PASS}" | docker login docker.io -u "${REG_USER}" --password-stdin
+
+                    # Pull & Deploy Frontend
+                    # Use FRONTEND_IMAGE/TAG env vars in docker-compose.yml
+                    FRONTEND_IMAGE="${IMAGE_NAME}" FRONTEND_TAG="${env.TAG}" docker compose pull frontend
+                    FRONTEND_IMAGE="${IMAGE_NAME}" FRONTEND_TAG="${env.TAG}" docker compose up -d --no-deps frontend
+
+                    docker image prune -f
+                  '
+                """
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

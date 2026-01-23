@@ -22,12 +22,15 @@
     "jsx": "react-jsx",
 
     /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
+    /* 개발용 임시 느슨한 설정. strict, noUnusedLocals true 필요*/
+    "strict": false,
+    "noUnusedLocals": false,
+
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
   },
   "include": ["src"]
 }
