@@ -1,6 +1,7 @@
 // src/components/dog/Dog.tsx
 import { motion } from 'framer-motion';
 import { DOG_IMAGE_MAP } from '@/lib/dogImages';
+import { SpeechBubble } from './SpeechBubble';
 import type { DogData } from '@/types/dog';
 import styles from './Dog.module.css';
 
@@ -26,7 +27,7 @@ export const Dog = ({ dog }: DogProps) => {
       style={{
         position: 'absolute',
         bottom: `${walkHeight}%`,
-        zIndex: 'var(--z-dog)',
+        zIndex: 10,
       }}
       initial={{ x: initialX }}
       animate={{
@@ -38,6 +39,21 @@ export const Dog = ({ dog }: DogProps) => {
         ease: 'linear',
       }}
     >
+      {/* 말풍선 */}
+      {dog.speechText && (
+        <div style={{
+          position: 'absolute',
+          top: '-10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          whiteSpace: 'nowrap',
+          zIndex: 1,
+        }}>
+          <SpeechBubble text={dog.speechText} isFlipped={!isMovingRight} />
+        </div>
+      )}
+      
+      {/* 강아지 이미지 */}
       <motion.img
         className={styles.dog}
         src={DOG_IMAGE_MAP[dog.type]}

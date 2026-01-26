@@ -17,6 +17,9 @@ import { SCENES, type SceneId } from '@/constants/scenes';
 import { Dog } from '@/components/dog/dog';
 import { Background } from '@/components/common/background';
 import mainLogo from '@/assets/logo/main_logo.png';
+import { mainDecorations } from '@/pages/create/decorations';
+import DecoItem from '@/pages/create/DecoItem';
+import { animationStyles } from './create/createAnimations';
 
 const currentScene: SceneId = 'main';
 const scene = SCENES[currentScene];
@@ -79,6 +82,7 @@ export const Intro = () => {
   // --------------------------------------------------------
   return (
     <>
+      <style>{animationStyles}</style>
       <Background style={{ width: `${dimensions.width}px`, height: `${dimensions.height}px` }}>
         {/* 1. 로고와 버튼 (중앙 정렬) */}
         <div style={{ position: 'relative', zIndex: 20 }}>
@@ -147,7 +151,7 @@ export const Intro = () => {
           <div style={{
             width: '60%',
             maxWidth: '400px', // 너무 넓어지지 않게 제한
-            margin: '40px auto 0',
+            margin: '50px auto 0',
             display: 'flex',
             flexDirection: 'column',
             gap: '16px', // 버튼 사이 간격
@@ -211,6 +215,11 @@ export const Intro = () => {
         {/* 강아지 장식 요소들 */}
         {DOGS.map((dog) => (
         <Dog key={dog.id} dog={dog} />
+        ))}
+
+        {/* 메인페이지 장식 (bone과 foot) */}
+        {mainDecorations.map((d, i) => (
+          <DecoItem key={i} {...d} />
         ))}
 
         {/* 코드 입력 필드 (화면 하단) */}

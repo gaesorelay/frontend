@@ -14,4 +14,5 @@ export type DogData = {
   name: string
   direction?: 'left' | 'right' // 처음 이동 방향
   walkHeight?: number // 화면 하단으로부터의 높이 (0-100%)
+  speechText?: string // 강아지의 말풍선 텍스트
 }
