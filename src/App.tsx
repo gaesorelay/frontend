@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Intro } from './pages/Intro.tsx';
-import Create from './pages/Create.tsx';
-import Setup from './pages/Setup.tsx';
+import Create from './pages/create/Create.tsx';
+import Setup from './pages/setup/Setup.tsx';
 import GameRoom from './pages/GameRoom.tsx';
 import NotFound from './pages/NotFound';
 import { socket } from './lib/socket';

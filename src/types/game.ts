@@ -1,15 +1,17 @@
-export type RoomStatus = 'LOBBY' | 'PLAYING' | 'VOTING' | 'RESULT';
-export type UserRole = 'HOST' | 'PLAYER' | 'AUDIENCE';
-export type UserTeam = 'TEAM_A' | 'TEAM_B' | 'NONE';
+export type RoomStatus = 'WAITING' | 'PLAYING' | 'ENDED';
+
+// ⭐️ [수정] HOST 제거 (isHost로 대체)
+export type UserRole = 'PLAYER' | 'AUDIENCE';
+export type UserTeam = 'A' | 'B' | null; // TeamSlot 컴포넌트와 통일 ('A' | 'B' | null)
 
 export type RoomConfig = {
   title: string;
   maxPlayers: number;
-  totalRounds: number;
+  // totalRounds: number;
   roundTime: number;
   voteTime: number;
   storytellerCount: number;
-  imageCount: number;
+  // imageCount: number;
 };
 
 export type RoomInfo = {
@@ -27,7 +29,9 @@ export type Player = {
   roomUuid: string;
   nickname: string;
   role: UserRole;
+  isHost: boolean;
   team: UserTeam;
+  slotIndex: number | null; // 몇 번째 의자인지
   avatar: string;
   ipAddress?: string;
   isReady: boolean;
@@ -44,6 +48,7 @@ export type GameState = {
   teamBStory: string[];
   turnEndAt: string | null;
 };
+
 
 export type VoteJudge = {
   name: string;
@@ -66,3 +71,19 @@ export type ChatMessage = {
   text: string;
   createdAt: string;
 };
+
+export type GamePhase = 
+  | 'LOBBY'             // 대기실
+  | 'CARD_SHUFFLE'      // 카드 섞기
+  | 'JUDGE_SHUFFLE'     // 심사위원 선정
+  | 'WRITING'           // 글쓰기
+  | 'VOTING'            // 투표
+  | 'JUDGE_RESULT'      // 결과 발표
+  | 'FINAL_RESULT';     // 최종 우승
+
+
+export interface RoundData {
+cardIds: number[];  // [1, 5, 20...]
+judgeIds: number[]; // [0, 2, 4]
+// 나중에 '주제' 같은 게 생기면 여기에 추가 (topicId: number)
+}

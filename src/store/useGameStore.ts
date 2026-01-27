@@ -6,6 +6,8 @@ import type {
   RoomConfig,
   RoomInfo,
   VoteResult,
+  GamePhase,
+  RoundData,
 } from '../types/game';
 
 interface GameStoreState {
@@ -16,6 +18,8 @@ interface GameStoreState {
   messages: ChatMessage[];
   gameState: GameState | null;
   voteResult: VoteResult | null;
+  gamePhase: GamePhase;
+  roundData: RoundData | null;
 
   setRoomConfig: (config: RoomConfig) => void;
   setJoinCode: (code: string | null) => void;
@@ -26,6 +30,9 @@ interface GameStoreState {
   addMessage: (message: ChatMessage) => void;
   setGameState: (state: GameState | null) => void;
   setVoteResult: (result: VoteResult | null) => void;
+  setGamePhase: (phase: GamePhase) => void;
+  setRoundData: (data: RoundData | null) => void; 
+  
   reset: () => void;
 }
 
@@ -37,7 +44,8 @@ export const useGameStore = create<GameStoreState>((set) => ({
   messages: [],
   gameState: null,
   voteResult: null,
-
+  gamePhase: 'LOBBY',
+  roundData: null,
   setRoomConfig: (config) => set({ roomConfig: config }),
   setJoinCode: (code) => set({ joinCode: code }),
   setRoomInfo: (info) => set({ roomInfo: info }),
@@ -56,6 +64,8 @@ export const useGameStore = create<GameStoreState>((set) => ({
     set((state) => ({ messages: [...state.messages, message] })),
   setGameState: (state) => set({ gameState: state }),
   setVoteResult: (result) => set({ voteResult: result }),
+  setGamePhase: (phase) => set({ gamePhase: phase }),
+  setRoundData: (data) => set({ roundData: data }),
   reset: () =>
     set({
       roomConfig: null,
@@ -65,5 +75,7 @@ export const useGameStore = create<GameStoreState>((set) => ({
       messages: [],
       gameState: null,
       voteResult: null,
+      gamePhase: 'LOBBY',
+      roundData: null,
     }),
 }));

@@ -1,6 +1,7 @@
 import CreateControls from './CreateControls';
 import { sketchBorderStyle } from './createStyles';
-import type { ControlItem } from './types';
+// 아까 CreateControls와 맞춰서 공통 타입을 사용하도록 통일했습니다.
+import type { ControlItem } from '../../components/common/types';
 
 interface Props {
   logoSrc: string;
