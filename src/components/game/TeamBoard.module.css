@@ -1,0 +1,60 @@
+/* TeamBoard.module.css */
+
+.boardContainer {
+  background-image: url('/src/assets/bg/board_paper.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  /* 이전의 그 찌글찌글한 테두리 공식! */
+  /* background-color: white;
+  border: 3px solid #333;
+  border-radius: 20px 225px 15px 255px / 255px 15px 225px 15px;
+  box-shadow: 10px 10px 0px rgba(0,0,0,0.08);  */
+
+  width: 100%;
+  max-width: 450px; /* 슬롯 4개가 들어갈 적당한 너비 */
+  aspect-ratio: 4 / 4; /* 배경 종이 모양에 맞춰 비율 고정 */
+  
+  display: flex;
+  flex-direction: column;
+  padding: 60px 20px; /* 종이 질감 안쪽으로 밀어넣기 */
+  box-sizing: border-box;
+}
+
+/* 상단에 압정(Pin) 효과 추가 */
+.innerPaper::before, .innerPaper::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  background-color: #666;
+  border-radius: 50%;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+.innerPaper::before { left: 10px; }
+.innerPaper::after { right: 10px; }
+
+.teamTitle {
+  color: #333;
+  font-size: 2rem;
+  margin: 5px;
+  text-align: center;
+}
+
+.teamSubtitle {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.slotGrid {
+display: grid;
+  /* 1fr 대신 고정 크기 또는 minmax를 사용하여 슬롯 크기 제어 */
+  grid-template-columns: repeat(4, minmax(0, 1fr)); 
+  gap: 10px;
+  width: 100%;
+  margin-top: auto;
+  margin-bottom: auto; /* 보드 중앙에 위치하도록 */
+}

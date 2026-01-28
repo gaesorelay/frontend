@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import styles from './TeamSlot.module.css';
+import dogHouseImg from '@/assets/doghouse.png';
 
 // 아이콘 (나중에 파일로 교체하세요)
 const ICON_PLUS = "➕"; 
@@ -15,8 +17,8 @@ export const TeamSlot = ({ status, user, onClick }: TeamSlotProps) => {
   // 1. 비활성화된 슬롯 (빨간줄)
   if (status === 'LOCKED') {
     return (
-      <div className="w-20 h-24 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300 opacity-50 cursor-not-allowed">
-        <span className="text-4xl grayscale">{ICON_LOCKED}</span>
+      <div className={`${styles.slotBase} ${styles.locked}`}>
+        <span className={styles.iconLocked}>{ICON_LOCKED}</span>
       </div>
     );
   }
@@ -28,25 +30,37 @@ export const TeamSlot = ({ status, user, onClick }: TeamSlotProps) => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={onClick}
-        className="w-20 h-24 bg-white rounded-lg flex items-center justify-center border-2 border-dashed border-amber-400 cursor-pointer shadow-sm hover:bg-amber-50"
+        className={`${styles.slotBase} ${styles.empty}`}
       >
-        <span className="text-3xl text-amber-500">{ICON_PLUS}</span>
+        <img src={dogHouseImg} className={styles.houseBg} alt="empty house" />
+        <div className={styles.plusOverlay}>+</div>
       </motion.button>
     );
   }
 
   // 3. 유저가 들어간 슬롯
   return (
-    <motion.div
-      layoutId={user?.nickname}
-      onClick={onClick} // 클릭하면 내보내기?
-      className="w-20 h-24 bg-white rounded-lg flex flex-col items-center justify-center border-2 border-amber-600 shadow-md cursor-pointer relative overflow-hidden"
+  <motion.div
+    layoutId={user?.nickname}
+    onClick={onClick}
+    className={`${styles.slotBase} ${styles.filled}`}
+    whileHover="hover" // 부모 요소 호버 상태 전파
+  >
+    <img src={dogHouseImg} className={styles.houseBg} alt="dog house" />
+    
+    <div className={styles.avatarWrapper}>
+      <img src={user?.avatar} className={styles.dogAvatar} alt={user?.nickname} />
+    </div>
+
+    {/* 명패 부분에 애니메이션 추가 가능 */}
+    <motion.div 
+      className={styles.nameTag}
+      variants={{
+        hover: { rotate: [0, -2, 2, 0], transition: { repeat: Infinity, duration: 0.5 } }
+      }}
     >
-      <div className="text-3xl mb-1">{user?.avatar}</div>
-      <span className="text-xs font-bold truncate w-full text-center px-1">
-        {user?.nickname}
-      </span>
-      {/* 마우스 올리면 X 표시 뜨게 해도 좋음 */}
+      <span className={styles.nickname}>{user?.nickname}</span>
     </motion.div>
-  );
+  </motion.div>
+);
 };

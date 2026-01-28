@@ -13,6 +13,9 @@ import VotingPhase from '@/components/game/phases/VotingPhase';
 import JudgeResultPhase from '@/components/game/phases/JudgeResultPhase';
 import FinalResultPhase from '@/components/game/phases/FinalResultPhase';
 
+// 더미 데이터 프로필 이미지
+import dog1 from '@/assets/dog/dog1.png';
+
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
 const TEST_MODE = false; 
 
@@ -38,11 +41,12 @@ const GameRoom = () => {
   // =========================================================
   const generateMockUsers = () => {
     const baseUsers = [
-      { userToken: 'u1', nickname: '멍멍이1', role: 'AUDIENCE', isHost: false, avatarId: 2, avatar: '🐕' },
-      { userToken: 'u2', nickname: '멍멍이2', role: 'AUDIENCE', isHost: false, avatarId: 3, avatar: '🐩' },
-      { userToken: 'u3', nickname: '멍멍이3', role: 'AUDIENCE', isHost: false, avatarId: 4, avatar: '🌭' },
-      { userToken: 'p2', nickname: '고인물', role: 'PLAYER', team: 'A', slotIndex: 1, isHost: false, avatarId: 5, avatar: '🐯' },
-      { userToken: 'p3', nickname: '뉴비', role: 'PLAYER', team: 'B', slotIndex: 0, isHost: false, avatarId: 3, avatar: '🐻' },
+      { userToken: 'u1', nickname: '멍멍이1', role: 'AUDIENCE', isHost: false, avatarId: 2, avatar: dog1 },
+      { userToken: 'u2', nickname: '멍멍이2', role: 'AUDIENCE', isHost: false, avatarId: 3, avatar: dog1 },
+      { userToken: 'u3', nickname: '멍멍이3', role: 'AUDIENCE', isHost: false, avatarId: 4, avatar: dog1 },
+      // 이미 자리를 차지한 다른 플레이어들
+      { userToken: 'p2', nickname: '고인물', role: 'PLAYER', team: 'A', slotIndex: 1, isHost: false, avatarId: 5, avatar: dog1 },
+      { userToken: 'p3', nickname: '뉴비', role: 'PLAYER', team: 'B', slotIndex: 0, isHost: false, avatarId: 3, avatar: dog1 },
     ];
 
     if (isHost) {

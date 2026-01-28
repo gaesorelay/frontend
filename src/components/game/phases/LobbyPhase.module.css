@@ -1,0 +1,313 @@
+/* GameRoom.module.css */
+.container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column; /* 세로로 헤더 / 컨텐츠 나눔 */
+  overflow: hidden; /* 전체 페이지 스크롤 방지 */
+}
+
+.header {
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 2rem;
+  backdrop-filter: blur(4px);
+  flex-shrink: 0;
+}
+
+.headerLogo {
+  width: 220px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.contentWrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  flex-direction: row;
+}
+
+.audienceBar {
+  width: 15rem;
+  flex-shrink: 0;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-right: 2px solid rgba(217, 119, 6, 0.5);
+  overflow-y: auto;
+  transition: all 0.3s ease;
+  z-index: 15;
+}
+
+.audienceBar::-webkit-scrollbar {
+  scrollbar-width: none;
+}
+
+.audienceBar.open {
+  width: 200px;
+  opacity: 1;
+}
+
+.audienceBar.closed {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  border: none;
+}
+
+.sidebarToggle {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25px;
+  height: 50vh;
+  background-color: white;
+  border-radius: 0 30px 30px 0;
+  border: none;
+  color: rgba(251, 191, 36, 1);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 99;
+  font-size: 0.9rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto !important;
+}
+
+.sidebarToggle:hover {
+  background-color: rgba(251, 190, 36, 0.202);
+  border: none;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+
+.mainBoard {
+  position: relative;
+  z-index: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+}
+
+.roomTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.gameArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.teamPanel {
+  width: 45%;
+  max-width: 500px;
+  height: 100%;
+  aspect-ratio: auto;
+  
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 3px solid;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  
+  background-color: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  flex-grow: 1;
+}
+
+.randomButton {
+  z-index: 20;
+  background-color: #f59e0b;
+  color: white;
+  font-weight: 900;
+  font-size: 1.25rem;
+  padding: 0.75rem 2rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 0 #b45309;
+  cursor: pointer;
+  transition: all 0.1s;
+  border: none;
+  margin-top: 1rem;
+}
+
+.randomButton:active {
+  /* transform: translateX(-50%) translateY(4px); */
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
+.randomButton:hover {
+  background-color: #d97706;
+}
+
+/* 모달 내용 스타일 */
+.modalContent {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modalAvatar {
+  font-size: 2rem;
+}
+
+.modalTitle {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.modalTitleHighlight {
+  color: #b45309;
+}
+
+.modalButtonGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.modalButton {
+  padding: 0.75rem;
+  font-weight: bold;
+  border-radius: 0.5rem;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.buttonTeamA {
+  background-color: #3b82f6;
+}
+
+.buttonTeamA:hover {
+  background-color: #2563eb;
+}
+
+.buttonTeamB {
+  background-color: #ef4444;
+}
+
+.buttonTeamB:hover {
+  background-color: #dc2626;
+}
+
+.buttonKick {
+  grid-column: 1 / -1;
+  background-color: #1f2937;
+  border: 2px solid #ef4444;
+  transition: background-color 0.2s;
+}
+
+.buttonKick:hover {
+  background-color: #000;
+}
+
+.targetSlotContent {
+  text-align: center;
+  width: 100%;
+}
+
+.targetSlotTitle {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.targetSlotTeamHighlight {
+  color: #2563eb;
+}
+
+.targetSlotIndexHighlight {
+  color: #b45309;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.playerGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.playerButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.playerButton:hover {
+  background-color: #f3f4f6;
+}
+
+.playerAvatar {
+  font-size: 2.25rem;
+  margin-bottom: 0.25rem;
+  transition: transform 0.2s;
+}
+
+.playerButton:hover .playerAvatar {
+  transform: scale(1.1);
+}
+
+.playerNickname {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #4b5563;
+  background-color: #e5e7eb;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.emptyMessage {
+  grid-column: 1 / -1;
+  color: #9ca3af;
+  padding: 1rem;
+}
+
+.vsText {
+  font-size: 3.75rem;
+  font-weight: 900;
+  color: white;
+  font-style: italic;
+  filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.2));
+}
