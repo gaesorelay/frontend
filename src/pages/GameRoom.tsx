@@ -34,10 +34,26 @@ const GameRoom = () => {
 
   // =========================================================
   // 🧪 [테스트 데이터 생성기]
+  // 🧪 [테스트 데이터 생성기]
   // =========================================================
   const generateMockUsers = () => {
-    // ... (기존 mock 데이터 로직 유지 - 테스트할 때만 쓰임)
-    return [];
+    const baseUsers = [
+      { userToken: 'u1', nickname: '멍멍이1', role: 'AUDIENCE', isHost: false, avatarId: 2, avatar: '🐕' },
+      { userToken: 'u2', nickname: '멍멍이2', role: 'AUDIENCE', isHost: false, avatarId: 3, avatar: '🐩' },
+      { userToken: 'u3', nickname: '멍멍이3', role: 'AUDIENCE', isHost: false, avatarId: 4, avatar: '🌭' },
+      { userToken: 'p2', nickname: '고인물', role: 'PLAYER', team: 'A', slotIndex: 1, isHost: false, avatarId: 5, avatar: '🐯' },
+      { userToken: 'p3', nickname: '뉴비', role: 'PLAYER', team: 'B', slotIndex: 0, isHost: false, avatarId: 3, avatar: '🐻' },
+    ];
+
+    if (isHost) {
+      baseUsers.push({
+        userToken: 'me_host_token',
+        nickname: myNickname || '나(방장)',
+        role: 'PLAYER', team: 'A', slotIndex: 0,
+        isHost: true, avatarId: myAvatarId || 1, avatar: '🦁'
+      });
+    }
+    return baseUsers;
   };
 
   // ⭐️ 유저 상태 관리
@@ -104,20 +120,41 @@ const GameRoom = () => {
       case 'VOTING': return <VotingPhase />;
       case 'JUDGE_RESULT': return <JudgeResultPhase />;
       case 'FINAL_RESULT': return <FinalResultPhase />;
-      default: return <div className="text-white">로딩 중... ({gamePhase})</div>;
+      default: return <div className="text-white flex items-center justify-center h-full">로딩 중... ({gamePhase})</div>;
     }
   };
 
   return (
-    <div className="w-full h-screen overflow-hidden bg-green-800 relative">
-      <div className="absolute top-0 left-0 bg-black/50 text-white text-xs p-2 z-50">
-         {isHost ? "👑 HOST" : "🏃 GUEST"} | Room: {roomId} | Users: {users.length}
+    // 🏟️ [전체 컨테이너] flex-col 적용 (세로 배치)
+    <div className="w-full h-screen bg-gray-900 flex flex-col overflow-hidden relative">
+      
+      {/* 1️⃣ 상단 정보 바 (Header) */}
+      {/* shrink-0: 공간이 부족해도 찌그러지지 않음 */}
+      <header className="w-full h-12 bg-black/60 flex items-center justify-between px-4 text-white text-xs z-50 shrink-0 border-b border-white/10 backdrop-blur-sm">
+         <span className="font-bold text-lg">✨ STORY GAME</span>
+         <span>{isHost ? "👑 HOST" : "🏃 GUEST"} | Room: {roomId} | Users: {users.length}</span>
+      </header>
+
+      {/* 2️⃣ ⭐️ [핵심] 게임 메인 무대 (Main Stage) */}
+      {/* flex-1: 남은 공간을 꽉 채움 */}
+      {/* relative: 자식 컴포넌트가 absolute를 쓸 때 기준점이 됨 */}
+      <main className="flex-1 w-full relative overflow-hidden bg-green-800 z-0">
+        {renderPhase()}
+      </main>
+
+      {/* 3️⃣ 개발자 리모콘 (Overlay) */}
+      <div className="fixed bottom-4 right-4 bg-black/70 p-4 rounded-xl z-[100] flex flex-col gap-2 border border-white/10 backdrop-blur-md shadow-2xl">
+        <p className="text-white text-xs font-bold text-center mb-2">🚧 Dev Controls</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => devSwitchPhase('LOBBY')} className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-500 transition">Lobby</button>
+          <button onClick={() => devSwitchPhase('CARD_SHUFFLE')} className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500 transition">Card Shuffle</button>
+          <button onClick={() => devSwitchPhase('JUDGE_SHUFFLE')} className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500 transition">Judge Shuffle</button>
+          <button onClick={() => devSwitchPhase('WRITING')} className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-500 transition">Writing</button>
+          <button onClick={() => devSwitchPhase('VOTING')} className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-500 transition">Voting</button>
+          <button onClick={() => devSwitchPhase('JUDGE_RESULT')} className="px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-500 transition">Round Result</button>
+          <button onClick={() => devSwitchPhase('FINAL_RESULT')} className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-500 transition">Final Result</button> 
+        </div>
       </div>
-
-      {renderPhase()}
-
-      {/* 개발자 리모콘 (TEST_MODE일 때만 보이거나, 필요할 때만 주석 해제) */}
-      {/* <div className="fixed bottom-4 right-4 ..."> ... </div> */}
     </div>
   );
 };

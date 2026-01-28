@@ -1,59 +1,187 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import paperBg from '@/assets/bg/paper.png';
+import titleLogo from '@/assets/logo/carddistribute.png';
+import dotImage from '@/assets/logo/dot.png';
+import cardLogo1 from '@/assets/logo/cardlogo1.png'; 
+import cardLogo2 from '@/assets/logo/cardlogo2.png'; 
+import cardLogo3 from '@/assets/logo/cardlogo3.png';
+import aiTeacherLogo from '@/assets/logo/AIteacher.png';
 
-// 🛠️ [Mock] 나중에 서버에서 받아올 이미지들
+const DECORATION_FILES = [
+  'big_heart', 'bone', 'foot', 'heart', 'pencil_blue', 'pencil_green', 'pencil_red', 'star'
+];
+
 const MOCK_CARDS = [
-  '/images/card1.png', '/images/card2.png', '/images/card3.png', 
-  '/images/card4.png', '/images/card5.png', '/images/card6.png',
-  '/images/card7.png', '/images/card8.png'
+  'https://picsum.photos/200/300?random=1', 'https://picsum.photos/200/300?random=2',
+  'https://picsum.photos/200/300?random=3', 'https://picsum.photos/200/300?random=4',
+  'https://picsum.photos/200/300?random=5', 'https://picsum.photos/200/300?random=6',
+  'https://picsum.photos/200/300?random=7', 'https://picsum.photos/200/300?random=8',
 ];
 
 interface Props {
-  onFinish: () => void; // 애니메이션 끝나면 호출할 함수 (부모가 내려줌)
+  onFinish: () => void;
 }
 
+const TOTAL_CARDS = 40;
+const TARGET_COUNT = 8;
+
 const CardShufflePhase = ({ onFinish }: Props) => {
-  const [showFront, setShowFront] = useState(false); // 처음엔 뒷면
+  const [isShuffling, setIsShuffling] = useState(true);
+  const [shuffleTick, setShuffleTick] = useState(0);
+  const [isDealt, setIsDealt] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [dotCount, setDotCount] = useState(1);
+  const [outroStep, setOutroStep] = useState(0);
+  const [showAITeacher, setShowAITeacher] = useState(false);
+
+  const backgroundDecorations = useMemo(() => {
+    return Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      image: `/src/assets/decorations/${DECORATION_FILES[Math.floor(Math.random() * DECORATION_FILES.length)]}.png`,
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      rotation: `${Math.random() * 360}deg`,
+      scale: `${Math.random() * 0.5 + 0.5}`,
+    }));
+  }, []);
+
+  const cardsData = useMemo(() => {
+    const dogIndices = new Set<number>();
+    while (dogIndices.size < TARGET_COUNT) dogIndices.add(Math.floor(Math.random() * 29) + 1);
+    const dogArray = Array.from(dogIndices);
+    return Array.from({ length: TOTAL_CARDS }).map((_, i) => {
+      const isTarget = i < TARGET_COUNT;
+      return {
+        id: i, isTarget,
+        frontImage: isTarget ? MOCK_CARDS[i] : MOCK_CARDS[0],
+        backImage: isTarget ? `/src/assets/dog/dog${dogArray[i]}.png` : `/src/assets/dog/dog1.png`,
+      };
+    });
+  }, []);
+
+  const getShufflePos = (index: number) => {
+    if (!isShuffling) return { x: 0, y: 0, r: 0 };
+    const randomSeed = index * shuffleTick * 123.45; 
+    const randomX = (Math.sin(randomSeed) * 50); 
+    const randomY = (Math.cos(randomSeed * 0.5) * 50);
+    const randomR = (Math.sin(randomSeed * 0.2) * 40);
+    return { x: randomX, y: randomY, r: randomR };
+  };
 
   useEffect(() => {
-    // 1. 애니메이션 시나리오 (프론트 맘대로 연출)
-    
-    // 2초 뒤에 카드 뒤집기 (공개)
-    const flipTimer = setTimeout(() => {
-      setShowFront(true);
-    }, 2000);
+    const dotInterval = setInterval(() => setDotCount((prev) => (prev < 3 ? prev + 1 : 1)), 300);
+    const shuffleInterval = setInterval(() => setShuffleTick((prev) => prev + 1), 80);
 
-    // 5초 뒤에 다음 단계(심사위원 선정)로 넘어가기 (서버 신호 대용)
-    const finishTimer = setTimeout(() => {
-      onFinish(); 
-    }, 5000);
+    const stopShuffleTimer = setTimeout(() => { clearInterval(shuffleInterval); setIsShuffling(false); }, 2000);
+    const dealTimer = setTimeout(() => setIsDealt(true), 2500);
+    
+    const revealStartTimer = setTimeout(() => {
+      clearInterval(dotInterval); setDotCount(0);
+      for (let i = 0; i < TARGET_COUNT; i++) { setTimeout(() => setVisibleCount((prev) => prev + 1), i * 200); }
+    }, 4000);
+
+    const outroTimer1 = setTimeout(() => setOutroStep(1), 6000); 
+    const outroTimer2 = setTimeout(() => setOutroStep(2), 7500); 
+    const outroTimer3 = setTimeout(() => setOutroStep(3), 9000); // 9초에 "킹받을까!?" 등장
+
+    // ⚡️ [시간 단축] 9.8초: 0.8초 뒤에 바로 AI 등장 (기존 10.5초에서 단축)
+    const aiTeacherTimer = setTimeout(() => {
+      setShowAITeacher(true);
+    }, 9800);
+
+    // 🏁 [시간 단축] 12.0초: 종료 (기존 12.5초에서 단축)
+    const finishTimer = setTimeout(() => onFinish(), 12000);
 
     return () => {
-      clearTimeout(flipTimer);
-      clearTimeout(finishTimer);
+      clearInterval(dotInterval); clearInterval(shuffleInterval);
+      clearTimeout(stopShuffleTimer); clearTimeout(dealTimer); clearTimeout(revealStartTimer);
+      clearTimeout(outroTimer1); clearTimeout(outroTimer2); clearTimeout(outroTimer3);
+      clearTimeout(aiTeacherTimer); clearTimeout(finishTimer);
     };
   }, [onFinish]);
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-black/80">
-      <h1 className="text-white text-3xl font-bold mb-8 animate-bounce">
-        {showFront ? "이 카드들로 이야기를 만들어주세요!" : "카드를 섞고 있습니다..."}
-      </h1>
-
-      {/* 카드 그리드 */}
-      <div className="grid grid-cols-4 gap-4">
-        {MOCK_CARDS.map((imgSrc, index) => (
-          <div key={index} className="w-32 h-48 bg-white rounded-lg shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-110">
-            {showFront ? (
-              // 🅰️ 앞면 (변수 처리될 부분)
-              <img src={imgSrc} alt="카드" className="w-full h-full object-cover" />
-            ) : (
-              // 🅱️ 뒷면 (공통 디자인)
-              <div className="w-full h-full bg-blue-600 flex items-center justify-center">
-                <span className="text-white text-4xl">?</span>
-              </div>
-            )}
-          </div>
+    <div 
+      style={{
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+        backgroundImage: `url(${paperBg})`, backgroundSize: 'cover', backgroundPosition: 'center',
+        zIndex: 10, overflow: 'hidden',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+      }}
+    >
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.6 }}>
+        {backgroundDecorations.map((deco) => (
+          <img key={deco.id} src={deco.image} alt="deco" style={{ position: 'absolute', top: deco.top, left: deco.left, transform: `translate(-50%, -50%) rotate(${deco.rotation}) scale(${deco.scale})`, width: '40px', height: 'auto', filter: 'grayscale(20%)' }} />
         ))}
+      </div>
+
+      {/* --- 상단 로고 및 아웃트로 영역 --- */}
+      <div style={{ position: 'absolute', top: '8%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem', zIndex: 20, transition: 'all 0.5s', transform: visibleCount > 0 ? 'scale(0.9) translateY(-20px)' : 'scale(1)', opacity: outroStep > 0 ? 0 : 1 }}>
+          <img src={titleLogo} alt="Card Distribute" className="drop-shadow-md" style={{ width: '800px', height: 'auto', display: 'block', margin: 0 }} />
+          <div style={{ display: 'flex', gap: '8px', marginLeft: '20px', alignItems: 'center', marginTop: '60px' }}>
+            {dotCount >= 1 && <img src={dotImage} alt="dot" className="animate-bounce" style={{ width: '30px', height: '30px', animationDelay: '0ms' }} />}
+            {dotCount >= 2 && <img src={dotImage} alt="dot" className="animate-bounce" style={{ width: '30px', height: '30px', animationDelay: '150ms' }} />}
+            {dotCount >= 3 && <img src={dotImage} alt="dot" className="animate-bounce" style={{ width: '30px', height: '30px', animationDelay: '300ms' }} />}
+          </div>
+        </div>
+
+        {outroStep > 0 && (
+          <div style={{ position: 'absolute', top: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <img src={cardLogo1} alt="1" className={`absolute top-0 drop-shadow-lg transition-all duration-500 ${outroStep === 1 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '400px' }} />
+            <img src={cardLogo2} alt="2" className={`absolute top-0 drop-shadow-lg transition-all duration-500 ${outroStep === 2 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '400px' }} />
+            <img src={cardLogo3} alt="3" className={`absolute top-0 drop-shadow-xl transition-all duration-500 ${outroStep === 3 ? 'opacity-100 scale-125 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '450px' }} />
+          </div>
+        )}
+      </div>
+
+      {/* 🆕 [AI 심사위원 등장 영역] */}
+      <div
+        style={{
+          position: 'absolute', top: '55%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 100,
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          opacity: showAITeacher ? 1 : 0,
+          scale: showAITeacher ? 1 : 0.5,
+        }}
+      >
+        {/* 🚨 수정: 크기를 600px로 더욱 확대 (초대형) */}
+        <img 
+          src={aiTeacherLogo} 
+          alt="AI Teacher" 
+          style={{ width: '600px', height: 'auto', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.6))' }} 
+        />
+      </div>
+
+      {/* 🃏 카드 무대 */}
+      <div 
+        style={{ 
+          position: 'relative', width: '600px', height: '400px', perspective: '1000px', zIndex: 10, 
+          marginTop: '140px',
+          transition: 'all 1s', 
+          opacity: outroStep > 0 ? 0.3 : 1, 
+          filter: outroStep > 0 ? 'blur(4px)' : 'none' 
+        }}
+      >
+        {cardsData.map((card, index) => {
+          const shufflePos = getShufflePos(index);
+          const col = index % 4; const row = Math.floor(index / 4);
+          const gridX = (col - 1.5) * 150; const gridY = (row - 0.5) * 220; 
+          let x = 0, y = 0, rotate = 0, opacity = 1;
+          if (isShuffling) { x = shufflePos.x; y = shufflePos.y; rotate = shufflePos.r; } 
+          else if (isDealt) { if (card.isTarget) { x = gridX; y = gridY; rotate = 0; } else { x = 0; y = 0; opacity = 0; } }
+          const isFlipped = card.isTarget && index < visibleCount;
+          return (
+            <div key={card.id} style={{ position: 'absolute', top: '50%', left: '50%', width: '120px', height: '180px', marginTop: '-90px', marginLeft: '-60px', transition: isShuffling ? 'transform 0.1s linear' : 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s', transform: `translate(${x}px, ${y}px) rotate(${rotate}deg)`, opacity: opacity, zIndex: card.isTarget ? 100 + index : index }}>
+              <div style={{ width: '100%', height: '100%', position: 'relative', transformStyle: 'preserve-3d', transition: 'transform 0.5s', transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)', boxShadow: '2px 4px 8px rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', border: '4px solid white', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.1)' }}><img src={card.frontImage} alt="front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', border: '1px solid #ddd', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.05)' }}><img src={card.backImage} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
