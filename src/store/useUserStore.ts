@@ -8,15 +8,17 @@ interface UserState {
   avatarId: number;
   roomId: string | null;
   
-  // ⭐️ [추가] 내 신분증
-  role: UserRole;   // 현재 나는 구경꾼인가 선수인가?
-  isHost: boolean;  // 내가 방장인가? (권한)
+  // 내 신분증
+  role: UserRole;
+  isHost: boolean;
 
   // 액션
   setProfile: (nickname: string, avatarId: number) => void;
+  // 👇 [추가] 개별 설정 함수 (Setup 페이지 오류 해결용)
+  setNickname: (nickname: string) => void;
+  setAvatarId: (avatarId: number) => void;
+
   setRoomId: (roomId: string) => void;
-  
-  // ⭐️ [추가] 신분 변경 액션
   setUserStatus: (role: UserRole, isHost: boolean) => void;
 }
 
@@ -25,13 +27,15 @@ export const useUserStore = create<UserState>((set) => ({
   avatarId: 1,
   roomId: null,
   
-  // 초기값: 일단 모두 '관전자' & '방장 아님'으로 시작
   role: 'AUDIENCE', 
   isHost: false,
 
   setProfile: (nickname, avatarId) => set({ nickname, avatarId }),
-  setRoomId: (roomId) => set({ roomId }),
   
-  // 서버에서 내 정보 받아왔을 때 한방에 업데이트
+  // 👇 [추가] 구현
+  setNickname: (nickname) => set({ nickname }),
+  setAvatarId: (avatarId) => set({ avatarId }),
+
+  setRoomId: (roomId) => set({ roomId }),
   setUserStatus: (role, isHost) => set({ role, isHost }),
 }));

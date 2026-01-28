@@ -1,17 +1,18 @@
-export type RoomStatus = 'WAITING' | 'PLAYING' | 'ENDED';
+// src/types/game.ts
 
-// ⭐️ [수정] HOST 제거 (isHost로 대체)
+export type RoomStatus = 'WAITING' | 'PLAYING' | 'ENDED'; // LOBBY 제거, WAITING 사용
+
+// ⭐️ [수정] HOST 제거 -> boolean으로 대체
 export type UserRole = 'PLAYER' | 'AUDIENCE';
-export type UserTeam = 'A' | 'B' | null; // TeamSlot 컴포넌트와 통일 ('A' | 'B' | null)
+export type UserTeam = 'A' | 'B' | null;
 
+// ⭐️ [수정] 백엔드 RoomConfig와 변수명 통일
 export type RoomConfig = {
-  title: string;
-  maxPlayers: number;
-  // totalRounds: number;
-  roundTime: number;
-  voteTime: number;
-  storytellerCount: number;
-  // imageCount: number;
+  maxPlayers: number;       // (teamSize 제거 -> maxPlayers 사용)
+  storytellerCount: number; // 이야기꾼 수
+  rounds: number;           // (roundCount -> rounds)
+  roundTime: number;        // (roundTimeSeconds -> roundTime)
+  voteTime: number;         // (votingTimeSeconds -> voteTime)
 };
 
 export type RoomInfo = {
@@ -23,20 +24,22 @@ export type RoomInfo = {
   createdAt: string;
 };
 
+// ⭐️ [수정] avatar -> avatarId 로 변경 (숫자로 관리)
 export type Player = {
   userToken: string;
   socketId?: string;
   roomUuid: string;
   nickname: string;
   role: UserRole;
-  isHost: boolean;
+  isHost: boolean;          // boolean 필드 확인
   team: UserTeam;
-  slotIndex: number | null; // 몇 번째 의자인지
-  avatar: string;
+  slotIndex: number | null; 
+  avatarId: number;         // avatar string 대신 id 사용 권장
   ipAddress?: string;
   isReady: boolean;
 };
 
+// ... 나머지 GameState, ChatMessage 등은 그대로 유지 ...
 export type GameState = {
   roomUuid: string;
   currentRound: number;
@@ -48,7 +51,6 @@ export type GameState = {
   teamBStory: string[];
   turnEndAt: string | null;
 };
-
 
 export type VoteJudge = {
   name: string;
@@ -72,18 +74,16 @@ export type ChatMessage = {
   createdAt: string;
 };
 
-export type GamePhase = 
-  | 'LOBBY'             // 대기실
-  | 'CARD_SHUFFLE'      // 카드 섞기
-  | 'JUDGE_SHUFFLE'     // 심사위원 선정
-  | 'WRITING'           // 글쓰기
-  | 'VOTING'            // 투표
-  | 'JUDGE_RESULT'      // 결과 발표
-  | 'FINAL_RESULT';     // 최종 우승
-
+export type GamePhase =
+  | 'LOBBY'
+  | 'CARD_SHUFFLE'
+  | 'JUDGE_SHUFFLE'
+  | 'WRITING'
+  | 'VOTING'
+  | 'JUDGE_RESULT'
+  | 'FINAL_RESULT';
 
 export interface RoundData {
-cardIds: number[];  // [1, 5, 20...]
-judgeIds: number[]; // [0, 2, 4]
-// 나중에 '주제' 같은 게 생기면 여기에 추가 (topicId: number)
+  cardIds: number[];
+  judgeIds: number[];
 }

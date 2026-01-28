@@ -13,8 +13,8 @@ import VotingPhase from '@/components/game/phases/VotingPhase';
 import JudgeResultPhase from '@/components/game/phases/JudgeResultPhase';
 import FinalResultPhase from '@/components/game/phases/FinalResultPhase';
 
-// 🛠️ [디자인용] 테스트 모드 (여기서 관리)
-const TEST_MODE = true;
+// 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
+const TEST_MODE = false; 
 
 export type GamePhase = 'LOBBY' | 'CARD_SHUFFLE' | 'JUDGE_SHUFFLE' | 'WRITING' | 'VOTING' | 'JUDGE_RESULT' | 'FINAL_RESULT';
 
@@ -22,49 +22,51 @@ const GameRoom = () => {
   const { roomId } = useParams();
   
   // 1. 스토어 데이터
-  const { nickname: myNickname, avatarId: myAvatarId } = useUserStore();
-  const { roomConfig, gamePhase, setGamePhase, setRoundData } = useGameStore();
+  // ⭐️ [수정] useUserStore에서 isHost 정보를 정확하게 가져옵니다.
+  const { nickname: myNickname, avatarId: myAvatarId, isHost: isMyHost } = useUserStore();
+  const { roomConfig, gamePhase, setGamePhase, setRoundData, setRoomInfo, setPlayers } = useGameStore();
 
-  // ⭐️ 권한 체크 (여기서 한 번만 해서 내려줌)
-  const isHost = TEST_MODE || !!roomConfig;
+  // ⭐️ 권한 체크: 테스트 모드이거나, 내 스토어에 저장된 신분이 Host일 때
+  const isHost = TEST_MODE || isMyHost;
+  
+  // 게스트는 roomConfig가 아직 없을 수 있으므로 기본값(4) 처리
   const maxStorytellers = roomConfig?.storytellerCount || 4;
 
   // =========================================================
-  // 🧪 [테스트 데이터 생성기] (GameRoom으로 이사 옴)
+  // 🧪 [테스트 데이터 생성기]
   // =========================================================
   const generateMockUsers = () => {
-    const baseUsers = [
-      { userToken: 'u1', nickname: '멍멍이1', role: 'AUDIENCE', isHost: false, avatarId: 2, avatar: '🐕' },
-      { userToken: 'u2', nickname: '멍멍이2', role: 'AUDIENCE', isHost: false, avatarId: 3, avatar: '🐩' },
-      { userToken: 'u3', nickname: '멍멍이3', role: 'AUDIENCE', isHost: false, avatarId: 4, avatar: '🌭' },
-      { userToken: 'p2', nickname: '고인물', role: 'PLAYER', team: 'A', slotIndex: 1, isHost: false, avatarId: 5, avatar: '🐯' },
-      { userToken: 'p3', nickname: '뉴비', role: 'PLAYER', team: 'B', slotIndex: 0, isHost: false, avatarId: 3, avatar: '🐻' },
-    ];
-
-    if (isHost) {
-      baseUsers.push({
-        userToken: 'me_host_token',
-        nickname: myNickname || '나(방장)',
-        role: 'PLAYER', team: 'A', slotIndex: 0,
-        isHost: true, avatarId: myAvatarId || 1, avatar: '🦁'
-      });
-    }
-    return baseUsers;
+    // ... (기존 mock 데이터 로직 유지 - 테스트할 때만 쓰임)
+    return [];
   };
 
-  // ⭐️ 유저 상태 관리 (Global State 성격)
+  // ⭐️ 유저 상태 관리
+  // TEST_MODE가 꺼져있으면 빈 배열([])로 시작해서 소켓 데이터를 기다립니다.
   const [users, setUsers] = useState<any[]>(TEST_MODE ? generateMockUsers() : []);
 
-  // 📡 소켓 리스너 (여기서 받아야 페이즈가 바뀌어도 유지됨!)
+  // 📡 소켓 리스너
   useEffect(() => {
     if (TEST_MODE) return;
 
-    // 유저 리스트 업데이트
-    socket.on('user_list_update', (updatedUsers) => {
-      setUsers(updatedUsers);
+    console.log(`🔌 GameRoom 소켓 리스너 연결 (Room: ${roomId})`);
+
+    // 1. 방 정보 요청 (게스트는 들어오자마자 이게 필요함)
+    socket.emit('request_room_info', { roomId });
+
+    // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
+    socket.on('lobby_updated', (data) => {
+      console.log("👥 로비 업데이트:", data);
+      setUsers(data.users); 
+      // 만약 data.roomConfig 등 방 정보도 같이 온다면 여기서 setRoomInfo 업데이트
+    });
+    
+    // (구버전 호환)
+    socket.on('user_joined', (_data) => {
+        // user_joined만 오면 전체 리스트를 모르니, 다시 리스트 요청
+        socket.emit('request_room_info', { roomId });
     });
 
-    // 페이즈 변경 신호
+    // 3. [수신] 페이즈 변경
     socket.on('change_phase', (response) => {
       const { phase, data } = response;
       if (data) setRoundData(data);
@@ -72,41 +74,33 @@ const GameRoom = () => {
     });
 
     return () => {
-      socket.off('user_list_update');
+      socket.off('lobby_updated');
+      socket.off('user_joined');
       socket.off('change_phase');
     };
-  }, []);
+  }, [roomId]);
 
   // 🛠️ [개발용] 화면 강제 전환
   const devSwitchPhase = (phase: GamePhase) => {
     setGamePhase(phase);
   };
 
-  // 📺 페이즈 렌더러 (Props로 데이터 내려주기!)
+  // 📺 페이즈 렌더러
   const renderPhase = () => {
-    // ⭐️ 모든 페이즈가 공유할 데이터 패키지
     const commonProps = {
-      users,           // 유저 리스트 (가장 중요)
-      isHost,          // 방장 권한
-      maxStorytellers, // 설정값
-      TEST_MODE,       // 테스트 모드 여부
-      setUsers,        // (테스트용) 상태 변경 함수
-      roomId           // 방 ID
+      users,
+      isHost, 
+      maxStorytellers,
+      TEST_MODE,
+      setUsers,
+      roomId
     };
 
     switch (gamePhase) {
-      case 'LOBBY':
-        return <LobbyPhase {...commonProps} />; // 👈 Props 전달
-
-      case 'CARD_SHUFFLE':
-        return <CardShufflePhase onFinish={() => setGamePhase('JUDGE_SHUFFLE')} />;
-      
-      case 'JUDGE_SHUFFLE':
-        return <JudgeShufflePhase onFinish={() => setGamePhase('WRITING')} />;
-      
-      case 'WRITING':
-        return <WritingPhase />;
-        
+      case 'LOBBY': return <LobbyPhase {...commonProps} />;
+      case 'CARD_SHUFFLE': return <CardShufflePhase onFinish={() => setGamePhase('JUDGE_SHUFFLE')} />;
+      case 'JUDGE_SHUFFLE': return <JudgeShufflePhase onFinish={() => setGamePhase('WRITING')} />;
+      case 'WRITING': return <WritingPhase />;
       case 'VOTING': return <VotingPhase />;
       case 'JUDGE_RESULT': return <JudgeResultPhase />;
       case 'FINAL_RESULT': return <FinalResultPhase />;
@@ -122,19 +116,8 @@ const GameRoom = () => {
 
       {renderPhase()}
 
-      {/* 개발자 리모콘 */}
-      <div className="fixed bottom-4 right-4 bg-black/70 p-4 rounded-xl z-50 flex flex-col gap-2">
-        <p className="text-white text-xs font-bold text-center mb-2">🚧 Dev Controls</p>
-        <div className="grid grid-cols-2 gap-2">
-          <button onClick={() => devSwitchPhase('LOBBY')} className="px-2 py-1 bg-gray-600 text-white text-xs rounded">Lobby</button>
-          <button onClick={() => devSwitchPhase('CARD_SHUFFLE')} className="px-2 py-1 bg-blue-600 text-white text-xs rounded">Card Shuffle</button>
-          <button onClick={() => devSwitchPhase('JUDGE_SHUFFLE')} className="px-2 py-1 bg-blue-600 text-white text-xs rounded">Judge Shuffle</button>
-          <button onClick={() => devSwitchPhase('WRITING')} className="px-2 py-1 bg-green-600 text-white text-xs rounded">Writing</button>
-          <button onClick={() => devSwitchPhase('VOTING')} className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-500">Voting</button>
-          <button onClick={() => devSwitchPhase('JUDGE_RESULT')} className="px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-500">Round Result</button>
-          <button onClick={() => devSwitchPhase('FINAL_RESULT')} className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-500">Final Result</button> 
-        </div>
-      </div>
+      {/* 개발자 리모콘 (TEST_MODE일 때만 보이거나, 필요할 때만 주석 해제) */}
+      {/* <div className="fixed bottom-4 right-4 ..."> ... </div> */}
     </div>
   );
 };

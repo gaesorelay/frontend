@@ -16,14 +16,15 @@ interface LobbyProps {
 }
 
 const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomId }: LobbyProps) => {
-  const { roomConfig } = useGameStore();
+  
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
 
-  const roomTitle = roomConfig?.title || (isHost ? "내가 만든 방 👑" : "남의 방 구경 중 👀");
+  const { roomConfig, roomTitle } = useGameStore(); // 1. roomTitle을 스토어에서 직접 가져옴
 
   // 로비 전용 UI 상태 (모달 등)는 여기서 관리해도 OK
   const [targetSlot, setTargetSlot] = useState<{ team: 'A' | 'B', index: number } | null>(null);
   const [selectedAudience, setSelectedAudience] = useState<any | null>(null);
+  const displayTitle = roomTitle || (isHost ? "내가 만든 방 👑" : "남의 방 구경 중 👀");
 
   // =========================================================
   // 🎮 액션 핸들러 (users는 props.users를 사용!)
@@ -151,7 +152,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
   return (
     <div className="min-h-screen bg-green-800 flex flex-col items-center overflow-hidden relative">
       <div className="w-full bg-black/30 p-4 text-white flex justify-between items-center backdrop-blur-sm z-10">
-        <h1 className="text-2xl font-bold font-jua">{roomTitle}</h1>
+        <h1 className="text-2xl font-bold font-jua">{displayTitle}</h1>
         {TEST_MODE && <span className="text-yellow-300 text-sm font-bold animate-pulse">🚧 디자인 테스트 모드 🚧</span>}
         {isHost ? (
           <span className="bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">HOST</span>

@@ -1,38 +1,51 @@
+import client from '@/lib/axios';
+import type { RoomConfig } from '@/types/game';
 
-// [가짜] 방 코드가 맞는지 검사하는 함수
-export const checkRoomCodeApi = async (code: string) => {
-  console.log(`📡 [API Request] 방 코드 확인 중: ${code}`);
-  
-  // 0.5초 뒤에 결과를 줌 (네트워크 딜레이 흉내)
-  return new Promise<{ exists: boolean; roomId?: string }>((resolve) => {
-    setTimeout(() => {
-      // 테스트용: 코드가 '1234'면 성공, 아니면 실패
-      if (code === "1234") {
-        resolve({ exists: true, roomId: "ROOM_1234" });
-      } else {
-        resolve({ exists: false });
-      }
-    }, 500);
-  });
-};
+// ----------------------------------------------------------------------
+// 1. 방 생성 (Host)
+// ----------------------------------------------------------------------
 
-export const createRoomApi = async (data: any) => {
+// ⚠️ 백엔드 CreateRoomDto와 100% 일치해야 함!
+export interface CreateRoomRequest {
+  title: string;
+  config: RoomConfig;
+  nickname: string;  // 👈 hostProfile로 감싸지 말고 바로!
+  avatarId: number;  // 👈 여기도 바로!
+}
+
+export interface CreateRoomResponse {
+  roomId: string;
+  token: string;
+  // 백엔드 CreateRoomResponseDto에 따라 더 있을 수 있음
+}
+
+export const createRoomApi = async (data: CreateRoomRequest): Promise<CreateRoomResponse> => {
   console.log(`📡 [API POST] 방 생성 요청:`, data);
-  return new Promise<{ roomId: string; token: string }>((resolve) => {
-    setTimeout(() => {
-      // 랜덤 방 번호 생성 (예: RM_AD31)
-      const mockRoomId = "RM_" + Math.random().toString(36).substring(2, 6).toUpperCase();
-      resolve({ roomId: mockRoomId, token: "host_token_xyz" });
-    }, 1000);
-  });
+  // 백엔드: @Post('rooms')
+  const response = await client.post<CreateRoomResponse>('/rooms', data);
+  return response.data;
 };
 
-// [가짜] 방 입장 요청 (참가자)
-export const joinRoomApi = async (data: any) => {
-  console.log(`📡 [API POST] 방 입장 요청:`, data);
-  return new Promise<{ token: string }>((resolve) => {
-    setTimeout(() => {
-      resolve({ token: "guest_token_abc" });
-    }, 1000);
-  });
+
+
+// ----------------------------------------------------------------------
+// 2. 방 존재 확인
+// ----------------------------------------------------------------------
+
+export const checkRoomCodeApi = async (roomId: string) => {
+  console.log(`📡 [API GET] 방 조회 중: ${roomId}`);
+  try {
+    // 백엔드: @Get('rooms/:roomUuid')
+    // 백엔드가 { status: 'success', data: roomInfo } 형태로 준다고 가정
+    const response = await client.get(`/rooms/${roomId}`);
+    
+    if (response.data && response.data.data) {
+      return { exists: true, roomId: roomId };
+    } else {
+      return { exists: false };
+    }
+  } catch (e) {
+    console.error("방 조회 실패:", e);
+    return { exists: false };
+  }
 };

@@ -56,24 +56,30 @@ export const Intro = () => {
 
   // [기능 2] 코드 입력 후 확인 버튼 클릭
   const handleJoinRoom = async () => {
-    if (!inputCode) return alert("코드를 입력해주세요!");
+    if (!inputCode.trim()) return alert("코드를 입력해주세요!");
 
     try {
-      // 가짜 API 호출
+      // 1. 진짜 API를 찔러서 방이 있는지 확인
+      // (roomApi.ts가 수정되어 있어야 함)
       const result = await checkRoomCodeApi(inputCode);
       
       if (result.exists && result.roomId) {
+        // 2. 방이 존재하면 그 방 번호(roomId)를 스토어에 저장
         setRoomId(result.roomId);
-        navigate('/setup'); // 캐릭터 설정 페이지로
+        
+        console.log(`✅ 방 확인 완료! Setup 페이지로 이동: ${result.roomId}`);
+        
+        // 3. Setup 페이지로 이동 (URL에 방 번호 포함)
+        // Setup 페이지에서 useParams()로 이 ID를 잡아서 씁니다.
+        navigate(`/setup/${result.roomId}`); 
       } else {
-        alert("존재하지 않는 방입니다. (힌트: 1234)");
+        alert("존재하지 않는 방입니다. 코드를 다시 확인해주세요!");
       }
     } catch (error) {
       console.error(error);
-      alert("에러가 발생했습니다.");
+      alert("서버 연결에 실패했습니다.");
     }
   };
-
   // 애니메이션 상태 관리
   const [animationComplete, setAnimationComplete] = useState(false);
 

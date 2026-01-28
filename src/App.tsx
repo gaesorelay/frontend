@@ -16,6 +16,9 @@ function App() {
     socket.connect();
     const cleanup = initSocketHandlers();
 
+    // [Debug] 디버깅용 스토어 전역 노출
+    (window as any).gameStore = import('@/store/useGameStore').then(m => m.useGameStore);
+
     return () => {
       cleanup();
       socket.disconnect();
@@ -28,16 +31,17 @@ function App() {
         <Routes>
           {/* 1. 메인화면 */}
           <Route path="/" element={<Intro />} />
-          
+
           {/* 2. 방 설정(방장만 보게 될) */}
           <Route path="/create" element={<Create />} />
-          
+
           {/* 3. 프로필 설정(캐릭터, 닉네임) */}
-          <Route path="/setup" element={<Setup />} />
-          
+          <Route path="/setup" element={<Setup />} />          {/* 방장이 들어올 때 */}
+          <Route path="/setup/:roomId" element={<Setup />} />  {/* [추가] 게스트가 들어올 때 */}
+
           {/* 4. 게임 플레이(로비부터 결과까지 다) */}
-          <Route path="/game/:roomId" element={<GameRoom />} />
-          
+          <Route path="/gameroom/:roomId" element={<GameRoom />} />
+
           {/* 없는 주소면 홈으로 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
