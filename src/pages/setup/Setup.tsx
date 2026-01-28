@@ -122,7 +122,7 @@ export default function Setup() {
         });
         
         currentRoomId = res.roomId;
-        myToken = res.token;
+        // myToken = res.token;
         console.log("✅ 방 생성 완료:", currentRoomId);
       } else {
         console.log(`📡 [Guest] 기존 방(${currentRoomId}) 입장 시도...`);
