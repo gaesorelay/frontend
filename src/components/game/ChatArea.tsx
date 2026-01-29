@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, MessageSquare } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
@@ -20,11 +21,20 @@ const getAvatarUrl = (id?: number) => {
   return sortedImageUrls[id - 1];
 };
 
+// 배경 이미지 임포트
+import chatBgImg from '@/assets/bg/chat_background.png';
+
+const REACTION_EMOJIS = ['🐶', '🔥', '🤣', '👍', '👎', '🍅'];
+
 const ChatArea = () => {
   const { messages, addMessage } = useGameStore();
   const { nickname, avatarId: myAvatarId } = useUserStore();
   const [chatInput, setChatInput] = useState("");
   const chatListRef = useRef<HTMLDivElement>(null);
+
+  // 리액션 관련
+  const [showReactions, setShowReactions] = useState(false);
+  const [floatingReactions, setFloatingReactions] = useState<{ id: number; emoji: string; x: number }[]>([]);
 
   // 1. 소켓 이벤트 리스너 설정
   useEffect(() => {
@@ -40,10 +50,16 @@ const ChatArea = () => {
       addMessage(newMessage);
     };
 
+    const handleReaction = (data: { emoji: string }) => {
+      triggerFloatingReaction(data.emoji);
+    };
+
     socket.on('chat_message', handleChatMessage);
+    socket.on('receive_reaction', handleReaction);
 
     return () => {
       socket.off('chat_message', handleChatMessage);
+      socket.off('receive_reaction', handleReaction);
     };
   }, [addMessage]);
 
@@ -65,6 +81,22 @@ const ChatArea = () => {
     setChatInput("");
   };
 
+  // 리액션 발사 로직
+  const triggerFloatingReaction = (emoji: string) => {
+    const id = Date.now() + Math.random();
+    // 랜덤한 x 위치 (20% ~ 80% 사이)
+    const x = Math.floor(Math.random() * 60) + 20;
+    setFloatingReactions(prev => [...prev, { id, emoji, x }]);
+    setTimeout(() => {
+      setFloatingReactions(prev => prev.filter(r => r.id !== id));
+    }, 2000);
+  };
+
+  const handleSendReaction = (emoji: string) => {
+    socket.emit('send_reaction', { emoji, nickname });
+    triggerFloatingReaction(emoji);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSend();
@@ -73,8 +105,8 @@ const ChatArea = () => {
 
   // --- 스타일 ---
   const paperBoxStyle: React.CSSProperties = {
-    backgroundColor: '#fdfcf0',
-    border: '3px solid #333',
+    // backgroundColor: '#fdfcf0',
+    // border: '3px solid #333',
     boxShadow: '4px 4px 0px rgba(0,0,0,0.15)',
     borderRadius: '15px',
     fontFamily: 'SchoolSafeLittleOne, sans-serif',
@@ -88,7 +120,24 @@ const ChatArea = () => {
     flexDirection: 'column',
     overflow: 'hidden',
     padding: '15px',
+
+    // 🖼️ 배경 이미지 설정
+    backgroundImage: `url(${chatBgImg})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    borderRadius: '15px',
   };
+
+  const chatTitleStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '15px',
+    margin: '50px 8px 0',
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    color: '#333'
+  };
+
 
   const chatListStyle: React.CSSProperties = {
     flex: 1,
@@ -98,6 +147,16 @@ const ChatArea = () => {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px', // 메시지 간 간격 증가
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: '15px',
+  };
+
+  const senderWrapperStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '8px',
+    marginLeft: '5px',
   };
 
   // 말풍선 스타일
@@ -159,24 +218,71 @@ const ChatArea = () => {
     outline: 'none',
   };
 
-  const buttonStyle: React.CSSProperties = {
-    width: '40px',
-    height: '40px',
-    borderRadius: '8px',
-    border: '2px solid #333',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+  // const buttonStyle: React.CSSProperties = {
+  //   width: '40px',
+  //   height: '40px',
+  //   borderRadius: '8px',
+  //   border: '2px solid #333',
+  //   display: 'flex',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   cursor: 'pointer',
+  //   backgroundColor: '#FFD93D', // 노랑 포인트
+  //   boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
+  // };
+
+  const emojiTriggerStyle: React.CSSProperties = {
+    fontSize: '1.4rem',
     cursor: 'pointer',
-    backgroundColor: '#FFD93D',
-    boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
+    padding: '5px',
+  };
+
+  const reactionMenuStyle: React.CSSProperties = {
+    position: 'absolute' as const,
+    bottom: '100%',
+    left: '0',
+    backgroundColor: 'white',
+    border: '2px solid #333',
+    borderRadius: '15px',
+    padding: '8px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
+    zIndex: 100,
+  };
+
+  const reactionItemStyle: React.CSSProperties = {
+    fontSize: '1.5rem',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '2px',
   };
 
   return (
     <div style={chatBoxStyle}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px', fontSize: '1rem', fontWeight: 'bold', color: '#333' }}>
+
+      {/* 솟아오르는 리액션 레이어 */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
+        <AnimatePresence>
+          {floatingReactions.map(r => (
+            <motion.div
+              key={r.id}
+              initial={{ y: '100%', x: `${r.x}%`, opacity: 0, scale: 0.5 }}
+              animate={{ y: '-10%', opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1, 0.8] }}
+              transition={{ duration: 2, ease: "easeOut" }}
+              style={{ position: 'absolute', fontSize: '2.5rem' }}
+            >
+              {r.emoji}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <div style={chatTitleStyle}>
         <MessageSquare size={18} fill="#333" className="text-white" />
-        <span>채팅</span>
+        <span>실시간 개소리</span>
       </div>
 
       <div ref={chatListRef} style={chatListStyle}>
@@ -199,38 +305,62 @@ const ChatArea = () => {
           const avatarUrl = getAvatarUrl(msg.avatarId);
 
           return (
-            <div key={msg.id} style={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'flex-start',
-              gap: '8px'
-            }}>
-              <img src={avatarUrl} style={avatarStyle} alt="avatar" />
-
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', maxWidth: '85%' }}>
-                <span style={senderNameStyle}>{msg.nickname}</span>
-                <div style={msgBubbleStyle(isMe)}>
-                  {msg.text}
-                </div>
+            <div key={msg.id} style={senderWrapperStyle}>
+              {!isMe && <span style={senderNameStyle}>{msg.nickname}</span>}
+              <div style={msgBubbleStyle(isMe)}>
+                {msg.text}
               </div>
             </div>
           );
         })}
       </div>
 
+      {/* 하단 입력창 영역 */}
       <div style={inputAreaStyle}>
         <img src={getAvatarUrl(myAvatarId)} style={myAvatarStyle} alt="my-face" />
 
         <input
           style={inputStyle}
-          placeholder="멍멍!"
+          placeholder="멍멍해봐..."
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        <button style={buttonStyle} onClick={handleSend}>
-          <Send size={18} strokeWidth={2.5} />
-        </button>
+
+        {/* 리액션 버튼 팝업창 (호버 시 등장) */}
+        <div
+          onMouseEnter={() => setShowReactions(true)}
+          onMouseLeave={() => setShowReactions(false)}
+          style={{ position: 'relative' }}
+        >
+          <AnimatePresence>
+            {showReactions && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                animate={{ opacity: 1, y: -5, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                style={reactionMenuStyle}
+              >
+                {REACTION_EMOJIS.map(emoji => (
+                  <motion.button
+                    key={emoji}
+                    whileHover={{ scale: 1.3 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleSendReaction(emoji)}
+                    style={reactionItemStyle}
+                  >
+                    {emoji}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 리액션 트리거 아이콘 */}
+          <div style={emojiTriggerStyle}>
+            😊
+          </div>
+        </div>
       </div>
     </div>
   );
