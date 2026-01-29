@@ -15,10 +15,14 @@ const DUMMY_LOGS = Array.from({ length: 8 }).map((_, i) => ({
   teamB: `B팀의 ${i + 1}번째 개소리입니다! 🐱`,
 }));
 
-const VotingPhase = ({ timeLeft: _timeLeft, onVote }) => {
+const VotingPhase = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   // 1. 테스트를 위해 내부 상태로 선언 (나중에 이 줄만 지우면 됨)
   const [timeLeft, setTimeLeft] = useState(10);
+  const onVote = (team: 'A' | 'B') => {
+    console.log(`${team}팀에 투표함!`);
+    // 필요하다면 여기서 투표 후의 로직(예: 다음 단계 이동 등)을 테스트하세요.
+  };
 
   // ⏱️ 카운트다운 로직
   useEffect(() => {
