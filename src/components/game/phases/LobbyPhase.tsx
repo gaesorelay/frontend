@@ -161,7 +161,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
     if (TEST_MODE) {
       setUsers(users.filter(u => u.userToken !== selectedAudience.userToken));
     } else {
-      socket.emit('kick_user', { targetUserToken: selectedAudience.publicUserId });
+      socket.emit('kick_user', { public_user_id: selectedAudience.publicUserId });
     }
     setSelectedAudience(null);
   };

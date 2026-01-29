@@ -78,19 +78,28 @@ const GameRoom = () => {
 
     // 2. ⭐️ [복구] 여기서 초기 명단을 받아야 합니다!
     // 백엔드는 입장 시 'lobby_updated' 대신 이걸 보내고 있습니다.
-    socket.on('room_info', (data) => {
-      console.log("📦 방 정보(초기 명단) 도착:", data);
-
-      // A. 방 설정/제목 저장
-      useGameStore.getState().setRoomActions(data.title, data.config);
-      
-      // B. (중요) 유저 명단 업데이트 -> 이걸 해야 빈 방 현상이 사라짐!
-      setUsers(data.users); 
-      
-      // C. 로딩 끝
-      setIsVerifying(false);
+    // 1. ⭐️ [수정] 방 정보 요청 (콜백으로 바로 받기!)
+    // 백엔드가 return { status: 'success', data: ... } 해주는 걸 여기서 받습니다.
+    socket.emit('request_room_info', { roomId }, (response: any) => {
+        console.log("📦 방 정보(Ack) 도착:", response);
+        
+        if (response.status === 'success') {
+            const data = response.data;
+            
+            // A. 방 설정/제목 저장
+            useGameStore.getState().setRoomActions(data.title, data.config);
+            
+            // B. 유저 명단 업데이트
+            setUsers(data.users); 
+            
+            // C. 로딩 끝
+            setIsVerifying(false);
+        } else {
+            console.error("방 정보 로드 실패:", response.message);
+            // 에러 처리 (alert 등)
+        }
     });
-
+    
     // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
     socket.on('lobby_updated', (data) => {
       console.log("👥 로비 업데이트:", data);
