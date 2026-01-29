@@ -35,6 +35,10 @@ pipeline {
         }
 
         sh 'npm ci'
+        sh '''
+          echo "VITE_API_URL=https://gsrelay.o-r.kr/api" > .env
+          echo "VITE_SOCKET_URL=wss://gsrelay.o-r.kr" >> .env
+        '''
         sh 'npm run build'
 
         stash name: 'ws', includes: '**/*', useDefaultExcludes: false

@@ -7,6 +7,7 @@ import GameRoom from './pages/GameRoom.tsx';
 import NotFound from './pages/NotFound';
 import { socket } from './lib/socket';
 import { initSocketHandlers } from './lib/socketHandlers';
+import WritingPhase from './components/game/phases/WritingPhase';
 
 // 임시 페이지 컴포넌트 (나중에 src/pages/.. 로 분리하세요)
 const TempResult = () => <div className="p-10 text-2xl font-bold">결과 화면</div>;
@@ -41,6 +42,9 @@ function App() {
 
           {/* 4. 게임 플레이(로비부터 결과까지 다) */}
           <Route path="/gameroom/:roomId" element={<GameRoom />} />
+
+          {/* 개발용 임시 라우트 */}
+          <Route path="/test/writing" element={<WritingPhase />} />
 
           {/* 없는 주소면 홈으로 */}
           <Route path="*" element={<NotFound />} />
