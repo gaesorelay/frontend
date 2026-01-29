@@ -28,7 +28,7 @@ interface LobbyProps {
 }
 
 const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomId }: LobbyProps) => {
-
+  console.log("🔍 유저 데이터 구조 확인:", users);
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
 
   const { roomConfig, roomTitle } = useGameStore(); // 1. roomTitle을 스토어에서 직접 가져옴
@@ -63,20 +63,28 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
       setUsers(newUsers); // 부모의 state를 변경
       return;
     }
-    socket.emit('shuffle_teams', { roomId });
+    socket.emit('auto_fill', { roomId });
   };
 
   const handleSlotClick = (teamType: 'A' | 'B', slotIndex: number) => {
     const userInSlot = users.find(u => u.role === 'PLAYER' && u.team === teamType && u.slotIndex === slotIndex);
 
     // [방장]
+    // [CASE 1: 방장이 클릭]
     if (isHost) {
       if (userInSlot) {
+        // 이미 사람이 있으면 -> 관전석으로 보내기 (Leave Team)
         if (!window.confirm(`${userInSlot.nickname}님을 관전석으로 보낼까요?`)) return;
+        
         if (TEST_MODE) {
           setUsers(users.map(u => u.userToken === userInSlot.userToken ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null } : u));
         } else {
-          socket.emit('change_role', { targetUserToken: userInSlot.userToken, role: 'AUDIENCE' });
+          // ✅ [수정] leave_team 이벤트 전송
+          socket.emit('leave_team', { 
+            public_user_id: userInSlot.publicUserId, // userToken 아님!
+            team: teamType, 
+            slot_index: slotIndex 
+          });
         }
         return;
       }
@@ -106,13 +114,24 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
           setUsers([...users, me]);
         }
       } else {
-        socket.emit('change_role', { role: 'PLAYER', team: teamType, slotIndex: slotIndex });
+        const me = users.find(u => u.nickname === myNickname);
+        if (me) {
+          // ✅ [수정] join_team 이벤트 전송
+          socket.emit('join_team', { 
+            public_user_id: me.publicUserId, 
+            team: teamType, 
+            slot_index: slotIndex 
+          });
+        } else {
+            console.error("내 정보를 찾을 수 없습니다.");
+        }
       }
     }
   };
 
   const moveUserToTeam = (teamType: 'A' | 'B') => {
     if (!selectedAudience || !isHost) return;
+
     let emptyIndex = -1;
     for (let i = 0; i < maxStorytellers; i++) {
       if (!users.find(u => u.role === 'PLAYER' && u.team === teamType && u.slotIndex === i)) {
@@ -124,7 +143,12 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
     if (TEST_MODE) {
       setUsers(users.map(u => u.userToken === selectedAudience.userToken ? { ...u, role: 'PLAYER', team: teamType, slotIndex: emptyIndex } : u));
     } else {
-      socket.emit('change_role', { targetUserToken: selectedAudience.userToken, role: 'PLAYER', team: teamType, slotIndex: emptyIndex });
+      // ✅ [수정] join_team 전송
+      socket.emit('join_team', { 
+        public_user_id: selectedAudience.publicUserId, // 선택된 사람의 ID
+        team: teamType, 
+        slot_index: emptyIndex 
+      });
     }
     setSelectedAudience(null);
   };
@@ -136,7 +160,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
     if (TEST_MODE) {
       setUsers(users.filter(u => u.userToken !== selectedAudience.userToken));
     } else {
-      socket.emit('kick_user', { targetUserToken: selectedAudience.userToken });
+      socket.emit('kick_user', { targetUserToken: selectedAudience.publicUserId });
     }
     setSelectedAudience(null);
   };
@@ -148,7 +172,12 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
     if (TEST_MODE) {
       setUsers(users.map(u => u.userToken === user.userToken ? { ...u, role: 'PLAYER', team: team, slotIndex: index } : u));
     } else {
-      socket.emit('change_role', { targetUserToken: user.userToken, role: 'PLAYER', team: team, slotIndex: index });
+      // ✅ [수정] join_team 전송
+      socket.emit('join_team', { 
+        public_user_id: user.publicUserId, 
+        team: team, 
+        slot_index: index 
+      });
     }
     setTargetSlot(null);
   };
@@ -368,5 +397,4 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
     </Background>
   );
 };
-
 export default LobbyPhase;
