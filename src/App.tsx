@@ -8,6 +8,11 @@ import NotFound from './pages/NotFound';
 import { socket } from './lib/socket';
 import { initSocketHandlers } from './lib/socketHandlers';
 import WritingPhase from './components/game/phases/WritingPhase';
+import JudgeShufflePhase from './components/game/phases/JudgeShufflePhase.tsx';
+import CardShufflePhase from './components/game/phases/CardShufflePhase.tsx';
+import VotingPhase from './components/game/phases/VotingPhase.tsx';
+import JudgeResultPhase from './components/game/phases/JudgeResultPhase.tsx';
+import FinalResultPhase from './components/game/phases/FinalResultPhase.tsx';
 
 // 임시 페이지 컴포넌트 (나중에 src/pages/.. 로 분리하세요)
 const TempResult = () => <div className="p-10 text-2xl font-bold">결과 화면</div>;
@@ -45,6 +50,17 @@ function App() {
 
           {/* 개발용 임시 라우트 */}
           <Route path="/test/writing" element={<WritingPhase />} />
+          <Route path="/test/cardshuffle" element={<CardShufflePhase 
+          onFinish={() => console.log("테스트용 카드셔플 페이지로 이동")}/>} />
+
+          <Route path="/test/judgeshuffle" element={<JudgeShufflePhase 
+          onFinish={() => console.log("테스트용 심사위원셔플 페이지로 이동")}/>} />
+          
+          <Route path="/test/voting" element={<VotingPhase />} />
+          <Route path="/test/judgeresult" element={<JudgeResultPhase />} />
+          <Route path="/test/finalresult" element={<FinalResultPhase />} />
+
+
 
           {/* 없는 주소면 홈으로 */}
           <Route path="*" element={<NotFound />} />

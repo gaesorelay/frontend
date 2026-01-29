@@ -17,7 +17,7 @@ import FinalResultPhase from '@/components/game/phases/FinalResultPhase';
 import dog1 from '@/assets/dog/dog1.png';
 
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
-const TEST_MODE = false; 
+const TEST_MODE = true; 
 
 export type GamePhase = 'LOBBY' | 'CARD_SHUFFLE' | 'JUDGE_SHUFFLE' | 'WRITING' | 'VOTING' | 'JUDGE_RESULT' | 'FINAL_RESULT';
 
@@ -66,6 +66,7 @@ const GameRoom = () => {
 
   // 📡 소켓 리스너
   useEffect(() => {
+    setGamePhase('LOBBY');
     if (TEST_MODE) return;
 
     console.log(`🔌 GameRoom 소켓 리스너 연결 (Room: ${roomId})`);
