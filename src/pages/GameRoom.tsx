@@ -30,7 +30,7 @@ const GameRoom = () => {
   const { nickname: myNickname, avatarId: myAvatarId, isHost: isMyHost } = useUserStore();
   const { roomConfig, gamePhase, setGamePhase, setRoundData, setRoomInfo, setPlayers } = useGameStore();
   const [isVerifying, setIsVerifying] = useState(true);
-  
+
   // ⭐️ 권한 체크: 테스트 모드이거나, 내 스토어에 저장된 신분이 Host일 때
   const isHost = TEST_MODE || isMyHost;
 
@@ -81,25 +81,25 @@ const GameRoom = () => {
     // 1. ⭐️ [수정] 방 정보 요청 (콜백으로 바로 받기!)
     // 백엔드가 return { status: 'success', data: ... } 해주는 걸 여기서 받습니다.
     socket.emit('request_room_info', { roomId }, (response: any) => {
-        console.log("📦 방 정보(Ack) 도착:", response);
-        
-        if (response.status === 'success') {
-            const data = response.data;
-            
-            // A. 방 설정/제목 저장
-            useGameStore.getState().setRoomActions(data.title, data.config);
-            
-            // B. 유저 명단 업데이트
-            setUsers(data.users); 
-            
-            // C. 로딩 끝
-            setIsVerifying(false);
-        } else {
-            console.error("방 정보 로드 실패:", response.message);
-            // 에러 처리 (alert 등)
-        }
+      console.log("📦 방 정보(Ack) 도착:", response);
+
+      if (response.status === 'success') {
+        const data = response.data;
+
+        // A. 방 설정/제목 저장
+        useGameStore.getState().setRoomActions(data.title, data.config);
+
+        // B. 유저 명단 업데이트
+        setUsers(data.users);
+
+        // C. 로딩 끝
+        setIsVerifying(false);
+      } else {
+        console.error("방 정보 로드 실패:", response.message);
+        // 에러 처리 (alert 등)
+      }
     });
-    
+
     // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
     socket.on('lobby_updated', (data) => {
       console.log("👥 로비 업데이트:", data);
@@ -107,14 +107,14 @@ const GameRoom = () => {
       // 만약 data.roomConfig 등 방 정보도 같이 온다면 여기서 setRoomInfo 업데이트
     });
 
-   
+
     // 4. ⭐️ [신규] 게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
     socket.on('game_started', (data) => {
       console.log("🎮 게임 데이터 도착:", data);
       // imageIds, judges 등을 스토어에 저장
       setRoundData({
         cardIds: data.imageIds,
-        judgeIds: data.judges, 
+        judgeIds: data.judges,
         // 필요한 다른 데이터 초기화
       });
     });
@@ -230,7 +230,7 @@ const GameRoom = () => {
           </button>
 
           {/* 3. 중앙 개발자 컨트롤 패널 */}
-          {TEST_MODE && (
+          {(true) && (
             <div className={styles.devControlPanel}>
               <button
                 onClick={handlePrevPhase}
@@ -280,7 +280,7 @@ const GameRoom = () => {
         </header>
       ) : (
         /* 개발자 바가 꺼져있을 때: 중앙 상단 플로팅 핸들만 표시 */
-        TEST_MODE && (
+        (true) && (
           <button
             onClick={() => setIsDevExpanded(true)}
             className={styles.floatingToggleBtn}
