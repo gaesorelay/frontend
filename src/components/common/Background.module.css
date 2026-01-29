@@ -7,8 +7,10 @@
 }
 
 .inner {
-  position: relative; /* 강아지들의 좌표 기준점 */
+  position: relative;
+  /* 강아지들의 좌표 기준점 */
   width: 100%;
   height: 100%;
-  overflow: hidden; /* 강아지가 이 영역 밖으로 나가지 않도록 */
+  overflow: hidden;
+  /* 강아지가 이 영역 밖으로 나가지 않도록 */
 }

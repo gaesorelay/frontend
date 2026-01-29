@@ -62,16 +62,16 @@ export const Intro = () => {
       // 1. 진짜 API를 찔러서 방이 있는지 확인
       // (roomApi.ts가 수정되어 있어야 함)
       const result = await checkRoomCodeApi(inputCode);
-      
+
       if (result.exists && result.roomId) {
         // 2. 방이 존재하면 그 방 번호(roomId)를 스토어에 저장
         setRoomId(result.roomId);
-        
+
         console.log(`✅ 방 확인 완료! Setup 페이지로 이동: ${result.roomId}`);
-        
+
         // 3. Setup 페이지로 이동 (URL에 방 번호 포함)
         // Setup 페이지에서 useParams()로 이 ID를 잡아서 씁니다.
-        navigate(`/setup/${result.roomId}`); 
+        navigate(`/setup/${result.roomId}`);
       } else {
         alert("존재하지 않는 방입니다. 코드를 다시 확인해주세요!");
       }
@@ -94,9 +94,9 @@ export const Intro = () => {
         <div style={{ position: 'relative', zIndex: 20 }}>
           {/* 로고 입장 애니메이션 (애니메이션 완료 후 숨김) */}
           {!animationComplete && (
-            <motion.img 
-              src={mainLogo} 
-              alt="mainLogo" 
+            <motion.img
+              src={mainLogo}
+              alt="mainLogo"
               style={{
                 display: 'block',
               }}
@@ -130,9 +130,9 @@ export const Intro = () => {
 
           {/* 로고 무한 반복 애니메이션 (입장 애니메이션 완료 후) */}
           {animationComplete && (
-            <motion.img 
-              src={mainLogo} 
-              alt="mainLogo" 
+            <motion.img
+              src={mainLogo}
+              alt="mainLogo"
               style={{
                 margin: '22px auto',
                 width: '60%',
@@ -165,19 +165,19 @@ export const Intro = () => {
             zIndex: 10, // 강아지들보다 위에 오게
           }}>
             {/* 버튼 1: 방 만들기 */}
-            <button 
+            <button
               onClick={handleCreateRoom}
               style={{
-                width: '100%', 
-                padding: '14px 18px', 
+                width: '100%',
+                padding: '14px 18px',
                 fontSize: '24px',
                 border: '3.5px solid #222',
                 borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
                 backgroundColor: '#FFD93D', // 노란색 포인트
                 color: '#000',
                 fontWeight: 'bold',
-                outline: 'none', 
-                fontFamily: 'inherit', 
+                outline: 'none',
+                fontFamily: 'inherit',
                 boxSizing: 'border-box',
                 cursor: 'pointer',
                 boxShadow: '4px 4px 0px rgba(0,0,0,0.8)', // 그림자 효과
@@ -186,24 +186,24 @@ export const Intro = () => {
               onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
               onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
+            >
               방 만들기
             </button>
 
             {/* 버튼 2: 코드로 입장하기 */}
-            <button 
+            <button
               onClick={() => setShowCodeInput(!showCodeInput)}
               style={{
-                width: '100%', 
-                padding: '14px 18px', 
+                width: '100%',
+                padding: '14px 18px',
                 fontSize: '24px',
                 backgroundColor: '#fff',
                 border: '3.5px solid #222',
                 borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
                 color: '#333',
                 fontWeight: 'bold',
-                outline: 'none', 
-                fontFamily: 'inherit', 
+                outline: 'none',
+                fontFamily: 'inherit',
                 boxSizing: 'border-box',
                 cursor: 'pointer',
                 boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
@@ -220,7 +220,7 @@ export const Intro = () => {
 
         {/* 강아지 장식 요소들 */}
         {DOGS.map((dog) => (
-        <Dog key={dog.id} dog={dog} />
+          <Dog key={dog.id} dog={dog} />
         ))}
 
         {/* 메인페이지 장식 (bone과 foot) */}
@@ -253,7 +253,7 @@ export const Intro = () => {
               fontWeight: 'bold',
               color: '#333',
             }}>입장 코드 입력</h3>
-            <input 
+            <input
               type="text"
               placeholder="예: 1234"
               value={inputCode}
@@ -271,7 +271,7 @@ export const Intro = () => {
               }}
               autoFocus
             />
-            <button 
+            <button
               onClick={handleJoinRoom}
               style={{
                 width: '100%',
