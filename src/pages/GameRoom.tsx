@@ -18,7 +18,7 @@ import dog1 from '@/assets/dog/dog1.png';
 import styles from './GameRoom.module.css';
 
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
-const TEST_MODE = true;
+const TEST_MODE = false;
 
 export type GamePhase = 'LOBBY' | 'CARD_SHUFFLE' | 'JUDGE_SHUFFLE' | 'WRITING' | 'VOTING' | 'JUDGE_RESULT' | 'FINAL_RESULT';
 
@@ -98,14 +98,21 @@ const GameRoom = () => {
       // 만약 data.roomConfig 등 방 정보도 같이 온다면 여기서 setRoomInfo 업데이트
     });
 
-    // (구버전 호환)
-    socket.on('user_joined', (_data) => {
-      // user_joined만 오면 전체 리스트를 모르니, 다시 리스트 요청
-      socket.emit('request_room_info', { roomId });
+   
+    // 4. ⭐️ [신규] 게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
+    socket.on('game_started', (data) => {
+      console.log("🎮 게임 데이터 도착:", data);
+      // imageIds, judges 등을 스토어에 저장
+      setRoundData({
+        cardIds: data.imageIds,
+        judgeIds: data.judges, 
+        // 필요한 다른 데이터 초기화
+      });
     });
 
     // 3. [수신] 페이즈 변경
     socket.on('change_phase', (response) => {
+      console.log("🎬 페이즈 변경 요청 수신:", response); // 👈 로그 확인 필수
       const { phase, data } = response;
       if (data) setRoundData(data);
       setGamePhase(phase);
@@ -114,6 +121,7 @@ const GameRoom = () => {
     return () => {
       socket.off('lobby_updated');
       socket.off('user_joined');
+      socket.off('game_started');
       socket.off('change_phase');
     };
   }, [roomId]);
