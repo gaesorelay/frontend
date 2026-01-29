@@ -112,11 +112,11 @@ const JudgeShufflePhase = ({ onFinish }: Props) => {
 
     if (!mounted) return null;
 
-    return createPortal(
+    return (
         <div style={{
-            position: 'fixed',
-            top: 0, left: 0, width: '100vw', height: '100vh',
-            zIndex: 9999,
+            position: 'absolute',
+            top: 0, left: 0, width: '100%', height: '100%',
+            zIndex: 50, // 9999 -> 50 (헤더보다 낮아야 함)
             backgroundImage: `url(${bgImg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -308,8 +308,7 @@ const JudgeShufflePhase = ({ onFinish }: Props) => {
                     );
                 })}
             </div>
-        </div>,
-        document.body
+        </div>
     );
 };
 

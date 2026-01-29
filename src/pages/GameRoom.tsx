@@ -15,6 +15,7 @@ import FinalResultPhase from '@/components/game/phases/FinalResultPhase';
 
 // 더미 데이터 프로필 이미지
 import dog1 from '@/assets/dog/dog1.png';
+import styles from './GameRoom.module.css';
 
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
 const TEST_MODE = true;
@@ -101,16 +102,48 @@ const GameRoom = () => {
     };
   }, [roomId]);
 
-  // 🛠️ [개발용] 화면 강제 전환
-  const devSwitchPhase = (phase: GamePhase) => {
-    setGamePhase(phase);
+  // 🛠️ [개발용] 페이즈 순서 정의
+  const PHASE_ORDER: GamePhase[] = [
+    'LOBBY',
+    'CARD_SHUFFLE',
+    'JUDGE_SHUFFLE',
+    'WRITING',
+    'VOTING',
+    'JUDGE_RESULT',
+    'FINAL_RESULT'
+  ];
+
+  // 🛠️ [개발용] 제어 상태
+  const [isAutoPlay, setIsAutoPlay] = useState(false); // 기본값: 수동 (일시정지 상태)
+  const [isDevExpanded, setIsDevExpanded] = useState(true); // 개발자 바 펼침 여부
+
+  const handleNextPhase = () => {
+    const currentIndex = PHASE_ORDER.indexOf(gamePhase);
+    const nextIndex = (currentIndex + 1) % PHASE_ORDER.length;
+    setGamePhase(PHASE_ORDER[nextIndex]);
+  };
+
+  const handlePrevPhase = () => {
+    const currentIndex = PHASE_ORDER.indexOf(gamePhase);
+    const prevIndex = (currentIndex - 1 + PHASE_ORDER.length) % PHASE_ORDER.length;
+    setGamePhase(PHASE_ORDER[prevIndex]);
+  };
+
+  // 🛠️ 자동 전환 핸들러 (각 페이즈가 끝났을 때 호출)
+  const handlePhaseFinish = (nextPhase: GamePhase) => {
+    if (isAutoPlay) {
+      setGamePhase(nextPhase);
+    } else {
+      console.log(`⏸️ [Manual Mode] ${gamePhase} 종료됨. 다음(${nextPhase})으로 넘어가려면 Next 버튼을 누르세요.`);
+    }
   };
 
   // 🎮 게임 시작 버튼 핸들러
   const handleStartGame = () => {
     if (TEST_MODE) {
-      console.log("🎮 [TEST] 게임 시작! -> WRITING 페이즈로 이동");
-      setGamePhase('WRITING');
+      // 🛠️ AutoPlay가 켜져있으면 바로 넘어가고, 아니면 멈춤 (하지만 시작 버튼은 의도가 명확하므로 바로 실행)
+      console.log("🎮 [TEST] 게임 시작! -> CARD_SHUFFLE 페이즈로 이동");
+      setGamePhase('CARD_SHUFFLE');
     } else {
       console.log("📡 [Socket] 게임 시작 요청");
       socket.emit('start_game', { roomId });
@@ -130,47 +163,105 @@ const GameRoom = () => {
 
     switch (gamePhase) {
       case 'LOBBY': return <LobbyPhase {...commonProps} onStartGame={handleStartGame} />;
-      case 'CARD_SHUFFLE': return <CardShufflePhase onFinish={() => setGamePhase('JUDGE_SHUFFLE')} />;
-      case 'JUDGE_SHUFFLE': return <JudgeShufflePhase onFinish={() => setGamePhase('WRITING')} />;
+      case 'CARD_SHUFFLE': return <CardShufflePhase onFinish={() => handlePhaseFinish('JUDGE_SHUFFLE')} />;
+      case 'JUDGE_SHUFFLE': return <JudgeShufflePhase onFinish={() => handlePhaseFinish('WRITING')} />;
       case 'WRITING': return <WritingPhase />;
-      case 'VOTING': return <VotingPhase />;
+      case 'VOTING': return <VotingPhase />; // 추후 연결 필요
       case 'JUDGE_RESULT': return <JudgeResultPhase />;
       case 'FINAL_RESULT': return <FinalResultPhase />;
       default: return <div className="text-white flex items-center justify-center h-full">로딩 중... ({gamePhase})</div>;
     }
   };
 
-  return (
-    // 🏟️ [전체 컨테이너] flex-col 적용 (세로 배치)
-    <div className="w-full h-screen bg-gray-900 flex flex-col overflow-hidden relative">
 
-      {/* 1️⃣ 상단 정보 바 (Header) */}
-      {/* shrink-0: 공간이 부족해도 찌그러지지 않음 */}
-      <header className="w-full h-12 bg-black/60 flex items-center justify-between px-4 text-white text-xs z-50 shrink-0 border-b border-white/10 backdrop-blur-sm">
-        <span className="font-bold text-lg">✨ STORY GAME</span>
-        <span>{isHost ? "👑 HOST" : "🏃 GUEST"} | Room: {roomId} | Users: {users.length}</span>
-      </header>
+  return (
+    // 🏟️ [전체 컨테이너]
+    <div className={styles.container}>
+
+      {/* 1️⃣ 상단 정보 바 (Header) + 🛠️ Dev Controls */}
+      {/* 개발자 바가 켜져있을 때만 렌더링 */}
+      {isDevExpanded ? (
+        <header className={styles.header}>
+          {/* 1. 좌측 로고 영역 */}
+          <div className={styles.headerLeft}>
+            <span className={styles.logo}>✨ STORY GAME</span>
+          </div>
+
+          {/* 2. 중앙 닫기 핸들 (헤더 상단에 붙음) */}
+          <button
+            onClick={() => setIsDevExpanded(false)}
+            className={styles.closeHandleBtn}
+            title="접기"
+          >
+            ▲
+          </button>
+
+          {/* 3. 중앙 개발자 컨트롤 패널 */}
+          {TEST_MODE && (
+            <div className={styles.devControlPanel}>
+              <button
+                onClick={handlePrevPhase}
+                className={`${styles.btnBase} ${styles.navBtn}`}
+                title="이전 단계"
+              >
+                ⏮ Prev
+              </button>
+
+              <div className={styles.statusDisplay}>
+                <span className={styles.statusLabel}>CURRENT</span>
+                <span className={styles.statusValue}>{gamePhase}</span>
+              </div>
+
+              <button
+                onClick={handleNextPhase}
+                className={`${styles.btnBase} ${styles.nextBtn}`}
+                title="다음 단계"
+              >
+                Next ⏭
+              </button>
+
+              <div className={styles.divider}></div>
+
+              <button
+                onClick={() => setIsAutoPlay(!isAutoPlay)}
+                className={`${styles.btnBase} ${styles.autoBtn} ${isAutoPlay ? styles.autoOn : styles.autoOff}`}
+                title={isAutoPlay ? "자동 진행 ON (끝나면 넘어감)" : "자동 진행 OFF (일시정지)"}
+              >
+                {isAutoPlay ? "▶ Auto" : "⏸ Pause"}
+              </button>
+            </div>
+          )}
+
+          {/* 4. 우측 정보 영역 */}
+          <div className={styles.headerRight}>
+            <span className={styles.infoBadge}>
+              {isHost ? "👑 HOST" : "🏃 GUEST"}
+            </span>
+            <span className={styles.infoBadge}>
+              Room: <span className={styles.infoValue}>{roomId}</span>
+            </span>
+            <span className={styles.infoBadge}>
+              Users: <span className={styles.infoValue}>{users.length}</span>
+            </span>
+          </div>
+        </header>
+      ) : (
+        /* 개발자 바가 꺼져있을 때: 중앙 상단 플로팅 핸들만 표시 */
+        TEST_MODE && (
+          <button
+            onClick={() => setIsDevExpanded(true)}
+            className={styles.floatingToggleBtn}
+            title="개발자 도구 (펼치기)"
+          >
+            🛠️ DEV
+          </button>
+        )
+      )}
 
       {/* 2️⃣ ⭐️ [핵심] 게임 메인 무대 (Main Stage) */}
-      {/* flex-1: 남은 공간을 꽉 채움 */}
-      {/* relative: 자식 컴포넌트가 absolute를 쓸 때 기준점이 됨 */}
-      <main className="flex-1 w-full relative overflow-hidden bg-green-800 z-0">
+      <main className={styles.main}>
         {renderPhase()}
       </main>
-
-      {/* 3️⃣ 개발자 리모콘 (Overlay) */}
-      <div className="fixed bottom-4 right-4 bg-black/70 p-4 rounded-xl z-[100] flex flex-col gap-2 border border-white/10 backdrop-blur-md shadow-2xl">
-        <p className="text-white text-xs font-bold text-center mb-2">🚧 Dev Controls</p>
-        <div className="grid grid-cols-2 gap-2">
-          <button onClick={() => devSwitchPhase('LOBBY')} className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-500 transition">Lobby</button>
-          <button onClick={() => devSwitchPhase('CARD_SHUFFLE')} className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500 transition">Card Shuffle</button>
-          <button onClick={() => devSwitchPhase('JUDGE_SHUFFLE')} className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500 transition">Judge Shuffle</button>
-          <button onClick={() => devSwitchPhase('WRITING')} className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-500 transition">Writing</button>
-          <button onClick={() => devSwitchPhase('VOTING')} className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-500 transition">Voting</button>
-          <button onClick={() => devSwitchPhase('JUDGE_RESULT')} className="px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-500 transition">Round Result</button>
-          <button onClick={() => devSwitchPhase('FINAL_RESULT')} className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-500 transition">Final Result</button>
-        </div>
-      </div>
     </div>
   );
 };

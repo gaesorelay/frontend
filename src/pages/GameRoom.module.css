@@ -1,0 +1,273 @@
+/* 전체 컨테이너 */
+.container {
+    width: 100%;
+    height: 100vh;
+    background-color: #111827;
+    /* bg-gray-900 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 상단 헤더 */
+.header {
+    width: 100%;
+    height: 3.5rem;
+    /* h-14 */
+    background-color: #111827;
+    /* ⭐️ bg-gray-900 (불투명) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* ⭐️ 중앙 정렬 */
+    padding: 0 1rem;
+    color: white;
+    font-size: 0.75rem;
+    /* text-xs */
+    z-index: 99999;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    position: relative;
+    /* 자식 absolute 배치를 위해 */
+}
+
+/* 좌측 영역 (로고) - 절대 위치 */
+.headerLeft {
+    position: absolute;
+    left: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    font-size: 1.125rem;
+    /* text-lg */
+    font-weight: 700;
+    color: #facc15;
+    /* text-yellow-400 */
+}
+
+/* 개발 모드 컨트롤 패널 (중앙 배치) */
+.devControlPanel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #1f2937;
+    /* bg-gray-800 */
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid #4b5563;
+    /* border-gray-600 */
+    /* margin: 0 auto; Flex center라 자동 중앙 */
+}
+
+.devLabel {
+    color: #9ca3af;
+    /* text-gray-400 */
+    font-weight: 700;
+}
+
+.divider {
+    height: 1rem;
+    width: 1px;
+    background-color: #4b5563;
+    /* bg-gray-600 */
+    margin: 0 0.5rem;
+}
+
+/* 버튼 공통 */
+.btnBase {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    /* text-xs */
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    border: none;
+    color: white;
+}
+
+/* 이전/다음 버튼 */
+.navBtn {
+    background-color: #374151;
+    /* bg-gray-700 */
+}
+
+.navBtn:hover {
+    background-color: #4b5563;
+    /* hover:bg-gray-600 */
+}
+
+.nextBtn {
+    background-color: #2563eb;
+    /* bg-blue-600 */
+    font-weight: 700;
+}
+
+.nextBtn:hover {
+    background-color: #3b82f6;
+    /* hover:bg-blue-500 */
+}
+
+/* 현재 상태 표시 */
+.statusDisplay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 8rem;
+}
+
+.statusLabel {
+    font-size: 10px;
+    color: #6b7280;
+    /* text-gray-500 */
+}
+
+.statusValue {
+    font-family: monospace;
+    font-weight: 700;
+    color: #fef08a;
+    /* text-yellow-200 */
+}
+
+/* 자동 재생 토글 버튼 */
+.autoBtn {
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.autoOn {
+    background-color: #16a34a;
+    /* bg-green-600 */
+    border-color: #4ade80;
+    /* border-green-400 */
+    color: white;
+}
+
+.autoOff {
+    background-color: rgba(127, 29, 29, 0.5);
+    /* bg-red-900/50 */
+    border-color: #b91c1c;
+    /* border-red-700 */
+    color: #fca5a5;
+    /* text-red-300 */
+}
+
+/* 우측 정보 영역 - 절대 위치 */
+.headerRight {
+    position: absolute;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* 토글 버튼 (헤더 내부용) */
+.toggleBtn {
+    background-color: transparent;
+    border: 1px solid #4b5563;
+    color: #9ca3af;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.toggleBtn:hover {
+    background-color: #374151;
+    color: white;
+}
+
+/* 플로팅 토글 버튼 (헤더 숨김 시: 중앙 상단 핸들) */
+.floatingToggleBtn {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    background-color: #1f2937;
+    /* bg-gray-800 */
+    color: #fbbf24;
+    /* text-amber-400 */
+    border: 1px solid #4b5563;
+    border-top: none;
+    padding: 0.25rem 1.5rem;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floatingToggleBtn:hover {
+    background-color: #111827;
+    /* bg-gray-900 */
+    padding-top: 0.5rem;
+    /* 살짝 내려오는 효과 */
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+    /* yellow glow */
+}
+
+/* 닫기 핸들 (헤더 내부: 중앙 상단) */
+.closeHandleBtn {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #111827;
+    color: #4b5563;
+    border: none;
+    font-size: 0.8rem;
+    padding: 0 1rem 0.25rem 1rem;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.closeHandleBtn:hover {
+    color: white;
+    background-color: #374151;
+}
+
+.infoBadge {
+    background-color: #1f2937;
+    /* bg-gray-800 */
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    color: #d1d5db;
+    /* text-gray-300 */
+    border: 1px solid #374151;
+    /* border-gray-700 */
+}
+
+.infoValue {
+    color: white;
+    font-family: monospace;
+    margin-left: 0.25rem;
+}
+
+/* 메인 영역 */
+.main {
+    flex: 1;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #166534;
+    /* bg-green-800 */
+    z-index: 0;
+}
