@@ -17,13 +17,13 @@ import FinalResultPhase from '@/components/game/phases/FinalResultPhase';
 import dog1 from '@/assets/dog/dog1.png';
 
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
-const TEST_MODE = true; 
+const TEST_MODE = true;
 
 export type GamePhase = 'LOBBY' | 'CARD_SHUFFLE' | 'JUDGE_SHUFFLE' | 'WRITING' | 'VOTING' | 'JUDGE_RESULT' | 'FINAL_RESULT';
 
 const GameRoom = () => {
   const { roomId } = useParams();
-  
+
   // 1. 스토어 데이터
   // ⭐️ [수정] useUserStore에서 isHost 정보를 정확하게 가져옵니다.
   const { nickname: myNickname, avatarId: myAvatarId, isHost: isMyHost } = useUserStore();
@@ -31,7 +31,7 @@ const GameRoom = () => {
 
   // ⭐️ 권한 체크: 테스트 모드이거나, 내 스토어에 저장된 신분이 Host일 때
   const isHost = TEST_MODE || isMyHost;
-  
+
   // 게스트는 roomConfig가 아직 없을 수 있으므로 기본값(4) 처리
   const maxStorytellers = roomConfig?.storytellerCount || 4;
 
@@ -77,14 +77,14 @@ const GameRoom = () => {
     // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
     socket.on('lobby_updated', (data) => {
       console.log("👥 로비 업데이트:", data);
-      setUsers(data.users); 
+      setUsers(data.users);
       // 만약 data.roomConfig 등 방 정보도 같이 온다면 여기서 setRoomInfo 업데이트
     });
-    
+
     // (구버전 호환)
     socket.on('user_joined', (_data) => {
-        // user_joined만 오면 전체 리스트를 모르니, 다시 리스트 요청
-        socket.emit('request_room_info', { roomId });
+      // user_joined만 오면 전체 리스트를 모르니, 다시 리스트 요청
+      socket.emit('request_room_info', { roomId });
     });
 
     // 3. [수신] 페이즈 변경
@@ -110,7 +110,7 @@ const GameRoom = () => {
   const renderPhase = () => {
     const commonProps = {
       users,
-      isHost, 
+      isHost,
       maxStorytellers,
       TEST_MODE,
       setUsers,
@@ -132,12 +132,12 @@ const GameRoom = () => {
   return (
     // 🏟️ [전체 컨테이너] flex-col 적용 (세로 배치)
     <div className="w-full h-screen bg-gray-900 flex flex-col overflow-hidden relative">
-      
+
       {/* 1️⃣ 상단 정보 바 (Header) */}
       {/* shrink-0: 공간이 부족해도 찌그러지지 않음 */}
       <header className="w-full h-12 bg-black/60 flex items-center justify-between px-4 text-white text-xs z-50 shrink-0 border-b border-white/10 backdrop-blur-sm">
-         <span className="font-bold text-lg">✨ STORY GAME</span>
-         <span>{isHost ? "👑 HOST" : "🏃 GUEST"} | Room: {roomId} | Users: {users.length}</span>
+        <span className="font-bold text-lg">✨ STORY GAME</span>
+        <span>{isHost ? "👑 HOST" : "🏃 GUEST"} | Room: {roomId} | Users: {users.length}</span>
       </header>
 
       {/* 2️⃣ ⭐️ [핵심] 게임 메인 무대 (Main Stage) */}
@@ -157,7 +157,7 @@ const GameRoom = () => {
           <button onClick={() => devSwitchPhase('WRITING')} className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-500 transition">Writing</button>
           <button onClick={() => devSwitchPhase('VOTING')} className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-500 transition">Voting</button>
           <button onClick={() => devSwitchPhase('JUDGE_RESULT')} className="px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-500 transition">Round Result</button>
-          <button onClick={() => devSwitchPhase('FINAL_RESULT')} className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-500 transition">Final Result</button> 
+          <button onClick={() => devSwitchPhase('FINAL_RESULT')} className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-500 transition">Final Result</button>
         </div>
       </div>
     </div>

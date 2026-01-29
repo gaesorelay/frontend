@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore'; // 내 닉네임 가져오기용
-import { socket } from '@/lib/socket'; 
+import { socket } from '@/lib/socket';
 import { TeamSlot } from '@/components/game/TeamSlot';
 import { TeamBoard } from '@/components/game/TeamBoard';
 import { AudienceList } from '@/components/game/AudienceList';
@@ -10,6 +10,12 @@ import { Background } from '@/components/common/background';
 import Modal from '@/components/common/Modal';
 import styles from '@/components/game/phases/LobbyPhase.module.css';
 import { animationStyles } from '@/pages/create/createAnimations';
+
+// 나가기 버튼
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import logoOut from '@/assets/logo/logo_out.png';
+import logoSetting from '@/assets/logo/logo_setting.png';
 
 // ⭐️ 부모(GameRoom)에게 받을 데이터 타입 정의
 interface LobbyProps {
@@ -22,7 +28,7 @@ interface LobbyProps {
 }
 
 const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomId }: LobbyProps) => {
-  
+
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
 
   const { roomConfig, roomTitle } = useGameStore(); // 1. roomTitle을 스토어에서 직접 가져옴
@@ -43,7 +49,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
     if (TEST_MODE) {
       const newUsers = [...users];
       const audience = newUsers.filter(u => u.role === 'AUDIENCE');
-      
+
       const fillTeam = (team: string) => {
         for (let i = 0; i < maxStorytellers; i++) {
           if (!newUsers.find(u => u.role === 'PLAYER' && u.team === team && u.slotIndex === i) && audience.length) {
@@ -80,7 +86,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
 
     // [게스트]
     if (!isHost) {
-      if (userInSlot) return; 
+      if (userInSlot) return;
       if (!window.confirm(`${teamType}팀 ${slotIndex + 1}번 자리에 참가하시겠습니까?`)) return;
 
       if (TEST_MODE) {
@@ -155,27 +161,51 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
   };
 
   const audienceList = users.filter(u => u.role === 'AUDIENCE');
+  const [copied, setCopied] = useState(false);
+
+  // 방 코드 복사
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        `말이 되든 말든 이어가라! 개소릴레이 \n${roomTitle} 에서 너를 기다리고 있을개. 🐶 \n참여 코드 : ${roomId}`
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // 2초 후 메시지 사라짐
+    } catch (err) {
+      console.error('복사 실패!', err);
+    }
+  };
+
+  const navigate = useNavigate();
+
+  const handleExit = () => {
+    if (window.confirm("정말 방에서 나가시겠어요? 🐾")) {
+      navigate('/');
+    }
+  };
+
+  const [isSettingOpen, setIsSettingOpen] = useState(false);
 
   return (
-<Background>
+    <Background>
       <div className={styles.container}>
 
         {/* 메인 콘텐츠 */}
         <div className={styles.contentWrapper}>
           <aside className={`${styles.audienceBar} ${isAudienceBarOpen ? styles.open : styles.closed}`}>
-            <AudienceList 
-              list={audienceList} 
-              isHost={isHost} 
+            <AudienceList
+              list={audienceList}
+              isHost={isHost}
               onSelect={setSelectedAudience}
               onClose={() => setIsAudienceBarOpen(false)}
-              />
+            />
           </aside>
 
-          <button 
+          <button
             onClick={() => setIsAudienceBarOpen(!isAudienceBarOpen)}
             className={styles.sidebarToggle}
             title={isAudienceBarOpen ? '닫기' : '관전자 목록'}
-            >
+          >
             {isAudienceBarOpen ? '◀' : '▶'}
           </button>
 
@@ -183,33 +213,100 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
             {/* 상단 헤더 */}
             <style>{animationStyles}</style>
             <header className={styles.header}>
-              <img src="/src/assets/logo/lobby_logo.png" alt="Lobby Logo" className={styles.headerLogo} 
-                style={{
-                  animation: 'logoJitter 0.3s linear infinite'
-                }}/>
-              <div className={styles.headerLeft}>
-                <h1 className={styles.roomTitle}>{roomTitle}</h1>
-                <span className={isHost ? styles.badgeHost : styles.badgeGuest}>
-                  {isHost ? 'HOST' : 'GUEST'}
-                </span>
+              {/* 1층: 유틸리티 라인 (로고, 코드, 나가기) */}
+              <div className={styles.topRow}>
+                <div className={styles.topLeft}>
+                  <img src="/src/assets/logo/lobby_logo.png" alt="Logo" className={styles.headerLogo} />
+
+                  <div className={styles.codeContainer} onClick={handleCopyCode}>
+                    <div className={styles.tape}></div>
+                    <div className={styles.codeBox}>
+                      <span className={styles.codeLabel}>ROOM CODE</span>
+                      <span className={styles.codeNumber}>{roomId}</span>
+                      {copied && <div className={styles.copyTooltip}>복사 완료! ✨</div>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.topRight}>
+                  {isHost && (
+                    <motion.button
+                      className={styles.exitButton}
+                      onClick={() => setIsSettingOpen(true)}
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                    >
+                      <img src={logoSetting} alt="Exit" className={styles.exitImg} />
+                      <span className={styles.exitText}>설정</span>
+                    </motion.button>
+                  )}
+                  <motion.button
+                    className={styles.exitButton}
+                    onClick={handleExit}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    <img src={logoOut} alt="Exit" className={styles.exitImg} />
+                    <span className={styles.exitText}>나가기</span>
+                  </motion.button>
+                </div>
               </div>
-              {/* {TEST_MODE && <div className={styles.testIndicator}>DESIGN TEST MODE</div>} */}
+
+              {/* 2층: 방 제목 라인 (중앙 정렬) */}
+              <div className={styles.bottomRow}>
+                <div className={styles.titleWrapper}>
+                  <h1 className={styles.roomTitle}>{roomTitle}</h1>
+                </div>
+              </div>
+
+              {/* 🏠 설정 수정 모달 */}
+              <Modal isOpen={isSettingOpen} onClose={() => setIsSettingOpen(false)}>
+                <div className={styles.settingModalContent}>
+                  <h2 className={styles.modalTitle}>방 설정 변경</h2>
+
+                  <div className={styles.settingField}>
+                    <label>방 제목</label>
+                    <input
+                      type="text"
+                      defaultValue={roomTitle}
+                      className={styles.settingInput}
+                    />
+                  </div>
+
+                  <div className={styles.settingField}>
+                    <label>최대 인원 (팀당)</label>
+                    <div className={styles.counter}>
+                      <button className={styles.countBtn}>-</button>
+                      <span className={styles.countNum}>{maxStorytellers}명</span>
+                      <button className={styles.countBtn}>+</button>
+                    </div>
+                  </div>
+
+                  <div className={styles.modalActions}>
+                    <button className={styles.saveButton} onClick={() => setIsSettingOpen(false)}>
+                      변경사항 저장
+                    </button>
+                  </div>
+                </div>
+              </Modal>
             </header>
+
             <div className={styles.gameArea}>
-              <TeamBoard 
-                teamName="A" 
-                maxStorytellers={maxStorytellers} 
+              <TeamBoard
+                teamName="A"
+                maxStorytellers={maxStorytellers}
                 renderSlots={(team) => Array.from({ length: maxStorytellers }).map((_, i) => {
                   const user = users.find(u => u.role === 'PLAYER' && u.team === team && u.slotIndex === i);
                   return <TeamSlot key={i} status={user ? "FILLED" : "EMPTY"} user={user} onClick={() => handleSlotClick(team, i)} />;
                 })}
               />
 
-              <div className={styles.vsText}>VS</div>
+              <div className={styles.vsContainer}>
+                <div className={styles.vsCircle}></div> {/* 뒤에 깔리는 노란 광광 효과 */}
+                <div className={styles.vsText}>VS</div>
+              </div>
 
-              <TeamBoard 
-                teamName="B" 
-                maxStorytellers={maxStorytellers} 
+              <TeamBoard
+                teamName="B"
+                maxStorytellers={maxStorytellers}
                 renderSlots={(team) => Array.from({ length: maxStorytellers }).map((_, i) => {
                   const user = users.find(u => u.role === 'PLAYER' && u.team === team && u.slotIndex === i);
                   return <TeamSlot key={i} status={user ? "FILLED" : "EMPTY"} user={user} onClick={() => handleSlotClick(team, i)} />;
@@ -217,9 +314,16 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
               />
             </div>
             {isHost && (
-              <button onClick={handleRandomAssign} className={styles.randomButton}>
-                🎲 랜덤 팀 배정
-              </button>
+              <footer className={styles.footerArea}>
+                <div className={styles.buttonGroup}>
+                  <button onClick={handleRandomAssign} className={styles.randomButton}>
+                    랜덤 팀 배정
+                  </button>
+                  <button className={`${styles.randomButton} ${styles.startButton}`}>
+                    게임 시작!
+                  </button>
+                </div>
+              </footer>
             )}
           </main>
         </div>
@@ -232,7 +336,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
             <div className={styles.modalContent}>
               <div className={styles.modalAvatar}>{selectedAudience?.avatar}</div>
               <h2 className={styles.modalTitle}>
-                <span className={styles.modalTitleHighlight}>{selectedAudience?.nickname}</span>님을<br/>어떻게 할까요?
+                <span className={styles.modalTitleHighlight}>{selectedAudience?.nickname}</span>님을<br />어떻게 할까요?
               </h2>
               <div className={styles.modalButtonGrid}>
                 <button onClick={() => moveUserToTeam('A')} className={`${styles.modalButton} ${styles.buttonTeamA}`}>🟦 A팀 배정</button>
@@ -245,8 +349,8 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
           <Modal isOpen={!!targetSlot} onClose={() => setTargetSlot(null)}>
             <div className={styles.targetSlotContent}>
               <h2 className={styles.targetSlotTitle}>
-                <span className={styles.targetSlotTeamHighlight}>{targetSlot?.team}팀</span> 
-                <span className={styles.targetSlotIndexHighlight}>{targetSlot ? targetSlot.index + 1 : 0}번 자리</span>에<br/>누구를 앉힐까요?
+                <span className={styles.targetSlotTeamHighlight}>{targetSlot?.team}팀</span>
+                <span className={styles.targetSlotIndexHighlight}>{targetSlot ? targetSlot.index + 1 : 0}번 자리</span>에<br />누구를 앉힐까요?
               </h2>
               <div className={styles.playerGrid}>
                 {users.filter(u => u.role === 'AUDIENCE').map((user) => (

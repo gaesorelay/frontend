@@ -3,24 +3,177 @@
   width: 100%;
   height: 100vh;
   display: flex;
-  flex-direction: column; /* 세로로 헤더 / 컨텐츠 나눔 */
-  overflow: hidden; /* 전체 페이지 스크롤 방지 */
+  flex-direction: column;
+  /* 세로로 헤더 / 컨텐츠 나눔 */
+  overflow: hidden;
+  /* 전체 페이지 스크롤 방지 */
 }
 
+/* 헤더 설정 */
 .header {
+  display: flex;
+  flex-direction: column;
+  /* 세로로 쌓기 */
+  width: 100%;
+  padding: 15px 40px;
+  box-sizing: border-box;
+}
+
+/* 1층 레이아웃 */
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  /* 좌우 끝 정렬 */
   align-items: center;
-  gap: 1.5rem;
-  padding: 0 2rem;
-  backdrop-filter: blur(4px);
-  flex-shrink: 0;
+  width: 100%;
+}
+
+.topLeft {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.topRight {
+  display: flex;
+  align-items: center;
 }
 
 .headerLogo {
-  width: 220px;
-  object-fit: contain;
-  flex-shrink: 0;
+  width: 190px;
+  filter: drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.1));
+  animation: logoJitter 0.3s linear infinite;
 }
 
+/* 2층 레이아웃 (방 이름) */
+.bottomRow {
+  display: flex;
+}
+
+.titleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.roomTitle {
+  font-size: 2.5rem;
+  /* 제목을 더 큼직하게 */
+  font-weight: 900;
+  color: #333;
+  text-shadow: 3px 3px 0px white;
+  letter-spacing: -1px;
+}
+
+/* 방 코드 복사 박스 (쪽지 컨셉) */
+.codeContainer {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.codeContainer:hover {
+  transform: scale(1.05) rotate(1deg);
+}
+
+.codeBox {
+  background: #fffbeb;
+  /* 연한 노란색 쪽지 느낌 */
+  border: 2px solid #333;
+  padding: 10px 20px;
+  border-radius: 5px 15px 3px 10px / 10px 5px 15px 3px;
+  /* 찌글찌글한 종이 */
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tape {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 60px;
+  height: 25px;
+  background: rgba(255, 255, 255, 0.5);
+  /* 반투명 마스킹 테이프 */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+.codeLabel {
+  font-size: 10px;
+  font-weight: bold;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+.codeNumber {
+  font-size: 20px;
+  font-weight: 900;
+  color: #d97706;
+  /* 강조 색상 */
+  font-family: 'monospace';
+  /* 코드니까 고정폭 폰트 느낌 */
+}
+
+/* 복사 툴팁 */
+.copyTooltip {
+  position: absolute;
+  bottom: -35px;
+  background: #333;
+  color: white;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  animation: popUp 0.3s ease-out;
+}
+
+@keyframes popUp {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+
+/* 나가기 버튼 크기 살짝 조정 */
+.exitButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem;
+}
+
+.exitImg {
+  width: 60px;
+  height: auto;
+}
+
+.exitButton:hover .exitImg {
+  /* 호버 시 이미지가 살짝 붉게 변하거나 밝아지게 할 수 있습니다 */
+  filter: drop-shadow(3px 3px 0px rgba(255, 107, 107, 0.4));
+}
+
+.exitText {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #666;
+  /* 텍스트는 너무 튀지 않게 */
+  margin-top: 2px;
+}
+
+/* 컨텐츠 설정 */
 .contentWrapper {
   position: relative;
   flex: 1;
@@ -104,8 +257,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .gameArea {
@@ -121,44 +281,79 @@
   max-width: 500px;
   height: 100%;
   aspect-ratio: auto;
-  
+
   padding: 1rem;
   border-radius: 1rem;
   border: 3px solid;
-  
+
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  
+
   background-color: rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
   flex-grow: 1;
 }
 
+.footerArea {
+  width: 100%;
+  /* 콘텐츠 크기에 맞게 */
+  padding: 0.5rem;
+  margin-right: 3rem;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: flex-end;
+  /* 오른쪽 정렬 */
+  align-items: center;
+  gap: 1rem;
+  padding: 0;
+  /* footerArea에서 여백을 잡으므로 여기선 0 */
+}
+
 .randomButton {
   z-index: 20;
-  background-color: #f59e0b;
-  color: white;
+  /* 1. 배경색: 조금 더 선명한 노란색/주황색 */
+  background-color: white;
+  color: #333;
+  /* 글자색은 진한 회색이 더 귀여워요 */
   font-weight: 900;
-  font-size: 1.25rem;
-  padding: 0.75rem 2rem;
-  border-radius: 9999px;
-  box-shadow: 0 4px 0 #b45309;
+  font-size: 1.2rem;
+  padding: 0.5rem 1.2rem;
+
+  /* 2. 핵심: 비정형 테두리 (손으로 깎은 듯한 느낌) */
+  border: 3px solid #333;
+  border-radius: 15px 50px 20px 45px / 40px 20px 50px 25px;
+
+  /* 3. 그림자: 흐릿하지 않은 찐한 만화 그림자 */
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.15);
+
   cursor: pointer;
   transition: all 0.1s;
-  border: none;
-  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.randomButton:active {
-  /* transform: translateX(-50%) translateY(4px); */
-  transform: translateY(4px);
-  box-shadow: none;
-}
-
+/* 호버 시 살짝 흔들리는 효과(Jitter) 추가 */
 .randomButton:hover {
-  background-color: #d97706;
+  transform: rotate(-1deg) scale(1.02);
+}
+
+/* 클릭 시: 바닥에 딱 붙는 느낌 */
+.randomButton:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+}
+
+/* 게임 시작 버튼은 더 특별하게 (빨간색 계열) */
+.startButton {
+  background-color: #FFD700;
+  color: white;
+  border-radius: 50px 15px 45px 20px / 20px 40px 25px 50px;
+  /* 랜덤 버튼과 대칭되게 */
 }
 
 /* 모달 내용 스타일 */
@@ -271,10 +466,6 @@
   transition: background-color 0.2s, transform 0.2s;
 }
 
-.playerButton:hover {
-  background-color: #f3f4f6;
-}
-
 .playerAvatar {
   font-size: 2.25rem;
   margin-bottom: 0.25rem;
@@ -305,9 +496,133 @@
 }
 
 .vsText {
-  font-size: 3.75rem;
+  font-size: 5rem;
+  /* 조금 더 키워도 좋아요! */
   font-weight: 900;
-  color: white;
   font-style: italic;
-  filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.2));
+
+  /* 1. 색상: 강렬한 빨간색 계열 그라데이션 또는 단색 */
+  color: #FF4D4D;
+
+  /* 2. 외곽선: Setup 페이지 컨셉인 두꺼운 테두리 (#333) */
+  /* -webkit-text-stroke를 쓰면 글자 안에 두꺼운 선이 생깁니다 */
+  -webkit-text-stroke: 2.5px #333;
+
+  /* 3. 그림자: 입체감 있는 겹치기 그림자 (만화 느낌) */
+  text-shadow:
+    4px 4px 0px #333,
+    8px 8px 0px rgba(0, 0, 0, 0.1);
+
+  /* 4. 애니메이션: 로고처럼 계속 부들부들 떨리는 효과 */
+  animation: vsJitter 0.2s infinite;
+
+  position: relative;
+  z-index: 10;
+  user-select: none;
+}
+
+.vsContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 20px;
+}
+
+.vsCircle {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, #FFD700 0%, transparent 70%);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+/* 모달 내부 컨텐츠 */
+.settingModalContent {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.modalTitle {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.settingField {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settingField label {
+  font-weight: 800;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.settingInput {
+  padding: 12px;
+  border: 3px solid #333;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-family: inherit;
+  background: #fdfdfd;
+}
+
+/* 인원수 조절기 */
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: #eee;
+  padding: 10px;
+  border-radius: 50px;
+  border: 2px solid #333;
+}
+
+.countBtn {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  background: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* 저장 버튼 (아까 만든 랜덤 버튼 스타일 재사용) */
+.saveButton {
+  background-color: #FFD700;
+  color: #333;
+  font-weight: 900;
+  padding: 10px 30px;
+  border: 3px solid #333;
+  border-radius: 15px 40px 15px 35px / 35px 15px 40px 15px;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
