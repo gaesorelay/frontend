@@ -25,10 +25,10 @@ interface LobbyProps {
   TEST_MODE: boolean;
   setUsers: (users: any[]) => void;
   roomId: string | undefined;
-  onStartGame?: () => void;
+  // onStartGame?: () => void;
 }
 
-const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomId, onStartGame }: LobbyProps) => {
+const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomId }: LobbyProps) => {
   console.log("🔍 유저 데이터 구조 확인:", users);
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
 
@@ -197,7 +197,8 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(
-        `말이 되든 말든 이어가라! 개소릴레이 \n${roomTitle} 에서 너를 기다리고 있을개. 🐶 \n참여 코드 : ${roomId}`
+        // `말이 되든 말든 이어가라! 개소릴레이 \n${roomTitle} 에서 너를 기다리고 있을개. 🐶 \n참여 코드 : ${roomId}`
+        roomId
       );
       setCopied(true);
       setTimeout(() => setCopied(false), 2000); // 2초 후 메시지 사라짐
@@ -206,6 +207,27 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
     }
   };
 
+  // 게임시작
+  const handleStartGame = () => {
+    console.log("🚀 게임 시작 버튼 클릭됨");
+    if (!isHost) return;
+    
+    // (선택) 인원 수 체크 등을 여기서 미리 막아도 됨
+    // const playerCnt = users.filter(u => u.role === 'PLAYER').length;
+    // if (playerCnt < 4) return alert("플레이어가 부족합니다!");
+
+    if (TEST_MODE) {
+       // 테스트 모드면 바로 다음 페이즈로 강제 이동
+       // (부모 GameRoom의 devSwitchPhase 등을 호출해야 하는데, 여기선 socket만 보냄)
+       alert("테스트 모드: 개발자 컨트롤 패널을 이용하세요.");
+    } else {
+       // 📡 백엔드에 시작 신호 전송
+       socket.emit('start_game', { roomId });
+    }
+  };
+
+
+  // 나가기 처리
   const navigate = useNavigate();
 
   const handleExit = () => {
@@ -349,7 +371,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
                   <button onClick={handleRandomAssign} className={styles.randomButton}>
                     랜덤 팀 배정
                   </button>
-                  <button onClick={onStartGame} className={`${styles.randomButton} ${styles.startButton}`}>
+                  <button onClick={handleStartGame} className={`${styles.randomButton} ${styles.startButton}`}>
                     게임 시작!
                   </button>
                 </div>

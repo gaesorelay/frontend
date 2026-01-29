@@ -29,7 +29,8 @@ const GameRoom = () => {
   // ⭐️ [수정] useUserStore에서 isHost 정보를 정확하게 가져옵니다.
   const { nickname: myNickname, avatarId: myAvatarId, isHost: isMyHost } = useUserStore();
   const { roomConfig, gamePhase, setGamePhase, setRoundData, setRoomInfo, setPlayers } = useGameStore();
-
+  const [isVerifying, setIsVerifying] = useState(true);
+  
   // ⭐️ 권한 체크: 테스트 모드이거나, 내 스토어에 저장된 신분이 Host일 때
   const isHost = TEST_MODE || isMyHost;
 
@@ -74,6 +75,21 @@ const GameRoom = () => {
 
     // 1. 방 정보 요청 (게스트는 들어오자마자 이게 필요함)
     socket.emit('request_room_info', { roomId });
+
+    // 2. ⭐️ [복구] 여기서 초기 명단을 받아야 합니다!
+    // 백엔드는 입장 시 'lobby_updated' 대신 이걸 보내고 있습니다.
+    socket.on('room_info', (data) => {
+      console.log("📦 방 정보(초기 명단) 도착:", data);
+
+      // A. 방 설정/제목 저장
+      useGameStore.getState().setRoomActions(data.title, data.config);
+      
+      // B. (중요) 유저 명단 업데이트 -> 이걸 해야 빈 방 현상이 사라짐!
+      setUsers(data.users); 
+      
+      // C. 로딩 끝
+      setIsVerifying(false);
+    });
 
     // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
     socket.on('lobby_updated', (data) => {
@@ -162,7 +178,7 @@ const GameRoom = () => {
     };
 
     switch (gamePhase) {
-      case 'LOBBY': return <LobbyPhase {...commonProps} onStartGame={handleStartGame} />;
+      case 'LOBBY': return <LobbyPhase {...commonProps} />;
       case 'CARD_SHUFFLE': return <CardShufflePhase onFinish={() => handlePhaseFinish('JUDGE_SHUFFLE')} />;
       case 'JUDGE_SHUFFLE': return <JudgeShufflePhase onFinish={() => handlePhaseFinish('WRITING')} />;
       case 'WRITING': return <WritingPhase />;
