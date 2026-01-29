@@ -23,11 +23,12 @@ interface LobbyProps {
   isHost: boolean;
   maxStorytellers: number;
   TEST_MODE: boolean;
-  setUsers: (users: any[]) => void; // 테스트용 상태 변경
+  setUsers: (users: any[]) => void;
   roomId: string | undefined;
+  onStartGame?: () => void;
 }
 
-const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomId }: LobbyProps) => {
+const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomId, onStartGame }: LobbyProps) => {
   console.log("🔍 유저 데이터 구조 확인:", users);
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
 
@@ -75,15 +76,15 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
       if (userInSlot) {
         // 이미 사람이 있으면 -> 관전석으로 보내기 (Leave Team)
         if (!window.confirm(`${userInSlot.nickname}님을 관전석으로 보낼까요?`)) return;
-        
+
         if (TEST_MODE) {
           setUsers(users.map(u => u.userToken === userInSlot.userToken ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null } : u));
         } else {
           // ✅ [수정] leave_team 이벤트 전송
-          socket.emit('leave_team', { 
+          socket.emit('leave_team', {
             public_user_id: userInSlot.publicUserId, // userToken 아님!
-            team: teamType, 
-            slot_index: slotIndex 
+            team: teamType,
+            slot_index: slotIndex
           });
         }
         return;
@@ -117,13 +118,13 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
         const me = users.find(u => u.nickname === myNickname);
         if (me) {
           // ✅ [수정] join_team 이벤트 전송
-          socket.emit('join_team', { 
-            public_user_id: me.publicUserId, 
-            team: teamType, 
-            slot_index: slotIndex 
+          socket.emit('join_team', {
+            public_user_id: me.publicUserId,
+            team: teamType,
+            slot_index: slotIndex
           });
         } else {
-            console.error("내 정보를 찾을 수 없습니다.");
+          console.error("내 정보를 찾을 수 없습니다.");
         }
       }
     }
@@ -144,10 +145,10 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
       setUsers(users.map(u => u.userToken === selectedAudience.userToken ? { ...u, role: 'PLAYER', team: teamType, slotIndex: emptyIndex } : u));
     } else {
       // ✅ [수정] join_team 전송
-      socket.emit('join_team', { 
+      socket.emit('join_team', {
         public_user_id: selectedAudience.publicUserId, // 선택된 사람의 ID
-        team: teamType, 
-        slot_index: emptyIndex 
+        team: teamType,
+        slot_index: emptyIndex
       });
     }
     setSelectedAudience(null);
@@ -173,10 +174,10 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
       setUsers(users.map(u => u.userToken === user.userToken ? { ...u, role: 'PLAYER', team: team, slotIndex: index } : u));
     } else {
       // ✅ [수정] join_team 전송
-      socket.emit('join_team', { 
-        public_user_id: user.publicUserId, 
-        team: team, 
-        slot_index: index 
+      socket.emit('join_team', {
+        public_user_id: user.publicUserId,
+        team: team,
+        slot_index: index
       });
     }
     setTargetSlot(null);
@@ -348,7 +349,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
                   <button onClick={handleRandomAssign} className={styles.randomButton}>
                     랜덤 팀 배정
                   </button>
-                  <button className={`${styles.randomButton} ${styles.startButton}`}>
+                  <button onClick={onStartGame} className={`${styles.randomButton} ${styles.startButton}`}>
                     게임 시작!
                   </button>
                 </div>

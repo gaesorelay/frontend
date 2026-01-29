@@ -19,31 +19,6 @@ import dog10 from '@/assets/dog/dog10.png';
 import dog11 from '@/assets/dog/dog11.png';
 
 const WritingPhase = () => {
-  // [개발용] 채팅 테스트 상태
-  const [testRoomId, setTestRoomId] = useState("");
-  const [testNickname, setTestNickname] = useState(`유저${Math.floor(Math.random() * 1000)}`);
-  const [isJoined, setIsJoined] = useState(false);
-
-  // [개발용] 방 입장 함수
-  const handleTestJoin = () => {
-    if (!testRoomId) return alert("Room UUID를 입력하세요!");
-
-    // 소켓 연결 확인
-    if (!socket.connected) {
-      socket.connect();
-    }
-
-    console.log(`🚪 테스트 입장 시도: ${testRoomId}, ${testNickname}`);
-    socket.emit('join_room', {
-      roomId: testRoomId,
-      nickname: testNickname,
-      avatarId: 1,
-    });
-
-    setIsJoined(true);
-  };
-
-
   // --- Styles ---
   // Common
   const paperBoxStyle: React.CSSProperties = {
@@ -385,34 +360,6 @@ const WritingPhase = () => {
 
           {/* Right: Chat [TEST MODE] */}
           <div style={rightColumnStyle}>
-            {/* 🛠️ 개발용 방 입장 UI Overlay */}
-            {!isJoined && (
-              <div style={{
-                background: '#333', color: 'white', padding: '10px', borderRadius: '10px',
-                marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '5px'
-              }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>🕵️♂️ 채팅 테스트 (먼저 방 ID 입력)</span>
-                <input
-                  placeholder="Room UUID"
-                  value={testRoomId}
-                  onChange={(e) => setTestRoomId(e.target.value)}
-                  style={{ color: 'black', padding: '4px', borderRadius: '4px' }}
-                />
-                <input
-                  placeholder="닉네임"
-                  value={testNickname}
-                  onChange={(e) => setTestNickname(e.target.value)}
-                  style={{ color: 'black', padding: '4px', borderRadius: '4px' }}
-                />
-                <button
-                  onClick={handleTestJoin}
-                  style={{ background: '#FFD93D', color: 'black', fontWeight: 'bold', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}
-                >
-                  입장하기
-                </button>
-              </div>
-            )}
-
             <ChatArea />
           </div>
 

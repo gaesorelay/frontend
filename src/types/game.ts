@@ -33,7 +33,7 @@ export type Player = {
   role: UserRole;
   isHost: boolean;          // boolean 필드 확인
   team: UserTeam;
-  slotIndex: number | null; 
+  slotIndex: number | null;
   avatarId: number;         // avatar string 대신 id 사용 권장
   ipAddress?: string;
   isReady: boolean;
@@ -72,6 +72,7 @@ export type ChatMessage = {
   nickname: string;
   text: string;
   createdAt: string;
+  avatarId?: number;
 };
 
 export type GamePhase =

@@ -5,26 +5,39 @@ import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import type { ChatMessage } from '@/types/game';
 
+const rawImages = import.meta.glob('@/assets/dog/*.{png,jpg,jpeg}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const sortedImageUrls = Object.entries(rawImages)
+  .sort(([pathA], [pathB]) => {
+    const numA = parseInt(pathA.match(/dog(\d+)/)?.[1] || '0', 10);
+    const numB = parseInt(pathB.match(/dog(\d+)/)?.[1] || '0', 10);
+    return numA - numB;
+  })
+  .map(([_, url]) => url);
+
+// avatarId (1-based) -> Image URL
+const getAvatarUrl = (id?: number) => {
+  if (!id || id < 1 || id > sortedImageUrls.length) return sortedImageUrls[0]; // 기본값
+  return sortedImageUrls[id - 1];
+};
+
 const ChatArea = () => {
   const { messages, addMessage } = useGameStore();
-  const { nickname } = useUserStore();
+  const { nickname, avatarId: myAvatarId } = useUserStore();
   const [chatInput, setChatInput] = useState("");
   const chatListRef = useRef<HTMLDivElement>(null);
 
   // 1. 소켓 이벤트 리스너 설정
   useEffect(() => {
     const handleChatMessage = (data: any) => {
-      // 서버에서 오는 데이터 형태에 맞춰 매핑
-      // 가정: { senderId, nickname, message, ... }
-
       const newMessage: ChatMessage = {
-        id: Date.now().toString() + Math.random(), // 임시 ID
-        userToken: data.senderId || 'unknown', // 서버가 senderId를 준다고 가정
-        nickname: data.nickname, // 서버가 nickname을 준다고 가정
+        id: Date.now().toString() + Math.random(),
+        userToken: data.senderId || 'unknown',
+        nickname: data.nickname,
         text: data.message,
         createdAt: new Date().toISOString(),
+        avatarId: data.avatarId,
       };
-      addMessage(newMessage); // 스토어에 추가
+      addMessage(newMessage);
     };
 
     socket.on('chat_message', handleChatMessage);
@@ -45,10 +58,10 @@ const ChatArea = () => {
   const handleSend = () => {
     if (!chatInput.trim()) return;
 
-    // 서버로 전송
+    // 서버로 전송 (내 아바타 정보도 같이 보내는 게 좋을 수 있음, 서버가 모른다면)
+    // 일단은 메시지만 보냄 (서버가 senderId로 찾아서 뿌려준다고 가정)
     socket.emit('send_chat', { message: chatInput });
 
-    // 입력창 비우기 (메시지는 소켓 이벤트로 받아서 추가됨)
     setChatInput("");
   };
 
@@ -59,7 +72,6 @@ const ChatArea = () => {
   };
 
   // --- 스타일 ---
-  // (Paper 스타일 재사용)
   const paperBoxStyle: React.CSSProperties = {
     backgroundColor: '#fdfcf0',
     border: '3px solid #333',
@@ -85,18 +97,19 @@ const ChatArea = () => {
     paddingRight: '5px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px',
+    gap: '12px', // 메시지 간 간격 증가
   };
 
+  // 말풍선 스타일
   const msgBubbleStyle = (isMe: boolean): React.CSSProperties => ({
-    alignSelf: isMe ? 'flex-end' : 'flex-start',
-    backgroundColor: isMe ? '#e0f2fe' : '#ffffff', // 나: 파랑 연한색, 남: 흰색
+    backgroundColor: isMe ? '#e0f2fe' : '#ffffff',
     border: isMe ? '2px solid #3b82f6' : '2px solid #ccc',
     borderRadius: '8px',
     padding: '6px 10px',
-    maxWidth: '80%',
+    maxWidth: '100%',
     fontSize: '0.9rem',
     wordBreak: 'break-word',
+    position: 'relative',
   });
 
   const senderNameStyle: React.CSSProperties = {
@@ -106,16 +119,38 @@ const ChatArea = () => {
     color: '#555',
   };
 
+  const avatarStyle: React.CSSProperties = {
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    border: '2px solid #333',
+    backgroundColor: 'white',
+    objectFit: 'cover',
+    flexShrink: 0,
+  };
+
+  const myAvatarStyle: React.CSSProperties = {
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    border: '2px solid #333',
+    backgroundColor: 'white',
+    objectFit: 'cover',
+    marginRight: '8px',
+  };
+
   // 입력창 스타일
   const inputAreaStyle: React.CSSProperties = {
     display: 'flex',
+    alignItems: 'center', // 세로 중앙 정렬
     gap: '8px',
-    height: '40px',
+    height: '50px', // 높이 약간 증가
     marginTop: 'auto',
   };
 
   const inputStyle: React.CSSProperties = {
     flex: 1,
+    height: '40px',
     border: '2px solid #333',
     borderRadius: '8px',
     padding: '0 10px',
@@ -133,7 +168,7 @@ const ChatArea = () => {
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    backgroundColor: '#FFD93D', // 노랑 포인트
+    backgroundColor: '#FFD93D',
     boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
   };
 
@@ -146,14 +181,37 @@ const ChatArea = () => {
 
       <div ref={chatListRef} style={chatListStyle}>
         {messages.map((msg) => {
-          // 내 닉네임과 같으면 '나'로 처리
           const isMe = msg.nickname === nickname;
+          const isSystem = msg.nickname === 'SYSTEM';
+
+          // 1. 시스템 메시지 (중앙 정렬, 심플)
+          if (isSystem) {
+            return (
+              <div key={msg.id} style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
+                <span style={{ fontSize: '0.85rem', color: '#888', fontWeight: 'bold', backgroundColor: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '12px' }}>
+                  📢 {msg.text}
+                </span>
+              </div>
+            );
+          }
+
+          // 2. 일반 유저 메시지 (무조건 왼쪽 정렬)
+          const avatarUrl = getAvatarUrl(msg.avatarId);
 
           return (
-            <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
-              {!isMe && <span style={senderNameStyle}>{msg.nickname}</span>}
-              <div style={msgBubbleStyle(isMe)}>
-                {msg.text}
+            <div key={msg.id} style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              gap: '8px'
+            }}>
+              <img src={avatarUrl} style={avatarStyle} alt="avatar" />
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', maxWidth: '85%' }}>
+                <span style={senderNameStyle}>{msg.nickname}</span>
+                <div style={msgBubbleStyle(isMe)}>
+                  {msg.text}
+                </div>
               </div>
             </div>
           );
@@ -161,9 +219,11 @@ const ChatArea = () => {
       </div>
 
       <div style={inputAreaStyle}>
+        <img src={getAvatarUrl(myAvatarId)} style={myAvatarStyle} alt="my-face" />
+
         <input
           style={inputStyle}
-          placeholder="메시지 입력..."
+          placeholder="멍멍!"
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           onKeyDown={handleKeyDown}

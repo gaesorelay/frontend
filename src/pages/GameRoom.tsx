@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
@@ -17,7 +17,7 @@ import FinalResultPhase from '@/components/game/phases/FinalResultPhase';
 import dog1 from '@/assets/dog/dog1.png';
 
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
-const TEST_MODE = false;
+const TEST_MODE = true;
 
 export type GamePhase = 'LOBBY' | 'CARD_SHUFFLE' | 'JUDGE_SHUFFLE' | 'WRITING' | 'VOTING' | 'JUDGE_RESULT' | 'FINAL_RESULT';
 
@@ -106,6 +106,17 @@ const GameRoom = () => {
     setGamePhase(phase);
   };
 
+  // 🎮 게임 시작 버튼 핸들러
+  const handleStartGame = () => {
+    if (TEST_MODE) {
+      console.log("🎮 [TEST] 게임 시작! -> WRITING 페이즈로 이동");
+      setGamePhase('WRITING');
+    } else {
+      console.log("📡 [Socket] 게임 시작 요청");
+      socket.emit('start_game', { roomId });
+    }
+  };
+
   // 📺 페이즈 렌더러
   const renderPhase = () => {
     const commonProps = {
@@ -118,7 +129,7 @@ const GameRoom = () => {
     };
 
     switch (gamePhase) {
-      case 'LOBBY': return <LobbyPhase {...commonProps} />;
+      case 'LOBBY': return <LobbyPhase {...commonProps} onStartGame={handleStartGame} />;
       case 'CARD_SHUFFLE': return <CardShufflePhase onFinish={() => setGamePhase('JUDGE_SHUFFLE')} />;
       case 'JUDGE_SHUFFLE': return <JudgeShufflePhase onFinish={() => setGamePhase('WRITING')} />;
       case 'WRITING': return <WritingPhase />;
