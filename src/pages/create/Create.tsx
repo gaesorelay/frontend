@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/useGameStore';
-import type { RoomConfig } from '@/types/game'; // 타입 체크를 위해 import 추천
+import type { RoomConfig } from '@/types/game';
 
 // 이미지 에셋
 import background from '@/assets/background.png';
@@ -17,22 +17,63 @@ export default function CreatePage() {
   const navigate = useNavigate();
 
   // 1. 상태값들 (State)
+  // 초기값은 범위 내 안전한 값으로 설정해두는 것이 좋습니다.
   const [roomName, setRoomName] = useState('');
-  const [maxPlayers, setMaxPlayers] = useState(10);  // 총 정원
-  const [storytellers, setStorytellers] = useState(4); // 이야기꾼 수
-  const [rounds, setRounds] = useState(3);           // 라운드 수
-  const [roundTime, setRoundTime] = useState(60);    // ⭐️ [추가] 라운드 시간
-  const [voteTime, setVoteTime] = useState(30);      // 투표 시간
+  const [maxPlayers, setMaxPlayers] = useState(10);  // 초기값 10명
+  const [storytellers, setStorytellers] = useState(3); // 초기값 3명
+  const [rounds, setRounds] = useState(3);           // 초기값 3라운드
+  const [roundTime, setRoundTime] = useState(60);    // 초기값 60초
+  const [voteTime, setVoteTime] = useState(20);      // 초기값 20초
 
-  // 2. 컨트롤러 설정 (UI 표시용)
+  // 2. ⚙️ 컨트롤러 설정 (여기에 Min/Max 제한 적용!)
+  // HandControl 컴포넌트가 이 min/max 값을 받아 버튼/입력을 제어합니다.
   const controls = [
-    { label: '최대 인원', value: maxPlayers, setValue: setMaxPlayers, unit: '명', step: 1 },
-    { label: '이야기꾼 수', value: storytellers, setValue: setStorytellers, unit: '명', step: 1 },
-    { label: '라운드 수', value: rounds, setValue: setRounds, unit: 'R', step: 1 },
-    // ⭐️ [추가] 라운드 시간 컨트롤러
-    { label: '라운드 시간', value: roundTime, setValue: setRoundTime, unit: '초', step: 10 },
-    { label: '투표 시간', value: voteTime, setValue: setVoteTime, unit: '초', step: 10 },
-  ] as const;
+    {
+      label: '최대 인원',
+      value: maxPlayers,
+      setValue: setMaxPlayers,
+      unit: '명',
+      step: 1,
+      min: 8,   // ✅ 최소 8명
+      max: 30   // ✅ 최대 30명
+    },
+    {
+      label: '이야기꾼 수',
+      value: storytellers,
+      setValue: setStorytellers,
+      unit: '명',
+      step: 1,
+      min: 2,   // ✅ 최소 2명
+      max: 8    // ✅ 최대 8명
+    },
+    {
+      label: '라운드 수',
+      value: rounds,
+      setValue: setRounds,
+      unit: 'R',
+      step: 1,
+      min: 1,   // ✅ 최소 1라운드
+      max: 3    // ✅ 최대 3라운드
+    },
+    {
+      label: '라운드 시간',
+      value: roundTime,
+      setValue: setRoundTime,
+      unit: '초',
+      step: 5,  // 5초 단위 이동
+      min: 10,  // ✅ 최소 10초
+      max: 60   // ✅ 최대 60초
+    },
+    {
+      label: '투표 시간',
+      value: voteTime,
+      setValue: setVoteTime,
+      unit: '초',
+      step: 5,
+      min: 5,   // ✅ 최소 5초
+      max: 20   // ✅ 최대 20초
+    },
+  ];
 
   const setRoomActions = useGameStore((state) => state.setRoomActions);
 
@@ -42,34 +83,26 @@ export default function CreatePage() {
       alert("방 제목을 입력해주세요!");
       return;
     }
-    
-    // 이야기꾼이 총 인원보다 많을 순 없음
+
+    // 논리적 오류 검사 (최대 인원이 이야기꾼보다 적으면 안 됨)
     if (maxPlayers < storytellers) {
-        alert("최대 인원은 이야기꾼 수보다 많아야 합니다!");
-        return;
+      alert("최대 인원은 이야기꾼 수보다 많아야 합니다!");
+      return;
     }
 
-    // 권장 인원 체크 (이야기꾼의 2배수 권장 등 정책에 따라)
-    // if (maxPlayers < storytellers * 2) {
-    //   if (!window.confirm(`최대 인원이 이야기꾼 수(${storytellers}명)의 2배보다 적습니다.\n관전자가 부족할 수 있는데 진행할까요?`)) {
-    //     return;
-    //   }
-    // }
-
-    // 4. 설정값 포장 📦 (RoomConfig 타입과 100% 일치시킴)
-    // 꼬아서 생각할 필요 없이 State 변수 그대로 넣으면 됩니다!
+    // 4. 설정값 포장 📦
     const configData: RoomConfig = {
       maxPlayers: maxPlayers,        // 총 정원
       storytellerCount: storytellers,// 이야기꾼 수
       rounds: rounds,                // 라운드 수
-      roundTime: roundTime,          // ⭐️ 라운드 시간 (초)
+      roundTime: roundTime,          // 라운드 시간 (초)
       voteTime: voteTime,            // 투표 시간 (초)
     };
 
     // 5. 스토어에 저장
     setRoomActions(roomName, configData);
 
-    // [Debug] 저장 확인
+    // [Debug] 저장 확인 및 이동
     setTimeout(() => {
       const stored = localStorage.getItem('game-storage');
       console.log("📦 [CreatePage] 저장 완료:", configData);
@@ -100,11 +133,14 @@ export default function CreatePage() {
       <style>{animationStyles}</style>
       <CreateDecorations />
 
+      {/* CreateFormCard에 controls 배열을 그대로 넘겨줍니다.
+        내부적으로 HandControl이 min/max를 사용하게 됩니다.
+      */}
       <CreateFormCard
         logoSrc={logo}
         roomName={roomName}
         setRoomName={setRoomName}
-        controls={[...controls]} 
+        controls={[...controls]}
       />
 
       <CreateButtons

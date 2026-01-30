@@ -19,4 +19,6 @@ export interface ControlItem {
   setValue: (v: number) => void;
   unit?: string;
   step?: number;
+  min?: number;
+  max?: number;
 }

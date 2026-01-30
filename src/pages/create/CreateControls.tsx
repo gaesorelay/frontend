@@ -1,6 +1,4 @@
 import HandControl from '@/components/common/HandControl';
-// 보통 공통 컴포넌트에는 공통 타입을 쓰는 경우가 많으므로 아래 경로를 선택했습니다.
-// 만약 에러가 난다면 './types'로 바꿔주세요.
 import type { ControlItem } from '../../components/common/types';
 
 interface Props {
@@ -20,11 +18,15 @@ export default function CreateControls({ items }: Props) {
           }}
         >
           <span style={{ fontSize: '24px' }}>{item.label}</span>
+
+          {/* 👇 여기에 min과 max를 추가했습니다! 이제 제한이 작동합니다. */}
           <HandControl
             value={item.value}
             setValue={item.setValue}
             unit={item.unit}
             step={item.step}
+            min={item.min} // ✅ 최소값 전달 (이게 없어서 1까지 내려갔던 것!)
+            max={item.max} // ✅ 최대값 전달
           />
         </div>
       ))}

@@ -13,10 +13,13 @@ export interface DecoProps {
   type?: DecoAnimType;
 }
 
+// ✅ 여기를 수정해주세요!
 export interface ControlItem {
   label: string;
   value: number;
   setValue: (v: number) => void;
   unit?: string;
   step?: number;
+  min?: number; // 👈 이 줄 추가 (최소값)
+  max?: number; // 👈 이 줄 추가 (최대값)
 }

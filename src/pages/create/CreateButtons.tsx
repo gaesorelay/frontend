@@ -1,4 +1,5 @@
 import { sketchBorderStyle, shadowColor } from './createStyles';
+import clickSound from '@/assets/sound/click.mp3';
 
 interface Props {
   onBack: () => void;
@@ -6,10 +7,25 @@ interface Props {
 }
 
 export default function CreateButtons({ onBack, onCreate }: Props) {
+  // ✅ 소리 재생 함수 (이걸 복사해서 다른 파일에서도 쓰시면 됩니다)
+  const playSound = () => {
+    try {
+      const audio = new Audio(clickSound);
+      audio.volume = 0.6;
+      audio.play();
+    } catch (e) {
+      console.error("Sound error", e);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', width: '450px', gap: '22px', marginTop: '25px', zIndex: 10 }}>
+      {/* 🔙 돌아가기 버튼 */}
       <button
-        onClick={onBack}
+        onClick={() => {
+          playSound(); // 🔊 딸깍!
+          onBack();
+        }}
         className="create-btn"
         style={{
           flex: 0.8,
@@ -27,8 +43,12 @@ export default function CreateButtons({ onBack, onCreate }: Props) {
         돌아가기
       </button>
 
+      {/* ✅ 방 만들기 버튼 */}
       <button
-        onClick={onCreate}
+        onClick={() => {
+          playSound(); // 🔊 딸깍!
+          onCreate();
+        }}
         className="create-btn"
         style={{
           flex: 1.2,

@@ -1,6 +1,5 @@
 import CreateControls from './CreateControls';
 import { sketchBorderStyle } from './createStyles';
-// 아까 CreateControls와 맞춰서 공통 타입을 사용하도록 통일했습니다.
 import type { ControlItem } from '../../components/common/types';
 
 interface Props {
@@ -13,39 +12,45 @@ interface Props {
 export default function CreateFormCard({ logoSrc, roomName, setRoomName, controls }: Props) {
   return (
     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+      {/* ✅ [복구됨] 로고 이미지 */}
       <img
         src={logoSrc}
         alt="방 만들기"
         style={{
-          width: '400px',
+          width: '350px', // 크기 적절히 조절
           zIndex: 11,
-          marginBottom: '-5px',
-          filter: 'drop-shadow(6px 6px 0px rgba(0,0,0,0.1))',
-          animation: 'logoJitter 0.3s linear infinite',
+          marginBottom: '-15px', // 카드와 살짝 겹치게 (자연스럽게)
+          filter: 'drop-shadow(5px 5px 0px rgba(0,0,0,0.1))',
+          animation: 'logoJitter 0.3s linear infinite', // 흔들리는 애니메이션 유지
         }}
       />
 
+      {/* 흰색 카드 영역 */}
       <div
         style={{
           position: 'relative',
           zIndex: 10,
           background: 'white',
-          padding: '25px 45px',
-          width: '450px',
+          padding: '25px 35px',
+          width: '550px',       // 요청하신 대로 가로를 조금 넓게 잡음
           boxSizing: 'border-box',
-          boxShadow: '10px 10px 0px rgba(0,0,0,0.08)',
-          ...sketchBorderStyle,
+          boxShadow: '8px 8px 0px rgba(0,0,0,0.08)',
+          ...sketchBorderStyle, // 스케치북 스타일 테두리
         }}
       >
-        <label style={{ fontSize: '26px', display: 'block', marginBottom: '10px' }}>방 이름</label>
+        <label style={{ fontSize: '24px', display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
+          방 이름
+        </label>
+
         <input
           value={roomName}
           onChange={(e) => setRoomName(e.target.value)}
           placeholder="방 이름을 적어줘!"
           style={{
             width: '100%',
-            padding: '14px 22px',
-            fontSize: '22px',
+            padding: '12px 18px',
+            fontSize: '20px',
             border: '2.5px solid #333',
             borderRadius: '40px 10px 45px 8px / 8px 45px 10px 40px',
             outline: 'none',
@@ -54,7 +59,9 @@ export default function CreateFormCard({ logoSrc, roomName, setRoomName, control
           }}
         />
 
-        <CreateControls items={controls} />
+        <div style={{ marginTop: '20px' }}>
+          <CreateControls items={controls} />
+        </div>
       </div>
     </div>
   );
