@@ -15,21 +15,7 @@ import rightArrowImg from '@/assets/logo/rightarrow.png';
 import SetupDecorations from './components/SetupDecorations';
 
 // 🐶 강아지 이미지 로딩
-const rawImages = import.meta.glob('@/assets/dog/*.{png,jpg,jpeg}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
-const sortedImageUrls = Object.entries(rawImages)
-  .sort(([pathA], [pathB]) => {
-    const numA = parseInt(pathA.match(/dog(\d+)/)?.[1] || '0', 10);
-    const numB = parseInt(pathB.match(/dog(\d+)/)?.[1] || '0', 10);
-    return numA - numB;
-  })
-  .map(([_, url]) => url);
-
-const AVATARS = sortedImageUrls.map((imgSrc, index) => ({
-  id: index + 1,
-  name: `멍멍이 ${index + 1}`,
-  desc: '준비 완료!',
-  icon: imgSrc,
-}));
+import { AVATAR_LIST } from '@/lib/avatarMapper';
 
 export default function Setup() {
   const navigate = useNavigate();
@@ -37,21 +23,21 @@ export default function Setup() {
 
   // 1. GameStore
   const { roomConfig, roomTitle, setRoomInfo, reset } = useGameStore(); // 👈 reset 추가
-  
+
   // 2. UserStore
-  const { 
-    setNickname: setStoreNickname, 
+  const {
+    setNickname: setStoreNickname,
     setAvatarId: setStoreAvatarId,
-    setUserStatus, 
-    setRoomId      
+    setUserStatus,
+    setRoomId
   } = useUserStore();
 
   const [nickname, setNickname] = useState("");
   const [avatarIdx, setAvatarIdx] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const selectedDog = AVATARS[avatarIdx] || { id: 1, name: '?', icon: '' };
-  const totalDogs = AVATARS.length;
+  const selectedDog = AVATAR_LIST[avatarIdx] || { id: 1, name: '?', icon: '' };
+  const totalDogs = AVATAR_LIST.length;
 
   // 기본 설정
   const defaultConfig = {
@@ -81,7 +67,7 @@ export default function Setup() {
       alert("잘못된 접근입니다.");
       navigate('/');
     }
-    
+
     console.log("Setup Page Check:", { paramRoomId, isRealHost: isHost, staleConfig: !!roomConfig });
   }, [isHost, paramRoomId, roomConfig, navigate]);
 
@@ -111,8 +97,8 @@ export default function Setup() {
       // ----------------------------------------------------
       // ⭐️ isHost가 false면 이 블록은 절대 실행되지 않음!
       if (isHost) {
-        if (!roomConfig) return; 
-        
+        if (!roomConfig) return;
+
         console.log("📡 [Host] 방 생성 요청 중...");
         const res = await createRoomApi({
           title: roomTitle || "즐거운 게임",
@@ -120,7 +106,7 @@ export default function Setup() {
           nickname: nickname,
           avatarId: selectedDog.id,
         });
-        
+
         currentRoomId = res.roomId;
         // myToken = res.token;
         console.log("✅ 방 생성 완료:", currentRoomId);
@@ -137,22 +123,22 @@ export default function Setup() {
       }
 
       console.log("🔌 소켓 연결 시도...", { currentRoomId, myToken });
-      
-      socket.auth = { token: myToken }; 
+
+      socket.auth = { token: myToken };
       socket.connect();
 
       socket.emit('join_room', {
         roomId: currentRoomId,
         nickname: nickname,
         avatarId: selectedDog.id,
-        userToken: myToken || undefined, 
+        userToken: myToken || undefined,
       }, (response: any) => {
         console.log("📩 Gateway 응답:", response);
         setIsLoading(false);
 
         if (response.status === 'success') {
           const user = response.data;
-          
+
           setStoreNickname(user.nickname);
           setStoreAvatarId(user.avatarId);
           setRoomId(currentRoomId);
@@ -170,8 +156,8 @@ export default function Setup() {
           }
 
           if (!isHost && user.userToken) {
-             console.log("🔑 게스트 토큰 저장:", user.userToken);
-             socket.auth = { token: user.userToken }; 
+            console.log("🔑 게스트 토큰 저장:", user.userToken);
+            socket.auth = { token: user.userToken };
           }
 
           console.log("🚀 게임방으로 이동!");

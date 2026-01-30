@@ -2,13 +2,25 @@ import { useEffect, useState, useMemo } from 'react';
 import paperBg from '@/assets/bg/paper.png';
 import titleLogo from '@/assets/logo/carddistribute.png';
 import dotImage from '@/assets/logo/dot.png';
-import cardLogo1 from '@/assets/logo/cardlogo1.png'; 
-import cardLogo2 from '@/assets/logo/cardlogo2.png'; 
+import cardLogo1 from '@/assets/logo/cardlogo1.png';
+import cardLogo2 from '@/assets/logo/cardlogo2.png';
 import cardLogo3 from '@/assets/logo/cardlogo3.png';
 import aiTeacherLogo from '@/assets/logo/AIteacher.png';
 
-const DECORATION_FILES = [
-  'big_heart', 'bone', 'foot', 'heart', 'pencil_blue', 'pencil_green', 'pencil_red', 'star'
+import { getAvatarSrc, getTotalAvatars } from '@/lib/avatarMapper';
+
+// Decorations Import
+import bone from '@/assets/decorations/bone.png';
+import foot from '@/assets/decorations/foot.png';
+import heart from '@/assets/decorations/heart.png';
+import bigHeart from '@/assets/decorations/big_heart.png';
+import pencilRed from '@/assets/decorations/pencil_red.png';
+import pencilBlue from '@/assets/decorations/pencil_blue.png';
+import pencilGreen from '@/assets/decorations/pencil_green.png';
+import star from '@/assets/decorations/star.png';
+
+const DECORATION_IMAGES = [
+  bigHeart, bone, foot, heart, pencilBlue, pencilGreen, pencilRed, star
 ];
 
 const MOCK_CARDS = [
@@ -37,7 +49,7 @@ const CardShufflePhase = ({ onFinish }: Props) => {
   const backgroundDecorations = useMemo(() => {
     return Array.from({ length: 20 }).map((_, i) => ({
       id: i,
-      image: `/src/assets/decorations/${DECORATION_FILES[Math.floor(Math.random() * DECORATION_FILES.length)]}.png`,
+      image: DECORATION_IMAGES[Math.floor(Math.random() * DECORATION_IMAGES.length)],
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
       rotation: `${Math.random() * 360}deg`,
@@ -47,22 +59,28 @@ const CardShufflePhase = ({ onFinish }: Props) => {
 
   const cardsData = useMemo(() => {
     const dogIndices = new Set<number>();
-    while (dogIndices.size < TARGET_COUNT) dogIndices.add(Math.floor(Math.random() * 29) + 1);
+    const totalAvatars = getTotalAvatars();
+    // 안전장치: 아바타가 충분하지 않으면 1로 fallback
+    const maxIndex = totalAvatars > 0 ? totalAvatars : 1;
+
+    while (dogIndices.size < TARGET_COUNT) {
+      dogIndices.add(Math.floor(Math.random() * maxIndex) + 1);
+    }
     const dogArray = Array.from(dogIndices);
     return Array.from({ length: TOTAL_CARDS }).map((_, i) => {
       const isTarget = i < TARGET_COUNT;
       return {
         id: i, isTarget,
         frontImage: isTarget ? MOCK_CARDS[i] : MOCK_CARDS[0],
-        backImage: isTarget ? `/src/assets/dog/dog${dogArray[i]}.png` : `/src/assets/dog/dog1.png`,
+        backImage: isTarget ? getAvatarSrc(dogArray[i]) : getAvatarSrc(1),
       };
     });
   }, []);
 
   const getShufflePos = (index: number) => {
     if (!isShuffling) return { x: 0, y: 0, r: 0 };
-    const randomSeed = index * shuffleTick * 123.45; 
-    const randomX = (Math.sin(randomSeed) * 50); 
+    const randomSeed = index * shuffleTick * 123.45;
+    const randomX = (Math.sin(randomSeed) * 50);
     const randomY = (Math.cos(randomSeed * 0.5) * 50);
     const randomR = (Math.sin(randomSeed * 0.2) * 40);
     return { x: randomX, y: randomY, r: randomR };
@@ -74,14 +92,14 @@ const CardShufflePhase = ({ onFinish }: Props) => {
 
     const stopShuffleTimer = setTimeout(() => { clearInterval(shuffleInterval); setIsShuffling(false); }, 2000);
     const dealTimer = setTimeout(() => setIsDealt(true), 2500);
-    
+
     const revealStartTimer = setTimeout(() => {
       clearInterval(dotInterval); setDotCount(0);
       for (let i = 0; i < TARGET_COUNT; i++) { setTimeout(() => setVisibleCount((prev) => prev + 1), i * 200); }
     }, 4000);
 
-    const outroTimer1 = setTimeout(() => setOutroStep(1), 6000); 
-    const outroTimer2 = setTimeout(() => setOutroStep(2), 7500); 
+    const outroTimer1 = setTimeout(() => setOutroStep(1), 6000);
+    const outroTimer2 = setTimeout(() => setOutroStep(2), 7500);
     const outroTimer3 = setTimeout(() => setOutroStep(3), 9000); // 9초에 "킹받을까!?" 등장
 
     // ⚡️ [시간 단축] 9.8초: 0.8초 뒤에 바로 AI 등장 (기존 10.5초에서 단축)
@@ -101,7 +119,7 @@ const CardShufflePhase = ({ onFinish }: Props) => {
   }, [onFinish]);
 
   return (
-    <div 
+    <div
       style={{
         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
         backgroundImage: `url(${paperBg})`, backgroundSize: 'cover', backgroundPosition: 'center',
@@ -148,29 +166,29 @@ const CardShufflePhase = ({ onFinish }: Props) => {
         }}
       >
         {/* 🚨 수정: 크기를 600px로 더욱 확대 (초대형) */}
-        <img 
-          src={aiTeacherLogo} 
-          alt="AI Teacher" 
-          style={{ width: '600px', height: 'auto', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.6))' }} 
+        <img
+          src={aiTeacherLogo}
+          alt="AI Teacher"
+          style={{ width: '600px', height: 'auto', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.6))' }}
         />
       </div>
 
       {/* 🃏 카드 무대 */}
-      <div 
-        style={{ 
-          position: 'relative', width: '600px', height: '400px', perspective: '1000px', zIndex: 10, 
+      <div
+        style={{
+          position: 'relative', width: '600px', height: '400px', perspective: '1000px', zIndex: 10,
           marginTop: '140px',
-          transition: 'all 1s', 
-          opacity: outroStep > 0 ? 0.3 : 1, 
-          filter: outroStep > 0 ? 'blur(4px)' : 'none' 
+          transition: 'all 1s',
+          opacity: outroStep > 0 ? 0.3 : 1,
+          filter: outroStep > 0 ? 'blur(4px)' : 'none'
         }}
       >
         {cardsData.map((card, index) => {
           const shufflePos = getShufflePos(index);
           const col = index % 4; const row = Math.floor(index / 4);
-          const gridX = (col - 1.5) * 150; const gridY = (row - 0.5) * 220; 
+          const gridX = (col - 1.5) * 150; const gridY = (row - 0.5) * 220;
           let x = 0, y = 0, rotate = 0, opacity = 1;
-          if (isShuffling) { x = shufflePos.x; y = shufflePos.y; rotate = shufflePos.r; } 
+          if (isShuffling) { x = shufflePos.x; y = shufflePos.y; rotate = shufflePos.r; }
           else if (isDealt) { if (card.isTarget) { x = gridX; y = gridY; rotate = 0; } else { x = 0; y = 0; opacity = 0; } }
           const isFlipped = card.isTarget && index < visibleCount;
           return (
