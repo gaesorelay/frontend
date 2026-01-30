@@ -170,7 +170,7 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
     if (TEST_MODE) {
       setUsers(users.filter(u => u.userToken !== selectedAudience.userToken));
     } else {
-      socket.emit('kick_user', { targetUserToken: selectedAudience.publicUserId });
+      socket.emit('kick_user', { public_user_id: selectedAudience.publicUserId });
     }
     setSelectedAudience(null);
   };
@@ -241,6 +241,8 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
 
   const handleExit = () => {
     if (window.confirm("정말 방에서 나가시겠어요? 🐾")) {
+      // ⭐️ [추가] 서버에 "나 나간다"고 말하고 가야 함!
+      socket.emit('leave_room'); 
       navigate('/');
     }
   };
