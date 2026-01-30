@@ -7,7 +7,7 @@ interface Props {
 
 export default function CreateButtons({ onBack, onCreate }: Props) {
   return (
-    <div style={{ display: 'flex', width: '450px', gap: '22px', marginTop: '35px', zIndex: 10 }}>
+    <div style={{ display: 'flex', width: '450px', gap: '22px', marginTop: '25px', zIndex: 10 }}>
       <button
         onClick={onBack}
         className="create-btn"

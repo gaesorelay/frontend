@@ -322,7 +322,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   cardImg: { width: '100%', height: '100%', objectFit: 'cover' },
   arrowGroup: { display: 'flex', alignItems: 'center', gap: '15px' },
   arrowBtn: { background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', fontWeight: 900 },
-  counterText: { fontWeight: 'bold', fontSize: '1.5rem' },
+  counterText: { fontWeight: 'bold', fontSize: '1.4rem' },
 
   // 중앙 메인
   mainContent: {

@@ -18,7 +18,7 @@ import dog1 from '@/assets/dog/dog1.png';
 import styles from './GameRoom.module.css';
 
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
-const TEST_MODE = false;
+const TEST_MODE = true;
 
 export type GamePhase = 'LOBBY' | 'CARD_SHUFFLE' | 'JUDGE_SHUFFLE' | 'WRITING' | 'VOTING' | 'JUDGE_RESULT' | 'FINAL_RESULT';
 
@@ -30,7 +30,7 @@ const GameRoom = () => {
   const { nickname: myNickname, avatarId: myAvatarId, isHost: isMyHost } = useUserStore();
   const { roomConfig, gamePhase, setGamePhase, setRoundData, setRoomInfo, setPlayers } = useGameStore();
   const [isVerifying, setIsVerifying] = useState(true);
-
+  
   // ⭐️ 권한 체크: 테스트 모드이거나, 내 스토어에 저장된 신분이 Host일 때
   const isHost = TEST_MODE || isMyHost;
 
@@ -78,26 +78,17 @@ const GameRoom = () => {
 
     // 2. ⭐️ [복구] 여기서 초기 명단을 받아야 합니다!
     // 백엔드는 입장 시 'lobby_updated' 대신 이걸 보내고 있습니다.
-    // 1. ⭐️ [수정] 방 정보 요청 (콜백으로 바로 받기!)
-    // 백엔드가 return { status: 'success', data: ... } 해주는 걸 여기서 받습니다.
-    socket.emit('request_room_info', { roomId }, (response: any) => {
-      console.log("📦 방 정보(Ack) 도착:", response);
+    socket.on('room_info', (data) => {
+      console.log("📦 방 정보(초기 명단) 도착:", data);
 
-      if (response.status === 'success') {
-        const data = response.data;
-
-        // A. 방 설정/제목 저장
-        useGameStore.getState().setRoomActions(data.title, data.config);
-
-        // B. 유저 명단 업데이트
-        setUsers(data.users);
-
-        // C. 로딩 끝
-        setIsVerifying(false);
-      } else {
-        console.error("방 정보 로드 실패:", response.message);
-        // 에러 처리 (alert 등)
-      }
+      // A. 방 설정/제목 저장
+      useGameStore.getState().setRoomActions(data.title, data.config);
+      
+      // B. (중요) 유저 명단 업데이트 -> 이걸 해야 빈 방 현상이 사라짐!
+      setUsers(data.users); 
+      
+      // C. 로딩 끝
+      setIsVerifying(false);
     });
 
     // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
@@ -107,21 +98,14 @@ const GameRoom = () => {
       // 만약 data.roomConfig 등 방 정보도 같이 온다면 여기서 setRoomInfo 업데이트
     });
 
-
-    // 4. ⭐️ [신규] 게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
-    socket.on('game_started', (data) => {
-      console.log("🎮 게임 데이터 도착:", data);
-      // imageIds, judges 등을 스토어에 저장
-      setRoundData({
-        cardIds: data.imageIds,
-        judgeIds: data.judges,
-        // 필요한 다른 데이터 초기화
-      });
+    // (구버전 호환)
+    socket.on('user_joined', (_data) => {
+      // user_joined만 오면 전체 리스트를 모르니, 다시 리스트 요청
+      socket.emit('request_room_info', { roomId });
     });
 
     // 3. [수신] 페이즈 변경
     socket.on('change_phase', (response) => {
-      console.log("🎬 페이즈 변경 요청 수신:", response); // 👈 로그 확인 필수
       const { phase, data } = response;
       if (data) setRoundData(data);
       setGamePhase(phase);
@@ -130,7 +114,6 @@ const GameRoom = () => {
     return () => {
       socket.off('lobby_updated');
       socket.off('user_joined');
-      socket.off('game_started');
       socket.off('change_phase');
     };
   }, [roomId]);
@@ -230,7 +213,7 @@ const GameRoom = () => {
           </button>
 
           {/* 3. 중앙 개발자 컨트롤 패널 */}
-          {(true) && (
+          {TEST_MODE && (
             <div className={styles.devControlPanel}>
               <button
                 onClick={handlePrevPhase}
@@ -280,7 +263,7 @@ const GameRoom = () => {
         </header>
       ) : (
         /* 개발자 바가 꺼져있을 때: 중앙 상단 플로팅 핸들만 표시 */
-        (true) && (
+        TEST_MODE && (
           <button
             onClick={() => setIsDevExpanded(true)}
             className={styles.floatingToggleBtn}

@@ -9,7 +9,7 @@ interface Props {
 
 export default function CreateControls({ items }: Props) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginTop: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginTop: '20px' }}>
       {items.map((item, i) => (
         <div
           key={i}
@@ -20,14 +20,14 @@ export default function CreateControls({ items }: Props) {
           }}
         >
           <span style={{ fontSize: '24px' }}>{item.label}</span>
-          <HandControl 
-            value={item.value} 
-            setValue={item.setValue} 
-            unit={item.unit} 
-            step={item.step} 
+          <HandControl
+            value={item.value}
+            setValue={item.setValue}
+            unit={item.unit}
+            step={item.step}
           />
         </div>
       ))}
-    </div> 
+    </div>
   );
 }

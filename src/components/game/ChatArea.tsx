@@ -109,7 +109,6 @@ const ChatArea = () => {
     // border: '3px solid #333',
     boxShadow: '4px 4px 0px rgba(0,0,0,0.15)',
     borderRadius: '15px',
-    fontFamily: 'SchoolSafeLittleOne, sans-serif',
   };
 
   const chatBoxStyle: React.CSSProperties = {

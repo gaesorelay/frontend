@@ -17,7 +17,7 @@ export default function CreateFormCard({ logoSrc, roomName, setRoomName, control
         src={logoSrc}
         alt="방 만들기"
         style={{
-          width: '420px',
+          width: '400px',
           zIndex: 11,
           marginBottom: '-5px',
           filter: 'drop-shadow(6px 6px 0px rgba(0,0,0,0.1))',
@@ -30,7 +30,7 @@ export default function CreateFormCard({ logoSrc, roomName, setRoomName, control
           position: 'relative',
           zIndex: 10,
           background: 'white',
-          padding: '40px 45px 25px 45px',
+          padding: '25px 45px',
           width: '450px',
           boxSizing: 'border-box',
           boxShadow: '10px 10px 0px rgba(0,0,0,0.08)',
@@ -45,7 +45,7 @@ export default function CreateFormCard({ logoSrc, roomName, setRoomName, control
           style={{
             width: '100%',
             padding: '14px 22px',
-            fontSize: '24px',
+            fontSize: '22px',
             border: '2.5px solid #333',
             borderRadius: '40px 10px 45px 8px / 8px 45px 10px 40px',
             outline: 'none',
