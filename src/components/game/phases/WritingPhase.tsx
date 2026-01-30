@@ -3,6 +3,8 @@ import { Timer } from 'lucide-react';
 import ChatArea from '@/components/game/ChatArea';
 import { useGameStore } from '@/store/useGameStore'; // 스토어 import
 import { useState, useMemo } from 'react';
+import { getCardImage } from '@/lib/cardMapper';
+import { getJudgeImage } from '@/lib/judgeMapper';
 
 // --- Assets (이미지) ---
 import dog1 from '@/assets/dog/dog1.png';
@@ -15,6 +17,8 @@ import dog6 from '@/assets/dog/dog6.png';
 import dog7 from '@/assets/dog/dog7.png';
 import dog8 from '@/assets/dog/dog8.png';
 
+
+
 // 아바타 ID를 이미지로 변환하는 헬퍼
 const getAvatarImage = (avatarId: number) => {
   const images = [dog1, dog2, dog3, dog4, dog5, dog6, dog7, dog8];
@@ -25,6 +29,8 @@ const getAvatarImage = (avatarId: number) => {
 interface WritingPhaseProps {
   currentRound: string; // "TURN1" ~ "TURN8"
 }
+
+
 
 const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   // 1. ⭐️ [수정] store에서 users가 아니라 'players'를 가져옵니다!
@@ -40,6 +46,24 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
   // 3. 슬롯 설정
   const maxStorytellers = roomConfig?.storytellerCount || 4;
+
+
+   // 2. ⭐️ [핵심] 현재 턴의 카드 ID 찾기
+  const currentCardId = useMemo(() => {
+    if (!roundData || !roundData.cardIds) return 0;
+    // turnNumber는 1부터 시작하므로 인덱스는 -1
+    const index = turnNumber - 1;
+    // 배열 범위 안전하게 접근
+    return roundData.cardIds[index] || 0; 
+  }, [roundData, turnNumber]);
+
+  // 3. ⭐️ [핵심] 심사위원 리스트 가져오기
+  const judges = useMemo(() => {
+    // roundData.judgeIds는 실제로는 Judge 객체 배열 [{id, name, persona}, ...]
+    return roundData?.judgeIds || []; 
+  }, [roundData]);
+
+
 
   // 4. ⭐️ [수정] players 배열을 필터링합니다.
   const teamAPlayers = useMemo(() => 
@@ -155,22 +179,62 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
         </header>
 
         <div style={mainStyle}>
+          {/* Left: Image & Judges */}
           <div style={leftColumnStyle}>
             <div style={imageCardFrameStyle}>
               <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', width: '60px', height: '15px', backgroundColor: 'rgba(255, 217, 61, 0.9)', border: '1px solid #333' }} />
+              
+              {/* 🖼️ 카드 이미지 영역 */}
               <div style={imagePlaceholderStyle}>
-                <span style={{ fontSize: '2rem' }}>🖼️</span>
-                <p>Card {turnNumber}</p>
+                {currentCardId > 0 ? (
+                    <img 
+                        src={getCardImage(currentCardId)} 
+                        alt={`Card ${currentCardId}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }} // contain으로 전체 보이게
+                        onError={(e) => {
+                            // 이미지 로드 실패 시 대체 화면
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement!.innerHTML = `<span style="font-size: 2rem;">🖼️</span><p style="color:red; font-size:0.8rem">Missing: ${currentCardId}</p>`;
+                        }}
+                    />
+                ) : (
+                    <>
+                        <span style={{ fontSize: '2rem' }}>🖼️</span>
+                        <p>Waiting...</p>
+                    </>
+                )}
               </div>
+              
               <div style={{ textAlign: 'center', marginTop: '5px', fontWeight: 'bold', fontSize: '0.9rem', color: '#555' }}>
-                KEYWORD
+                 CARD {currentCardId}
               </div>
             </div>
+
+            {/* 👨‍⚖️ 심사위원 영역 */}
             <div style={judgeSectionStyle}>
-              <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>심사위원</span>
-              <img src={dog1} style={judgeAvatarStyle} alt="j1" />
-              <img src={dog2} style={judgeAvatarStyle} alt="j2" />
-              <img src={dog3} style={judgeAvatarStyle} alt="j3" />
+              <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                 <span style={{ fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '5px' }}>심사위원</span>
+                 <div style={{display: 'flex', gap: '8px'}}>
+                    {judges.length > 0 ? (
+                        judges.map((judge: any, _) => (
+                            <img 
+                                key={judge.id} 
+                                src={getJudgeImage(judge.id)} 
+                                style={judgeAvatarStyle} 
+                                alt={judge.name} 
+                                title={`${judge.name}: ${judge.persona}`} // 마우스 올리면 설명 뜸
+                            />
+                        ))
+                    ) : (
+                        // 데이터가 없을 때 기본값
+                        <>
+                            <img src={dog1} style={judgeAvatarStyle} alt="j1" />
+                            <img src={dog2} style={judgeAvatarStyle} alt="j2" />
+                            <img src={dog3} style={judgeAvatarStyle} alt="j3" />
+                        </>
+                    )}
+                 </div>
+              </div>
             </div>
           </div>
 
@@ -186,7 +250,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
               <div style={storytellersStyle}>
                 {renderTeamAvatars(teamAPlayers, activeUserA, '#ef4444')}
               </div>
-              <div style={storyContentStyle}>(작성 대기 중)</div>
+              <div style={storyContentStyle}>(작성 내용 표시 예정)</div>
             </div>
 
             <div style={teamSectionStyle}>
@@ -200,7 +264,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
               <div style={storytellersStyle}>
                 {renderTeamAvatars(teamBPlayers, activeUserB, '#3b82f6')}
               </div>
-              <div style={storyContentStyle}>(작성 대기 중)</div>
+              <div style={storyContentStyle}>(작성 내용 표시 예정)</div>
             </div>
           </div>
 

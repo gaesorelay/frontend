@@ -1,20 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-
-// 🖼️ [이미지 Import]
-import judgeImg1 from '@/assets/judge/profile/judge1.png';
-import judgeImg2 from '@/assets/judge/profile/judge2.png';
-import judgeImg3 from '@/assets/judge/profile/judge3.png';
-import judgeImg4 from '@/assets/judge/profile/judge4.png';
-import judgeImg5 from '@/assets/judge/profile/judge5.png';
-import judgeImg6 from '@/assets/judge/profile/judge6.png';
-import judgeImg7 from '@/assets/judge/profile/judge7.png';
-import judgeImg8 from '@/assets/judge/profile/judge8.png';
-import judgeImg9 from '@/assets/judge/profile/judge9.png';
-import judgeImg10 from '@/assets/judge/profile/judge10.png';
-import judgeImg11 from '@/assets/judge/profile/judge11.png';
-import judgeImg12 from '@/assets/judge/profile/judge12.png';
-
+import { useGameStore } from '@/store/useGameStore'; // ⭐️ Store
+import { getJudgeImage } from '@/lib/judgeMapper';   // ⭐️ Mapper
 // 🖼️ [배경 이미지]
 import bgImg from '@/assets/background.png';
 
@@ -22,35 +9,55 @@ import bgImg from '@/assets/background.png';
 import titleLogo from '@/assets/logo/judgelogo1.png';
 import finishLogo from '@/assets/logo/judgelogo2.png';
 
-// 🛠️ [데이터]
-const JUDGES_POOL = [
-    { id: 1, name: '개소리 미식가 멍성재', image: judgeImg1 },
-    { id: 2, name: '과몰입 F 공감이', image: judgeImg2 },
-    { id: 3, name: '낭만주의자 줄리엣', image: judgeImg3 },
-    { id: 4, name: '음모론자 일루미', image: judgeImg4 },
-    { id: 5, name: '칠 가이 (Chill Guy)', image: judgeImg5 },
-    { id: 6, name: '팩트 폭격기 조', image: judgeImg6 },
-    { id: 7, name: '침소리 성급맨', image: judgeImg7 },
-    { id: 8, name: 'AI 판사 알빠노', image: judgeImg8 },
-    { id: 9, name: '도파민 쇼츠왕', image: judgeImg9 },
-    { id: 10, name: 'K-암행어사 조나단', image: judgeImg10 },
-    { id: 11, name: '퍼포먼스 카니', image: judgeImg11 },
-    { id: 12, name: '긍정왕 운동현', image: judgeImg12 },
+// 🛠️ [심사위원 전체 데이터 (ID 1~12)]
+// 이미지는 Mapper로 가져오므로, 여기선 이름만 정의하면 됩니다.
+const ALL_JUDGES = [
+    { id: 1, name: '개소리 미식가 멍성재' },
+    { id: 2, name: '과몰입 F 공감이' },
+    { id: 3, name: '낭만주의자 줄리엣' },
+    { id: 4, name: '음모론자 일루미' },
+    { id: 5, name: '칠 가이 (Chill Guy)' },
+    { id: 6, name: '팩트 폭격기 조' },
+    { id: 7, name: '침소리 성급맨' },
+    { id: 8, name: 'AI 판사 알빠노' },
+    { id: 9, name: '도파민 쇼츠왕' },
+    { id: 10, name: 'K-암행어사 조나단' },
+    { id: 11, name: '퍼포먼스 카니' },
+    { id: 12, name: '긍정왕 운동현' },
 ];
-
 const BARK_SOUNDS = ["월!", "멍!", "왈왈!", "Grrr...", "컹!", "깨갱!", "개소리!", "Woof!", "으르렁", "왕!"];
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-interface Props {
-    onFinish?: () => void;
-}
 
-const JudgeShufflePhase = ({ onFinish }: Props) => {
+
+const JudgeShufflePhase = () => {
+    // 1. ⭐️ Store에서 당첨된 심사위원 데이터 가져오기
+    const { roundData } = useGameStore();
+
+    // 2. ⭐️ 당첨자 명단 확정 (서버 데이터 사용)
     const targetWinners = useMemo(() => {
-        return [...JUDGES_POOL].sort(() => 0.5 - Math.random()).slice(0, 3);
-    }, []);
+        // 서버에서 온 데이터가 없으면 fallback (1,2,3번)
+        // roundData.judgeIds는 [{id, name, persona}, ...] 객체 배열임
+        if (roundData?.judgeIds && roundData.judgeIds.length > 0) {
+            return roundData.judgeIds.map((j: any) => ({
+                id: j.id,
+                name: j.name, // 서버 이름 사용
+                image: getJudgeImage(j.id) // Mapper로 이미지 로딩
+            }));
+        }
+        
+        // Fallback: 랜덤 3명
+        return ALL_JUDGES.slice(0, 3).map(j => ({ ...j, image: getJudgeImage(j.id) }));
+    }, [roundData]);
 
+    // 3. ⭐️ 전체 풀(Pool) 구성 (화면에 보여질 12명)
+    const displayPool = useMemo(() => {
+        return ALL_JUDGES.map(j => ({
+            ...j,
+            image: getJudgeImage(j.id)
+        }));
+    }, []);
     const [highlightId, setHighlightId] = useState<number | null>(null);
     const [pickedIds, setPickedIds] = useState<number[]>([]);
     const [isFinished, setIsFinished] = useState(false);
@@ -80,13 +87,13 @@ const JudgeShufflePhase = ({ onFinish }: Props) => {
         const runSequence = async () => {
             await wait(800);
 
-            for (let round = 0; round < 3; round++) {
+            for (let round = 0; round < targetWinners.length; round++) {
                 const winner = targetWinners[round];
                 let speed = 50;
                 const spinCount = 20 + round * 5;
 
                 for (let i = 0; i < spinCount; i++) {
-                    const pool = JUDGES_POOL.filter(j => !pickedIds.includes(j.id) && !targetWinners.slice(0, round).map(w => w.id).includes(j.id));
+                    const pool = displayPool.filter(j => !pickedIds.includes(j.id) && !targetWinners.slice(0, round).map(w => w.id).includes(j.id));
                     if (pool.length > 0) {
                         const randomIdx = Math.floor(Math.random() * pool.length);
                         setHighlightId(pool[randomIdx].id);
@@ -103,12 +110,11 @@ const JudgeShufflePhase = ({ onFinish }: Props) => {
 
             setHighlightId(null);
             setIsFinished(true);
-            await wait(2000);
-            if (onFinish) onFinish();
+            
         };
 
         runSequence();
-    }, [targetWinners, onFinish]);
+    }, [targetWinners, displayPool]);
 
     if (!mounted) return null;
 
@@ -226,7 +232,7 @@ const JudgeShufflePhase = ({ onFinish }: Props) => {
                 width: '90%', maxWidth: '800px',
                 zIndex: 10
             }}>
-                {JUDGES_POOL.map((judge) => {
+                {displayPool.map((judge) => {
                     const isPicked = pickedIds.includes(judge.id);
                     const isHighlight = highlightId === judge.id;
                     const isLoser = isFinished && !isPicked;

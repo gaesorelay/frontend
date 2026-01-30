@@ -80,7 +80,10 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   setGameState: (state) => set({ gameState: state }),
   setVoteResult: (result) => set({ voteResult: result }),
   setGamePhase: (phase) => set({ gamePhase: phase }),
-  setRoundData: (data) => set({ roundData: data }),
+  setRoundData: (newData) => 
+    set((state) => ({ 
+      roundData: state.roundData ? { ...state.roundData, ...newData } : newData 
+    })),
   reset: () =>
     set({
       roomConfig: null,

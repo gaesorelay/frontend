@@ -130,15 +130,12 @@ const CardShufflePhase = () => {
       setShowAITeacher(true);
     }, 9800);
 
-    // 🏁 [시간 단축] 12.0초: 종료 (기존 12.5초에서 단축)
-    // const finishTimer = setTimeout(() => onFinish(), 12000);
 
     return () => {
       clearInterval(dotInterval); clearInterval(shuffleInterval);
       clearTimeout(stopShuffleTimer); clearTimeout(dealTimer); clearTimeout(revealStartTimer);
       clearTimeout(outroTimer1); clearTimeout(outroTimer2); clearTimeout(outroTimer3);
       clearTimeout(aiTeacherTimer);
-      // clearTimeout(finishTimer);
     };
   }, []);
 
