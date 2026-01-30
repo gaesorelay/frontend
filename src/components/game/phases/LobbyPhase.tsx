@@ -16,6 +16,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logoOut from '@/assets/logo/logo_out.png';
 import logoSetting from '@/assets/logo/logo_setting.png';
+import lobbyLogo from '@/assets/logo/lobby_logo.png';
+import { getAvatarSrc } from '@/lib/avatarMapper';
 
 // ⭐️ 부모(GameRoom)에게 받을 데이터 타입 정의
 interface LobbyProps {
@@ -28,7 +30,14 @@ interface LobbyProps {
   // onStartGame?: () => void;
 }
 
-const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomId }: LobbyProps) => {
+const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUsers, roomId }: LobbyProps) => {
+  // 🐶 Avatar ID -> Image 변환 
+  // 이제 전역 Mapper를 사용합니다.
+  const users = rawUsers.map(user => ({
+    ...user,
+    avatar: getAvatarSrc(user.avatarId) || user.avatar
+  }));
+
   console.log("🔍 유저 데이터 구조 확인:", users);
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
 
@@ -211,18 +220,18 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
   const handleStartGame = () => {
     console.log("🚀 게임 시작 버튼 클릭됨");
     if (!isHost) return;
-    
+
     // (선택) 인원 수 체크 등을 여기서 미리 막아도 됨
     // const playerCnt = users.filter(u => u.role === 'PLAYER').length;
     // if (playerCnt < 4) return alert("플레이어가 부족합니다!");
 
     if (TEST_MODE) {
-       // 테스트 모드면 바로 다음 페이즈로 강제 이동
-       // (부모 GameRoom의 devSwitchPhase 등을 호출해야 하는데, 여기선 socket만 보냄)
-       alert("테스트 모드: 개발자 컨트롤 패널을 이용하세요.");
+      // 테스트 모드면 바로 다음 페이즈로 강제 이동
+      // (부모 GameRoom의 devSwitchPhase 등을 호출해야 하는데, 여기선 socket만 보냄)
+      alert("테스트 모드: 개발자 컨트롤 패널을 이용하세요.");
     } else {
-       // 📡 백엔드에 시작 신호 전송
-       socket.emit('start_game', { roomId });
+      // 📡 백엔드에 시작 신호 전송
+      socket.emit('start_game', { roomId });
     }
   };
 
@@ -268,7 +277,7 @@ const LobbyPhase = ({ users, isHost, maxStorytellers, TEST_MODE, setUsers, roomI
               {/* 1층: 유틸리티 라인 (로고, 코드, 나가기) */}
               <div className={styles.topRow}>
                 <div className={styles.topLeft}>
-                  <img src="/src/assets/logo/lobby_logo.png" alt="Logo" className={styles.headerLogo} />
+                  <img src={lobbyLogo} alt="Logo" className={styles.headerLogo} />
 
                   <div className={styles.codeContainer} onClick={handleCopyCode}>
                     <div className={styles.tape}></div>
