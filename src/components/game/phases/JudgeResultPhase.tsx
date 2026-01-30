@@ -5,18 +5,18 @@ import bgImg from '@/assets/background.png';
 import resultLogo from '@/assets/logo/resultlogo.png';
 
 // ✅ 심사위원 이미지 import
-import judge1 from '@/assets/result/1.png';
-import judge2 from '@/assets/result/2.png';
-import judge3 from '@/assets/result/3.png';
-import judge4 from '@/assets/result/4.png';
-import judge5 from '@/assets/result/5.png';
-import judge6 from '@/assets/result/6.png';
-import judge7 from '@/assets/result/7.png';
-import judge8 from '@/assets/result/8.png';
-import judge9 from '@/assets/result/9.png';
-import judge10 from '@/assets/result/10.png';
-import judge11 from '@/assets/result/11.png';
-import judge12 from '@/assets/result/12.png';
+import judge1 from '@/assets/judge/result/1.png';
+import judge2 from '@/assets/judge/result/2.png';
+import judge3 from '@/assets/judge/result/3.png';
+import judge4 from '@/assets/judge/result/4.png';
+import judge5 from '@/assets/judge/result/5.png';
+import judge6 from '@/assets/judge/result/6.png';
+import judge7 from '@/assets/judge/result/7.png';
+import judge8 from '@/assets/judge/result/8.png';
+import judge9 from '@/assets/judge/result/9.png';
+import judge10 from '@/assets/judge/result/10.png';
+import judge11 from '@/assets/judge/result/11.png';
+import judge12 from '@/assets/judge/result/12.png';
 
 interface Props { }
 

@@ -2,18 +2,18 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
 // 🖼️ [이미지 Import]
-import judgeImg1 from '@/assets/judge/judge1.png';
-import judgeImg2 from '@/assets/judge/judge2.png';
-import judgeImg3 from '@/assets/judge/judge3.png';
-import judgeImg4 from '@/assets/judge/judge4.png';
-import judgeImg5 from '@/assets/judge/judge5.png';
-import judgeImg6 from '@/assets/judge/judge6.png';
-import judgeImg7 from '@/assets/judge/judge7.png';
-import judgeImg8 from '@/assets/judge/judge8.png';
-import judgeImg9 from '@/assets/judge/judge9.png';
-import judgeImg10 from '@/assets/judge/judge10.png';
-import judgeImg11 from '@/assets/judge/judge11.png';
-import judgeImg12 from '@/assets/judge/judge12.png';
+import judgeImg1 from '@/assets/judge/profile/judge1.png';
+import judgeImg2 from '@/assets/judge/profile/judge2.png';
+import judgeImg3 from '@/assets/judge/profile/judge3.png';
+import judgeImg4 from '@/assets/judge/profile/judge4.png';
+import judgeImg5 from '@/assets/judge/profile/judge5.png';
+import judgeImg6 from '@/assets/judge/profile/judge6.png';
+import judgeImg7 from '@/assets/judge/profile/judge7.png';
+import judgeImg8 from '@/assets/judge/profile/judge8.png';
+import judgeImg9 from '@/assets/judge/profile/judge9.png';
+import judgeImg10 from '@/assets/judge/profile/judge10.png';
+import judgeImg11 from '@/assets/judge/profile/judge11.png';
+import judgeImg12 from '@/assets/judge/profile/judge12.png';
 
 // 🖼️ [배경 이미지]
 import bgImg from '@/assets/background.png';
