@@ -18,7 +18,7 @@ import dog1 from '@/assets/dog/dog1.png';
 import styles from './GameRoom.module.css';
 
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
-const TEST_MODE = true;
+const TEST_MODE = false;
 
 export type GamePhase = 'LOBBY' | 'CARD_SHUFFLE' | 'JUDGE_SHUFFLE' | 'WRITING' | 'VOTING' | 'JUDGE_RESULT' | 'FINAL_RESULT';
 
@@ -30,7 +30,7 @@ const GameRoom = () => {
   const { nickname: myNickname, avatarId: myAvatarId, isHost: isMyHost } = useUserStore();
   const { roomConfig, gamePhase, setGamePhase, setRoundData, setRoomInfo, setPlayers } = useGameStore();
   const [isVerifying, setIsVerifying] = useState(true);
-  
+
   // ⭐️ 권한 체크: 테스트 모드이거나, 내 스토어에 저장된 신분이 Host일 때
   const isHost = TEST_MODE || isMyHost;
 
@@ -73,22 +73,26 @@ const GameRoom = () => {
 
     console.log(`🔌 GameRoom 소켓 리스너 연결 (Room: ${roomId})`);
 
-    // 1. 방 정보 요청 (게스트는 들어오자마자 이게 필요함)
-    socket.emit('request_room_info', { roomId });
+    // 1. 🔍 [수정] 방 정보 요청 (콜백으로 바로 받기!)
+    // 백엔드가 return { status: 'success', data: ... } 해주는 걸 여기서 받습니다.
+    socket.emit('request_room_info', { roomId }, (response: any) => {
+      console.log("📦 방 정보(Ack) 도착:", response);
 
-    // 2. ⭐️ [복구] 여기서 초기 명단을 받아야 합니다!
-    // 백엔드는 입장 시 'lobby_updated' 대신 이걸 보내고 있습니다.
-    socket.on('room_info', (data) => {
-      console.log("📦 방 정보(초기 명단) 도착:", data);
+      if (response.status === 'success') {
+        const data = response.data;
 
-      // A. 방 설정/제목 저장
-      useGameStore.getState().setRoomActions(data.title, data.config);
-      
-      // B. (중요) 유저 명단 업데이트 -> 이걸 해야 빈 방 현상이 사라짐!
-      setUsers(data.users); 
-      
-      // C. 로딩 끝
-      setIsVerifying(false);
+        // A. 방 설정/제목 저장
+        useGameStore.getState().setRoomActions(data.title, data.config);
+
+        // B. 유저 명단 업데이트
+        setUsers(data.users);
+
+        // C. 로딩 끝
+        setIsVerifying(false);
+      } else {
+        console.error("방 정보 로드 실패:", response.message);
+        // 에러 처리 (alert 등)
+      }
     });
 
     // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
@@ -213,65 +217,48 @@ const GameRoom = () => {
           </button>
 
           {/* 3. 중앙 개발자 컨트롤 패널 */}
-          {TEST_MODE && (
-            <div className={styles.devControlPanel}>
-              <button
-                onClick={handlePrevPhase}
-                className={`${styles.btnBase} ${styles.navBtn}`}
-                title="이전 단계"
-              >
-                ⏮ Prev
-              </button>
+          <div className={styles.devControlPanel}>
+            <button
+              onClick={handlePrevPhase}
+              className={`${styles.btnBase} ${styles.navBtn}`}
+              title="이전 단계"
+            >
+              ⏮ Prev
+            </button>
 
-              <div className={styles.statusDisplay}>
-                <span className={styles.statusLabel}>CURRENT</span>
-                <span className={styles.statusValue}>{gamePhase}</span>
-              </div>
-
-              <button
-                onClick={handleNextPhase}
-                className={`${styles.btnBase} ${styles.nextBtn}`}
-                title="다음 단계"
-              >
-                Next ⏭
-              </button>
-
-              <div className={styles.divider}></div>
-
-              <button
-                onClick={() => setIsAutoPlay(!isAutoPlay)}
-                className={`${styles.btnBase} ${styles.autoBtn} ${isAutoPlay ? styles.autoOn : styles.autoOff}`}
-                title={isAutoPlay ? "자동 진행 ON (끝나면 넘어감)" : "자동 진행 OFF (일시정지)"}
-              >
-                {isAutoPlay ? "▶ Auto" : "⏸ Pause"}
-              </button>
+            <div className={styles.statusDisplay}>
+              <span className={styles.statusLabel}>CURRENT</span>
+              <span className={styles.statusValue}>{gamePhase}</span>
             </div>
-          )}
 
-          {/* 4. 우측 정보 영역 */}
-          <div className={styles.headerRight}>
-            <span className={styles.infoBadge}>
-              {isHost ? "👑 HOST" : "🏃 GUEST"}
-            </span>
-            <span className={styles.infoBadge}>
-              Room: <span className={styles.infoValue}>{roomId}</span>
-            </span>
-            <span className={styles.infoBadge}>
-              Users: <span className={styles.infoValue}>{users.length}</span>
-            </span>
+            <button
+              onClick={handleNextPhase}
+              className={`${styles.btnBase} ${styles.nextBtn}`}
+              title="다음 단계"
+            >
+              Next ⏭
+            </button>
+
+            <div className={styles.divider}></div>
+
+            <button
+              onClick={() => setIsAutoPlay(!isAutoPlay)}
+              className={`${styles.btnBase} ${styles.autoBtn} ${isAutoPlay ? styles.autoOn : styles.autoOff}`}
+              title={isAutoPlay ? "자동 진행 ON (끝나면 넘어감)" : "자동 진행 OFF (일시정지)"}
+            >
+              {isAutoPlay ? "▶ Auto" : "⏸ Pause"}
+            </button>
           </div>
         </header>
       ) : (
         /* 개발자 바가 꺼져있을 때: 중앙 상단 플로팅 핸들만 표시 */
-        TEST_MODE && (
-          <button
-            onClick={() => setIsDevExpanded(true)}
-            className={styles.floatingToggleBtn}
-            title="개발자 도구 (펼치기)"
-          >
-            🛠️ DEV
-          </button>
-        )
+        <button
+          onClick={() => setIsDevExpanded(true)}
+          className={styles.floatingToggleBtn}
+          title="개발자 도구 (펼치기)"
+        >
+          🛠️ DEV
+        </button>
       )}
 
       {/* 2️⃣ ⭐️ [핵심] 게임 메인 무대 (Main Stage) */}
