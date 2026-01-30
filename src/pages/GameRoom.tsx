@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
@@ -31,6 +31,8 @@ const GameRoom = () => {
   const { nickname: myNickname, avatarId: myAvatarId, isHost: isMyHost } = useUserStore();
   const { roomConfig, gamePhase, setGamePhase, setRoundData, setRoomInfo, players, setPlayers, setRoomActions } = useGameStore();
   const [isVerifying, setIsVerifying] = useState(true);
+  
+  const mountTimeRef = useRef(Date.now());
 
   // ⭐️ 권한 체크: 테스트 모드이거나, 내 스토어에 저장된 신분이 Host일 때
   const isHost = TEST_MODE || isMyHost;
@@ -108,7 +110,7 @@ const GameRoom = () => {
     });
 
 
-    // 4. ⭐️ [신규] 게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
+    // 3.  게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
     socket.on('game_started', (data) => {
       console.log("🎮 게임 데이터 도착:", data);
       // imageIds, judges 등을 스토어에 저장
@@ -119,7 +121,7 @@ const GameRoom = () => {
       });
     });
 
-    // 3. [수신] 페이즈 변경
+    // 4. [수신] 페이즈 변경
     socket.on('change_phase', (response) => {
       console.log("🎬 페이즈 변경:", response.phase); // 👈 로그 확인 필수
       const { phase, data } = response;
@@ -127,10 +129,29 @@ const GameRoom = () => {
       setGamePhase(phase as GamePhase);
     });
 
+
+    // ⭐️ 6. [추가] 브라우저 닫기/새로고침 방어
+    const handleBeforeUnload = () => {
+      socket.emit('leave_room');
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    
+    
     return () => {
       socket.off('lobby_updated');
       socket.off('game_started');
       socket.off('change_phase');
+
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      
+      const duration = Date.now() - mountTimeRef.current;
+      if (duration > 500) { 
+         console.log(`🚪 뒤로가기 감지 (유지 시간: ${duration}ms) -> 퇴장 처리`);
+         socket.emit('leave_room');
+      }
+     
+
     };
   }, [roomId]);
 
