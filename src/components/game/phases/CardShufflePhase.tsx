@@ -23,14 +23,8 @@ const DECORATION_IMAGES = [
   bigHeart, bone, foot, heart, pencilBlue, pencilGreen, pencilRed, star
 ];
 
-const MOCK_CARDS = [
-  'https://picsum.photos/200/300?random=1', 'https://picsum.photos/200/300?random=2',
-  'https://picsum.photos/200/300?random=3', 'https://picsum.photos/200/300?random=4',
-  'https://picsum.photos/200/300?random=5', 'https://picsum.photos/200/300?random=6',
-  'https://picsum.photos/200/300?random=7', 'https://picsum.photos/200/300?random=8',
-];
-
-
+import { useGameStore } from '@/store/useGameStore';
+import { getCardImage } from '@/lib/cardMapper';
 
 const TOTAL_CARDS = 40;
 const TARGET_COUNT = 8;
@@ -44,6 +38,8 @@ const CardShufflePhase = () => {
   const [outroStep, setOutroStep] = useState(0);
   const [showAITeacher, setShowAITeacher] = useState(false);
 
+  const roundData = useGameStore((state) => state.roundData);
+
   const backgroundDecorations = useMemo(() => {
     return Array.from({ length: 20 }).map((_, i) => ({
       id: i,
@@ -56,24 +52,53 @@ const CardShufflePhase = () => {
   }, []);
 
   const cardsData = useMemo(() => {
-    const dogIndices = new Set<number>();
-    const totalAvatars = getTotalAvatars();
-    // 안전장치: 아바타가 충분하지 않으면 1로 fallback
-    const maxIndex = totalAvatars > 0 ? totalAvatars : 1;
+    // 1. 카드 ID 준비 (데이터 없으면 1~8 fallback)
+    const targetCardIds = roundData?.cardIds && roundData.cardIds.length >= TARGET_COUNT
+      ? roundData.cardIds
+      : [1, 2, 3, 4, 5, 6, 7, 8];
 
-    while (dogIndices.size < TARGET_COUNT) {
-      dogIndices.add(Math.floor(Math.random() * maxIndex) + 1);
+    // 2. 심사위원(Avatar) ID 준비
+    let targetJudgeIds: number[] = [];
+    if (roundData?.judgeIds && roundData.judgeIds.length >= TARGET_COUNT) {
+      targetJudgeIds = roundData.judgeIds;
+    } else {
+      // Fallback: 랜덤 생성
+      const dogIndices = new Set<number>();
+      const totalAvatars = getTotalAvatars();
+      const maxIndex = totalAvatars > 0 ? totalAvatars : 1;
+      while (dogIndices.size < TARGET_COUNT) {
+        dogIndices.add(Math.floor(Math.random() * maxIndex) + 1);
+      }
+      targetJudgeIds = Array.from(dogIndices);
     }
-    const dogArray = Array.from(dogIndices);
+
     return Array.from({ length: TOTAL_CARDS }).map((_, i) => {
       const isTarget = i < TARGET_COUNT;
+
+      let frontImage = '';
+      let backImage = '';
+
+      if (isTarget) {
+        // 실제 게임 데이터 매핑
+        const cId = targetCardIds[i]; // 카드 ID
+        const jId = targetJudgeIds[i]; // 심사위원 ID
+        frontImage = getCardImage(cId);
+        backImage = getAvatarSrc(jId);
+      } else {
+        // 더미 카드 (나머지 깔리는 카드들)
+        // 앞면은 그냥 1번 카드(혹은 아무거나), 뒷면은 기본값
+        frontImage = getCardImage(targetCardIds[0]);
+        backImage = getAvatarSrc(1);
+      }
+
       return {
-        id: i, isTarget,
-        frontImage: isTarget ? MOCK_CARDS[i] : MOCK_CARDS[0],
-        backImage: isTarget ? getAvatarSrc(dogArray[i]) : getAvatarSrc(1),
+        id: i,
+        isTarget,
+        frontImage,
+        backImage,
       };
     });
-  }, []);
+  }, [roundData]);
 
   const getShufflePos = (index: number) => {
     if (!isShuffling) return { x: 0, y: 0, r: 0 };
@@ -112,7 +137,7 @@ const CardShufflePhase = () => {
       clearInterval(dotInterval); clearInterval(shuffleInterval);
       clearTimeout(stopShuffleTimer); clearTimeout(dealTimer); clearTimeout(revealStartTimer);
       clearTimeout(outroTimer1); clearTimeout(outroTimer2); clearTimeout(outroTimer3);
-      clearTimeout(aiTeacherTimer); 
+      clearTimeout(aiTeacherTimer);
       // clearTimeout(finishTimer);
     };
   }, []);
