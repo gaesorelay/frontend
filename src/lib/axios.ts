@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // 📡 백엔드 API 기본 주소 설정
-// (개발 환경에서는 http://localhost:8000/api)
-const BASE_URL = 'https://gsrelay.o-r.kr/api';
+// .env 파일에서 백엔드 주소를 가져옵니다 (없으면 로컬호스트)
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export const client = axios.create({
     baseURL: BASE_URL,
