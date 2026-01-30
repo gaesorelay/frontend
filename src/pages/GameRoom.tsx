@@ -29,7 +29,7 @@ const GameRoom = () => {
   // 1. 스토어 데이터
   // ⭐️ [수정] useUserStore에서 isHost 정보를 정확하게 가져옵니다.
   const { nickname: myNickname, avatarId: myAvatarId, isHost: isMyHost } = useUserStore();
-  const { roomConfig, gamePhase, setGamePhase, setRoundData, setRoomInfo, setPlayers } = useGameStore();
+  const { roomConfig, gamePhase, setGamePhase, setRoundData, setRoomInfo, players, setPlayers, setRoomActions } = useGameStore();
   const [isVerifying, setIsVerifying] = useState(true);
 
   // ⭐️ 권한 체크: 테스트 모드이거나, 내 스토어에 저장된 신분이 Host일 때
@@ -64,7 +64,7 @@ const GameRoom = () => {
 
   // ⭐️ 유저 상태 관리
   // TEST_MODE가 꺼져있으면 빈 배열([])로 시작해서 소켓 데이터를 기다립니다.
-  const [users, setUsers] = useState<any[]>(TEST_MODE ? generateMockUsers() : []);
+  // const [users, setUsers] = useState<any[]>(TEST_MODE ? generateMockUsers() : []);  삭제 : 로컬 state 더이상 쓰지 않음
 
   // 📡 소켓 리스너
   useEffect(() => {
@@ -87,10 +87,10 @@ const GameRoom = () => {
         const data = response.data;
 
         // A. 방 설정/제목 저장
-        useGameStore.getState().setRoomActions(data.title, data.config);
+        setRoomActions(data.title, data.config);
 
         // B. 유저 명단 업데이트
-        setUsers(data.users);
+        setPlayers(data.users);
 
         // C. 로딩 끝
         setIsVerifying(false);
@@ -103,7 +103,7 @@ const GameRoom = () => {
     // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
     socket.on('lobby_updated', (data) => {
       console.log("👥 로비 업데이트:", data);
-      setUsers(data.users);
+      setPlayers(data.users);
       // 만약 data.roomConfig 등 방 정보도 같이 온다면 여기서 setRoomInfo 업데이트
     });
 
@@ -168,11 +168,11 @@ const GameRoom = () => {
   // 📺 페이즈 렌더러
   const renderPhase = () => {
     const commonProps = {
-      users,
+      users: players,
       isHost,
       maxStorytellers,
       TEST_MODE,
-      setUsers,
+      setUsers: setPlayers,
       roomId
     };
 
