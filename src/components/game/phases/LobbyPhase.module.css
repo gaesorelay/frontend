@@ -365,7 +365,10 @@
 }
 
 .modalAvatar {
-  font-size: 2rem;
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+  margin-bottom: 10px;
 }
 
 .modalTitle {
@@ -467,7 +470,9 @@
 }
 
 .playerAvatar {
-  font-size: 2.25rem;
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
   margin-bottom: 0.25rem;
   transition: transform 0.2s;
 }

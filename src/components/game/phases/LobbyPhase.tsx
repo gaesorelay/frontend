@@ -395,7 +395,7 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
         <>
           <Modal isOpen={!!selectedAudience} onClose={() => setSelectedAudience(null)}>
             <div className={styles.modalContent}>
-              <div className={styles.modalAvatar}>{selectedAudience?.avatar}</div>
+              <img src={selectedAudience?.avatar} alt={selectedAudience?.nickname} className={styles.modalAvatar} />
               <h2 className={styles.modalTitle}>
                 <span className={styles.modalTitleHighlight}>{selectedAudience?.nickname}</span>님을<br />어떻게 할까요?
               </h2>
@@ -416,7 +416,7 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
               <div className={styles.playerGrid}>
                 {users.filter(u => u.role === 'AUDIENCE').map((user) => (
                   <button key={user.userToken} onClick={() => handleSelectPlayer(user)} className={styles.playerButton}>
-                    <div className={styles.playerAvatar}>{user.avatar}</div>
+                    <img src={user.avatar} alt={user.nickname} className={styles.playerAvatar} />
                     <span className={styles.playerNickname}>{user.nickname}</span>
                   </button>
                 ))}
