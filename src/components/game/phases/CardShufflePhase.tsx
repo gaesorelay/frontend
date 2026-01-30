@@ -30,14 +30,12 @@ const MOCK_CARDS = [
   'https://picsum.photos/200/300?random=7', 'https://picsum.photos/200/300?random=8',
 ];
 
-interface Props {
-  onFinish: () => void;
-}
+
 
 const TOTAL_CARDS = 40;
 const TARGET_COUNT = 8;
 
-const CardShufflePhase = ({ onFinish }: Props) => {
+const CardShufflePhase = () => {
   const [isShuffling, setIsShuffling] = useState(true);
   const [shuffleTick, setShuffleTick] = useState(0);
   const [isDealt, setIsDealt] = useState(false);
@@ -108,15 +106,16 @@ const CardShufflePhase = ({ onFinish }: Props) => {
     }, 9800);
 
     // 🏁 [시간 단축] 12.0초: 종료 (기존 12.5초에서 단축)
-    const finishTimer = setTimeout(() => onFinish(), 12000);
+    // const finishTimer = setTimeout(() => onFinish(), 12000);
 
     return () => {
       clearInterval(dotInterval); clearInterval(shuffleInterval);
       clearTimeout(stopShuffleTimer); clearTimeout(dealTimer); clearTimeout(revealStartTimer);
       clearTimeout(outroTimer1); clearTimeout(outroTimer2); clearTimeout(outroTimer3);
-      clearTimeout(aiTeacherTimer); clearTimeout(finishTimer);
+      clearTimeout(aiTeacherTimer); 
+      // clearTimeout(finishTimer);
     };
-  }, [onFinish]);
+  }, []);
 
   return (
     <div

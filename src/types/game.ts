@@ -75,15 +75,18 @@ export type ChatMessage = {
   avatarId?: number;
 };
 
-export type GamePhase =
+export type GamePhase = 
   | 'LOBBY'
   | 'CARD_SHUFFLE'
   | 'JUDGE_SHUFFLE'
-  | 'WRITING'
+  // 🔽 세분화된 턴 추가
+  | 'TURN1' | 'TURN2' | 'TURN3' | 'TURN4' 
+  | 'TURN5' | 'TURN6' | 'TURN7' | 'TURN8'
+  | 'STORY'         
   | 'VOTING'
-  | 'JUDGE_RESULT'
+  | 'JUDGE_RESULT' 
   | 'FINAL_RESULT';
-
+  
 export interface RoundData {
   cardIds: number[];
   judgeIds: number[];

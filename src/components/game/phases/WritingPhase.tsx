@@ -18,9 +18,19 @@ import dog9 from '@/assets/dog/dog9.png';
 import dog10 from '@/assets/dog/dog10.png';
 import dog11 from '@/assets/dog/dog11.png';
 
-const WritingPhase = () => {
-  // --- Styles ---
+//Props 인터페이스 정의 추가
+interface WritingPhaseProps {
+  currentRound: string; // "TURN1", "TURN2" 같은 문자열을 받음
+}
+
+
+
+
+const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
+  // --- Styles --- 
   // Common
+  console.log("현재 라운드:", currentRound);
+  
   const paperBoxStyle: React.CSSProperties = {
     backgroundColor: '#fdfcf0',
     border: '3px solid #333',

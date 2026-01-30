@@ -50,12 +50,10 @@ function App() {
                     <Route path="/gameroom/:roomId" element={<GameRoom />} />
 
                     {/* 개발용 임시 라우트 */}
-                    <Route path="/test/writing" element={<WritingPhase />} />
-                    <Route path="/test/cardshuffle" element={<CardShufflePhase
-                        onFinish={() => console.log("테스트용 카드셔플 페이지로 이동")} />} />
+                    {/* <Route path="/test/writing" element={<WritingPhase currentRound="TURN1" />} /> */}
+                    <Route path="/test/cardshuffle" element={<CardShufflePhase />} />
 
-                    <Route path="/test/judgeshuffle" element={<JudgeShufflePhase
-                        onFinish={() => console.log("테스트용 심사위원셔플 페이지로 이동")} />} />
+                    <Route path="/test/judgeshuffle" element={<JudgeShufflePhase />} />
 
                     <Route path="/test/voting" element={<VotingPhase />} />
                     <Route path="/test/judgeresult" element={<JudgeResultPhase />} />

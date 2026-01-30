@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
+import type { GamePhase } from '@/types/game';
 
 // 페이즈 컴포넌트들 Import
 import LobbyPhase from '@/components/game/phases/LobbyPhase';
@@ -20,7 +21,7 @@ import styles from './GameRoom.module.css';
 // 🛠️ [중요] 배포/실전 테스트 시에는 반드시 false로 설정!
 const TEST_MODE = false;
 
-export type GamePhase = 'LOBBY' | 'CARD_SHUFFLE' | 'JUDGE_SHUFFLE' | 'WRITING' | 'VOTING' | 'JUDGE_RESULT' | 'FINAL_RESULT';
+
 
 const GameRoom = () => {
   const { roomId } = useParams();
@@ -38,7 +39,6 @@ const GameRoom = () => {
   const maxStorytellers = roomConfig?.storytellerCount || 4;
 
   // =========================================================
-  // 🧪 [테스트 데이터 생성기]
   // 🧪 [테스트 데이터 생성기]
   // =========================================================
   const generateMockUsers = () => {
@@ -73,7 +73,12 @@ const GameRoom = () => {
 
     console.log(`🔌 GameRoom 소켓 리스너 연결 (Room: ${roomId})`);
 
-    // 1. 🔍 [수정] 방 정보 요청 (콜백으로 바로 받기!)
+    // 1. 방 정보 요청 (게스트는 들어오자마자 이게 필요함)
+    socket.emit('request_room_info', { roomId });
+
+    // 2. ⭐️ [복구] 여기서 초기 명단을 받아야 합니다!
+    // 백엔드는 입장 시 'lobby_updated' 대신 이걸 보내고 있습니다.
+    // 1. ⭐️ [수정] 방 정보 요청 (콜백으로 바로 받기!)
     // 백엔드가 return { status: 'success', data: ... } 해주는 걸 여기서 받습니다.
     socket.emit('request_room_info', { roomId }, (response: any) => {
       console.log("📦 방 정보(Ack) 도착:", response);
@@ -102,74 +107,64 @@ const GameRoom = () => {
       // 만약 data.roomConfig 등 방 정보도 같이 온다면 여기서 setRoomInfo 업데이트
     });
 
-    // (구버전 호환)
-    socket.on('user_joined', (_data) => {
-      // user_joined만 오면 전체 리스트를 모르니, 다시 리스트 요청
-      socket.emit('request_room_info', { roomId });
+
+    // 4. ⭐️ [신규] 게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
+    socket.on('game_started', (data) => {
+      console.log("🎮 게임 데이터 도착:", data);
+      // imageIds, judges 등을 스토어에 저장
+      setRoundData({
+        cardIds: data.imageIds,
+        judgeIds: data.judges,
+        // 필요한 다른 데이터 초기화
+      });
     });
 
     // 3. [수신] 페이즈 변경
     socket.on('change_phase', (response) => {
+      console.log("🎬 페이즈 변경:", response.phase); // 👈 로그 확인 필수
       const { phase, data } = response;
       if (data) setRoundData(data);
-      setGamePhase(phase);
+      setGamePhase(phase as GamePhase);
     });
 
     return () => {
       socket.off('lobby_updated');
-      socket.off('user_joined');
+      socket.off('game_started');
       socket.off('change_phase');
     };
   }, [roomId]);
 
   // 🛠️ [개발용] 페이즈 순서 정의
   const PHASE_ORDER: GamePhase[] = [
-    'LOBBY',
-    'CARD_SHUFFLE',
-    'JUDGE_SHUFFLE',
-    'WRITING',
-    'VOTING',
-    'JUDGE_RESULT',
-    'FINAL_RESULT'
-  ];
+      'LOBBY',
+      'CARD_SHUFFLE',
+      'JUDGE_SHUFFLE',
+      'TURN1', 'TURN2', 'TURN3', 'TURN4', 
+      'TURN5', 'TURN6', 'TURN7', 'TURN8',
+      'STORY', 
+      'VOTING', 
+      'JUDGE_RESULT', 
+      'FINAL_RESULT'
+    ];
 
   // 🛠️ [개발용] 제어 상태
   const [isAutoPlay, setIsAutoPlay] = useState(false); // 기본값: 수동 (일시정지 상태)
   const [isDevExpanded, setIsDevExpanded] = useState(true); // 개발자 바 펼침 여부
 
   const handleNextPhase = () => {
-    const currentIndex = PHASE_ORDER.indexOf(gamePhase);
+    const currentIndex = PHASE_ORDER.indexOf(gamePhase as GamePhase);
     const nextIndex = (currentIndex + 1) % PHASE_ORDER.length;
     setGamePhase(PHASE_ORDER[nextIndex]);
   };
 
   const handlePrevPhase = () => {
-    const currentIndex = PHASE_ORDER.indexOf(gamePhase);
+    const currentIndex = PHASE_ORDER.indexOf(gamePhase as GamePhase);
     const prevIndex = (currentIndex - 1 + PHASE_ORDER.length) % PHASE_ORDER.length;
     setGamePhase(PHASE_ORDER[prevIndex]);
   };
 
-  // 🛠️ 자동 전환 핸들러 (각 페이즈가 끝났을 때 호출)
-  const handlePhaseFinish = (nextPhase: GamePhase) => {
-    if (isAutoPlay) {
-      setGamePhase(nextPhase);
-    } else {
-      console.log(`⏸️ [Manual Mode] ${gamePhase} 종료됨. 다음(${nextPhase})으로 넘어가려면 Next 버튼을 누르세요.`);
-    }
-  };
-
-  // 🎮 게임 시작 버튼 핸들러
-  const handleStartGame = () => {
-    if (TEST_MODE) {
-      // 🛠️ AutoPlay가 켜져있으면 바로 넘어가고, 아니면 멈춤 (하지만 시작 버튼은 의도가 명확하므로 바로 실행)
-      console.log("🎮 [TEST] 게임 시작! -> CARD_SHUFFLE 페이즈로 이동");
-      setGamePhase('CARD_SHUFFLE');
-    } else {
-      console.log("📡 [Socket] 게임 시작 요청");
-      socket.emit('start_game', { roomId });
-    }
-  };
-
+  
+  
   // 📺 페이즈 렌더러
   const renderPhase = () => {
     const commonProps = {
@@ -181,18 +176,38 @@ const GameRoom = () => {
       roomId
     };
 
+   // ⭐️ 1. 턴(글쓰기) 페이즈 처리
+    // TURN1 ~ TURN8은 모두 WritingPhase를 사용하되, prop으로 몇 턴인지 넘겨줌
+    if (gamePhase.startsWith('TURN')) {
+        return <WritingPhase currentRound={gamePhase} />;
+    }
+
+    // ⭐️ 2. 나머지 페이즈 처리
     switch (gamePhase) {
-      case 'LOBBY': return <LobbyPhase {...commonProps} />;
-      case 'CARD_SHUFFLE': return <CardShufflePhase onFinish={() => handlePhaseFinish('JUDGE_SHUFFLE')} />;
-      case 'JUDGE_SHUFFLE': return <JudgeShufflePhase onFinish={() => handlePhaseFinish('WRITING')} />;
-      case 'WRITING': return <WritingPhase />;
-      case 'VOTING': return <VotingPhase />; // 추후 연결 필요
+      case 'LOBBY': 
+        return <LobbyPhase {...commonProps} />;
+      
+      case 'CARD_SHUFFLE': 
+        // onFinish 삭제! (시간 지나면 서버가 바꿔줌)
+        return <CardShufflePhase />; 
+      
+      case 'JUDGE_SHUFFLE': 
+        // onFinish 삭제!
+        return <JudgeShufflePhase />;
+      
+      // case 'WRITING': (이제 안 씀. 위 if문에서 처리됨)
+
+      case 'STORY':
+         // TODO: 스토리 낭독 컴포넌트 추가 필요
+         return <div className="text-white text-3xl font-bold flex justify-center items-center h-full">📖 스토리 낭독 시간 (개발중)</div>;
+
+      case 'VOTING': return <VotingPhase />;
       case 'JUDGE_RESULT': return <JudgeResultPhase />;
       case 'FINAL_RESULT': return <FinalResultPhase />;
+      
       default: return <div className="text-white flex items-center justify-center h-full">로딩 중... ({gamePhase})</div>;
     }
   };
-
 
   return (
     // 🏟️ [전체 컨테이너]
