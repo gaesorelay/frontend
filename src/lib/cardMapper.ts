@@ -1,13 +1,13 @@
 // 🃏 카드 이미지 로딩 및 매핑 로직
 // CardShufflePhase 등에서 ID <-> 이미지 매핑을 보장하기 위함입니다.
 
-const rawImages = import.meta.glob('@/assets/cards/*.{png,jpg,jpeg}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const rawImages = import.meta.glob('@/assets/cards/*.{png,jpg,jpeg,webp}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 
 // 이미지 정렬 로직
 // 파일명 card001.png -> 1번
 const sortedImageUrls = Object.entries(rawImages)
     .filter(([path]) => {
-        return /card\d+\.(png|jpg|jpeg)$/i.test(path);
+        return /card\d+\.(png|jpg|jpeg|webp)$/i.test(path);
     })
     .sort(([pathA], [pathB]) => {
         const numA = parseInt(pathA.match(/card(\d+)/)?.[1] || '0', 10);
