@@ -13,16 +13,16 @@ import finishLogo from '@/assets/logo/judgelogo2.png';
 // 이미지는 Mapper로 가져오므로, 여기선 이름만 정의하면 됩니다.
 const ALL_JUDGES = [
     { id: 1, name: '개소리 미식가 멍성재' },
-    { id: 2, name: '과몰입 F 공감이' },
-    { id: 3, name: '낭만주의자 줄리엣' },
-    { id: 4, name: '음모론자 일루미' },
-    { id: 5, name: '칠 가이 (Chill Guy)' },
-    { id: 6, name: '팩트 폭격기 조' },
-    { id: 7, name: '침소리 성급맨' },
-    { id: 8, name: 'AI 판사 알빠노' },
-    { id: 9, name: '도파민 쇼츠왕' },
-    { id: 10, name: 'K-암행어사 조나단' },
-    { id: 11, name: '퍼포먼스 카니' },
+    { id: 2, name: '침소리 성급맨' },
+    { id: 3, name: '과몰입 F 공감이' },
+    { id: 4, name: 'AI 판사 알빠노' },
+    { id: 5, name: '도파민 쇼츠왕' },
+    { id: 6, name: '낭만주의자 줄리엣' },
+    { id: 7, name: '음모론자 일루미' },
+    { id: 8, name: '칠 가이 (Chill Guy)' },
+    { id: 9, name: 'K-암행어사 조나단' },
+    { id: 10, name: '퍼포먼스 카니' },
+    { id: 11, name: '팩트 폭격기 조' },
     { id: 12, name: '긍정왕 운동현' },
 ];
 const BARK_SOUNDS = ["월!", "멍!", "왈왈!", "Grrr...", "컹!", "깨갱!", "개소리!", "Woof!", "으르렁", "왕!"];

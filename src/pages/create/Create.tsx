@@ -104,14 +104,9 @@ export default function CreatePage() {
 
     // [Debug] 저장 확인 및 이동
     setTimeout(() => {
-      const stored = localStorage.getItem('game-storage');
-      console.log("📦 [CreatePage] 저장 완료:", configData);
-
-      if (!stored) {
-        alert("❌ 스토어 저장 실패!");
-      } else {
+      
         navigate('/setup');
-      }
+      
     }, 100);
   };
 
