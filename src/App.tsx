@@ -14,6 +14,7 @@ import VotingPhase from './components/game/phases/VotingPhase.tsx';
 import JudgeResultPhase from './components/game/phases/JudgeResultPhase.tsx';
 import FinalResultPhase from './components/game/phases/FinalResultPhase.tsx';
 import { RoomValidationGuard, GameEntryGuard } from '@/components/routes/RouteGuards';
+import KickModal from '@/components/common/KickModal';
 // 임시 페이지 컴포넌트 (나중에 src/pages/.. 로 분리하세요)
 const TempResult = () => <div className="p-10 text-2xl font-bold">결과 화면</div>;
 
@@ -35,6 +36,7 @@ function App() {
         <BrowserRouter>
             <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
                 {/* <DevRemote /> */}
+                <KickModal />
                 <Routes>
                     {/* 1. 메인화면 */}
                     <Route path="/" element={<Intro />} />
