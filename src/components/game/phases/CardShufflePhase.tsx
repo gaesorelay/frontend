@@ -5,7 +5,36 @@ import dotImage from '@/assets/logo/dot.png';
 import cardLogo1 from '@/assets/logo/cardlogo1.png';
 import cardLogo2 from '@/assets/logo/cardlogo2.png';
 import cardLogo3 from '@/assets/logo/cardlogo3.png';
-import aiTeacherLogo from '@/assets/logo/AIteacher.png';
+
+// 심사위원 이미지
+import p1 from '@/assets/judge/profile/judge1.png';
+import p2 from '@/assets/judge/profile/judge2.png';
+import p3 from '@/assets/judge/profile/judge3.png';
+import p4 from '@/assets/judge/profile/judge4.png';
+import p5 from '@/assets/judge/profile/judge5.png';
+import p6 from '@/assets/judge/profile/judge6.png';
+import p7 from '@/assets/judge/profile/judge7.png';
+import p8 from '@/assets/judge/profile/judge8.png';
+import p9 from '@/assets/judge/profile/judge9.png';
+import p10 from '@/assets/judge/profile/judge10.png';
+import p11 from '@/assets/judge/profile/judge11.png';
+import p12 from '@/assets/judge/profile/judge12.png';
+
+// 🔄 데이터: 요청하신 멘트와 이름 유지
+const JUDGE_INFO = [
+  { img: p1, name: "개소리 미식가 멍성재", persona: "당신의 개소리, 생존입니다." },
+  { img: p2, name: "침소리 전문가 성급맨", persona: "오히려 좋아. 킹받네? 55도발" },
+  { img: p3, name: "과몰입 F 공감이", persona: "ㅠㅠ 흐어엉.. 휴지 좀 주세요.." },
+  { img: p4, name: "AI 판사 알빠노", persona: "감정? 알빠노. 팩트만." },
+  { img: p5, name: "도파민 중독자 쇼츠왕", persona: "3초 안에 웃겨봐. 스킵!" },
+  { img: p6, name: "사랑꾼 줄리엣", persona: "이게 사랑이지❤️ 낭만 합격!" },
+  { img: p7, name: "음모론자 일루미", persona: "이건 분명 외계인의 소행이야👁️" },
+  { img: p8, name: "초연한 칠 가이", persona: "굳이? 너무 애쓰지 마. Relax." },
+  { img: p9, name: "암행어사 조나단", persona: "예의가 없어! 밥은 먹었니?" },
+  { img: p10, name: "퍼포먼스 카니", persona: "쒸.. 쒸.. 문장이 맿끈해✨" },
+  { img: p11, name: "독설가 조", persona: "그래서 팩트가 뭔데? 꿈꿨어?" },
+  { img: p12, name: "운동선수 운동현", persona: "와! 뇌 운동 많이 된다! 나이스!" },
+];
 
 import { getAvatarSrc, getTotalAvatars } from '@/lib/avatarMapper';
 
@@ -32,11 +61,17 @@ const TARGET_COUNT = 8;
 const CardShufflePhase = () => {
   const [isShuffling, setIsShuffling] = useState(true);
   const [shuffleTick, setShuffleTick] = useState(0);
+  const [isScattered, setIsScattered] = useState(false);
   const [isDealt, setIsDealt] = useState(false);
   const [visibleCount, setVisibleCount] = useState(0);
   const [dotCount, setDotCount] = useState(1);
   const [outroStep, setOutroStep] = useState(0);
-  const [showAITeacher, setShowAITeacher] = useState(false);
+
+  const [showJudgeList, setShowJudgeList] = useState(false);
+  const [currentJudgeIndex, setCurrentJudgeIndex] = useState(-1);
+
+  // 🆕 그림 카드 줌인 효과를 위한 상태 추가
+  const [focusedCardIndex, setFocusedCardIndex] = useState(-1);
 
   const roundData = useGameStore((state) => state.roundData);
 
@@ -52,90 +87,121 @@ const CardShufflePhase = () => {
   }, []);
 
   const cardsData = useMemo(() => {
-    // 1. 카드 ID 준비 (데이터 없으면 1~8 fallback)
     const targetCardIds = roundData?.cardIds && roundData.cardIds.length >= TARGET_COUNT
       ? roundData.cardIds
       : [1, 2, 3, 4, 5, 6, 7, 8];
 
-    // 2. 심사위원(Avatar) ID 준비
+    const totalAvatars = getTotalAvatars();
+    const maxAvatarIndex = totalAvatars > 0 ? totalAvatars : 1;
+
     let targetJudgeIds: number[] = [];
     if (roundData?.judgeIds && roundData.judgeIds.length >= TARGET_COUNT) {
       targetJudgeIds = roundData.judgeIds;
     } else {
-      // Fallback: 랜덤 생성
       const dogIndices = new Set<number>();
-      const totalAvatars = getTotalAvatars();
-      const maxIndex = totalAvatars > 0 ? totalAvatars : 1;
       while (dogIndices.size < TARGET_COUNT) {
-        dogIndices.add(Math.floor(Math.random() * maxIndex) + 1);
+        dogIndices.add(Math.floor(Math.random() * maxAvatarIndex) + 1);
       }
       targetJudgeIds = Array.from(dogIndices);
     }
 
     return Array.from({ length: TOTAL_CARDS }).map((_, i) => {
       const isTarget = i < TARGET_COUNT;
-
       let frontImage = '';
       let backImage = '';
 
       if (isTarget) {
-        // 실제 게임 데이터 매핑
-        const cId = targetCardIds[i]; // 카드 ID
-        const jId = targetJudgeIds[i]; // 심사위원 ID
+        const cId = targetCardIds[i];
+        const jId = targetJudgeIds[i];
         frontImage = getCardImage(cId);
         backImage = getAvatarSrc(jId);
       } else {
-        // 더미 카드 (나머지 깔리는 카드들)
-        // 앞면은 그냥 1번 카드(혹은 아무거나), 뒷면은 기본값
-        frontImage = getCardImage(targetCardIds[0]);
-        backImage = getAvatarSrc(1);
+        frontImage = getCardImage(targetCardIds[i % TARGET_COUNT]);
+        const randomDogId = Math.floor(Math.random() * maxAvatarIndex) + 1;
+        backImage = getAvatarSrc(randomDogId);
       }
+
+      const scatterX = (Math.random() - 0.5) * 1400;
+      const scatterY = (Math.random() - 0.5) * 900;
+      const scatterR = (Math.random() - 0.5) * 720;
 
       return {
         id: i,
         isTarget,
         frontImage,
         backImage,
+        scatterPos: { x: scatterX, y: scatterY, r: scatterR }
       };
     });
   }, [roundData]);
 
   const getShufflePos = (index: number) => {
     if (!isShuffling) return { x: 0, y: 0, r: 0 };
-    const randomSeed = index * shuffleTick * 123.45;
-    const randomX = (Math.sin(randomSeed) * 50);
-    const randomY = (Math.cos(randomSeed * 0.5) * 50);
-    const randomR = (Math.sin(randomSeed * 0.2) * 40);
+    const randomSeed = index * shuffleTick * 999.99;
+    const randomX = (Math.sin(randomSeed) * 60);
+    const randomY = (Math.cos(randomSeed * 0.8) * 60);
+    const randomR = (Math.sin(randomSeed * 0.5) * 180);
     return { x: randomX, y: randomY, r: randomR };
   };
 
   useEffect(() => {
     const dotInterval = setInterval(() => setDotCount((prev) => (prev < 3 ? prev + 1 : 1)), 300);
-    const shuffleInterval = setInterval(() => setShuffleTick((prev) => prev + 1), 80);
+    const shuffleInterval = setInterval(() => setShuffleTick((prev) => prev + 1), 50);
 
-    const stopShuffleTimer = setTimeout(() => { clearInterval(shuffleInterval); setIsShuffling(false); }, 2000);
-    const dealTimer = setTimeout(() => setIsDealt(true), 2500);
+    const stopShuffleTimer = setTimeout(() => {
+      clearInterval(shuffleInterval);
+      setIsShuffling(false);
+      setIsScattered(true);
+    }, 2000);
 
+    const dealTimer = setTimeout(() => setIsDealt(true), 3200);
+
+    // 🆕 [그림 카드 줌인/줌아웃 효과 추가]
     const revealStartTimer = setTimeout(() => {
       clearInterval(dotInterval); setDotCount(0);
-      for (let i = 0; i < TARGET_COUNT; i++) { setTimeout(() => setVisibleCount((prev) => prev + 1), i * 200); }
-    }, 4000);
+      for (let i = 0; i < TARGET_COUNT; i++) {
+        setTimeout(() => {
+          setVisibleCount((prev) => prev + 1); // 뒤집기
+          setFocusedCardIndex(i); // 줌인!
 
-    const outroTimer1 = setTimeout(() => setOutroStep(1), 6000);
-    const outroTimer2 = setTimeout(() => setOutroStep(2), 7500);
-    const outroTimer3 = setTimeout(() => setOutroStep(3), 9000); // 9초에 "킹받을까!?" 등장
+          // 0.3초 뒤에 다시 줌아웃 (원래 크기로 복귀)
+          setTimeout(() => {
+            setFocusedCardIndex(-1);
+          }, 300);
 
-    // ⚡️ [시간 단축] 9.8초: 0.8초 뒤에 바로 AI 등장 (기존 10.5초에서 단축)
-    const aiTeacherTimer = setTimeout(() => {
-      setShowAITeacher(true);
-    }, 9800);
+        }, i * 400); // 0.4초 간격
+      }
+    }, 4500);
 
+    // 텍스트 등장 지연
+    const outroTimer1 = setTimeout(() => setOutroStep(1), 8500);
+    const outroTimer2 = setTimeout(() => setOutroStep(2), 10000);
+    const outroTimer3 = setTimeout(() => setOutroStep(3), 11500);
+
+    // 리스트 등장 (12초)
+    const showListTimer = setTimeout(() => {
+      setShowJudgeList(true);
+    }, 12000);
+
+    // 심사위원 시퀀스 시작 (14.5초)
+    const startJudgeSequence = setTimeout(() => {
+      let idx = 0;
+      const sequenceInterval = setInterval(() => {
+        setCurrentJudgeIndex(idx);
+        idx++;
+        if (idx > 12) {
+          clearInterval(sequenceInterval);
+          setCurrentJudgeIndex(-1);
+        }
+      }, 2000);
+    }, 14500);
 
     return () => {
       clearInterval(dotInterval); clearInterval(shuffleInterval);
       clearTimeout(stopShuffleTimer); clearTimeout(dealTimer); clearTimeout(revealStartTimer);
       clearTimeout(outroTimer1); clearTimeout(outroTimer2); clearTimeout(outroTimer3);
-      clearTimeout(aiTeacherTimer);
+      clearTimeout(showListTimer);
+      clearTimeout(startJudgeSequence);
     };
   }, []);
 
@@ -154,8 +220,8 @@ const CardShufflePhase = () => {
         ))}
       </div>
 
-      {/* --- 상단 로고 및 아웃트로 영역 --- */}
-      <div style={{ position: 'absolute', top: '8%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
+      {/* --- 상단 로고 --- */}
+      <div style={{ position: 'absolute', top: '5%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem', zIndex: 20, transition: 'all 0.5s', transform: visibleCount > 0 ? 'scale(0.9) translateY(-20px)' : 'scale(1)', opacity: outroStep > 0 ? 0 : 1 }}>
           <img src={titleLogo} alt="Card Distribute" className="drop-shadow-md" style={{ width: '800px', height: 'auto', display: 'block', margin: 0 }} />
           <div style={{ display: 'flex', gap: '8px', marginLeft: '20px', alignItems: 'center', marginTop: '60px' }}>
@@ -165,33 +231,98 @@ const CardShufflePhase = () => {
           </div>
         </div>
 
+        {/* 1, 2, 3 로고 */}
         {outroStep > 0 && (
-          <div style={{ position: 'absolute', top: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-            <img src={cardLogo1} alt="1" className={`absolute top-0 drop-shadow-lg transition-all duration-500 ${outroStep === 1 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '400px' }} />
-            <img src={cardLogo2} alt="2" className={`absolute top-0 drop-shadow-lg transition-all duration-500 ${outroStep === 2 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '400px' }} />
-            <img src={cardLogo3} alt="3" className={`absolute top-0 drop-shadow-xl transition-all duration-500 ${outroStep === 3 ? 'opacity-100 scale-125 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '450px' }} />
+          <div style={{ position: 'absolute', top: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', flexDirection: 'column' }}>
+            <div style={{ position: 'relative', width: '100%', height: '150px', display: 'flex', justifyContent: 'center' }}>
+              <img src={cardLogo1} alt="1" className={`absolute drop-shadow-lg transition-all duration-500 ${outroStep >= 1 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '450px', zIndex: 30 }} />
+              <img src={cardLogo2} alt="2" className={`absolute drop-shadow-lg transition-all duration-500 ${outroStep >= 2 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '450px', top: '60px', zIndex: 31 }} />
+              <img src={cardLogo3} alt="3" className={`absolute drop-shadow-xl transition-all duration-500 ${outroStep >= 3 ? 'opacity-100 scale-125 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`} style={{ width: '500px', top: '140px', zIndex: 32 }} />
+            </div>
           </div>
         )}
       </div>
 
-      {/* 🆕 [AI 심사위원 등장 영역] */}
+      {/* 12명 심사위원 리스트 */}
       <div
         style={{
-          position: 'absolute', top: '55%', left: '50%',
-          transform: 'translate(-50%, -50%)',
+          position: 'absolute',
+          bottom: '10%',
+          left: '50%', transform: 'translateX(-50%)',
+          width: '95%', maxWidth: '1200px',
+          display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)',
+          gap: '15px', rowGap: '20px', padding: '20px',
           zIndex: 100,
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-          opacity: showAITeacher ? 1 : 0,
-          scale: showAITeacher ? 1 : 0.5,
+          opacity: showJudgeList ? 1 : 0,
+          transition: 'opacity 1s ease-out'
         }}
       >
-        {/* 🚨 수정: 크기를 600px로 더욱 확대 (초대형) */}
-        <img
-          src={aiTeacherLogo}
-          alt="AI Teacher"
-          style={{ width: '600px', height: 'auto', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.6))' }}
-        />
+        {JUDGE_INFO.map((judge, index) => {
+          const isHighlighted = currentJudgeIndex === index;
+          const isOthersDimmed = currentJudgeIndex !== -1 && !isHighlighted;
+
+          return (
+            <div
+              key={index}
+              style={{
+                position: 'relative',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+
+                backgroundColor: 'transparent',
+                padding: 0,
+                border: 'none',
+                boxShadow: 'none',
+
+                transform: isHighlighted ? 'scale(1.5) translateY(-60px)' : 'scale(1)',
+                zIndex: isHighlighted ? 200 : (isOthersDimmed ? 1 : 10),
+                opacity: isOthersDimmed ? 0.3 : 1,
+                transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                cursor: 'default'
+              }}
+            >
+              <img
+                src={judge.img}
+                alt={judge.name}
+                style={{
+                  width: '100%', maxWidth: '110px',
+                  aspectRatio: '1/1',
+                  objectFit: 'contain',
+                  borderRadius: '0px',
+                  border: 'none', // 노란색 테두리 제거
+                  boxShadow: 'none', // 그림자 제거
+                  transition: 'all 0.3s'
+                }}
+              />
+
+              <div style={{
+                marginTop: '8px',
+                fontSize: '0.9rem', fontWeight: 'bold', color: '#333',
+                textShadow: '0 0 4px rgba(255,255,255,0.8), 0 0 8px white',
+                whiteSpace: 'nowrap'
+              }}>
+                {judge.name}
+              </div>
+
+              {/* 말풍선 */}
+              <div style={{
+                position: 'absolute', top: '-40px',
+                backgroundColor: '#333', color: 'white',
+                padding: '8px 16px', borderRadius: '20px',
+                fontSize: '0.9rem', fontWeight: 'bold', whiteSpace: 'nowrap',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
+                opacity: isHighlighted ? 1 : 0,
+                transform: isHighlighted ? 'scale(1)' : 'scale(0)',
+                transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s'
+              }}>
+                {judge.persona}
+                <div style={{
+                  position: 'absolute', bottom: '-6px', left: '50%', transform: 'translateX(-50%) rotate(45deg)',
+                  width: '12px', height: '12px', backgroundColor: '#333'
+                }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* 🃏 카드 무대 */}
@@ -200,23 +331,61 @@ const CardShufflePhase = () => {
           position: 'relative', width: '600px', height: '400px', perspective: '1000px', zIndex: 10,
           marginTop: '140px',
           transition: 'all 1s',
-          opacity: outroStep > 0 ? 0.3 : 1,
-          filter: outroStep > 0 ? 'blur(4px)' : 'none'
+          opacity: outroStep > 0 ? 0.2 : 1,
+          filter: outroStep > 0 ? 'blur(5px)' : 'none'
         }}
       >
         {cardsData.map((card, index) => {
           const shufflePos = getShufflePos(index);
           const col = index % 4; const row = Math.floor(index / 4);
-          const gridX = (col - 1.5) * 150; const gridY = (row - 0.5) * 220;
-          let x = 0, y = 0, rotate = 0, opacity = 1;
-          if (isShuffling) { x = shufflePos.x; y = shufflePos.y; rotate = shufflePos.r; }
-          else if (isDealt) { if (card.isTarget) { x = gridX; y = gridY; rotate = 0; } else { x = 0; y = 0; opacity = 0; } }
+          const gridX = (col - 1.5) * 240;
+          const gridY = (row - 0.5) * 180;
+
+          let x = 0, y = 0, rotate = 0, opacity = 1, scale = 1;
+
+          // 🆕 줌인/줌아웃 효과 (현재 포커스된 카드면 확대)
+          const isFocused = index === focusedCardIndex;
+
+          if (isDealt) {
+            if (card.isTarget) {
+              x = gridX; y = gridY; rotate = 0;
+              // 기본 1.3배, 줌인 시 1.6배
+              scale = isFocused ? 1.6 : 1.3;
+            } else {
+              x = card.scatterPos.x; y = card.scatterPos.y; rotate = card.scatterPos.r * 10; scale = 0; opacity = 0;
+            }
+          } else if (isScattered) {
+            x = card.scatterPos.x; y = card.scatterPos.y; rotate = card.scatterPos.r * 2; scale = 1.0;
+          } else if (isShuffling) {
+            x = shufflePos.x; y = shufflePos.y; rotate = shufflePos.r;
+          }
+
           const isFlipped = card.isTarget && index < visibleCount;
+
           return (
-            <div key={card.id} style={{ position: 'absolute', top: '50%', left: '50%', width: '120px', height: '180px', marginTop: '-90px', marginLeft: '-60px', transition: isShuffling ? 'transform 0.1s linear' : 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s', transform: `translate(${x}px, ${y}px) rotate(${rotate}deg)`, opacity: opacity, zIndex: card.isTarget ? 100 + index : index }}>
+            <div
+              key={card.id}
+              style={{
+                // 가로형 카드
+                position: 'absolute', top: '50%', left: '50%', width: '180px', height: '120px',
+                marginTop: '-60px', marginLeft: '-90px',
+                // 줌인 될 때는 부드럽게 트랜지션
+                transition: isShuffling ? 'transform 0.05s linear' : isDealt ? 'transform 0.5s cubic-bezier(0.68, -0.6, 0.32, 1.6), opacity 0.5s' : 'transform 1.0s cubic-bezier(0.1, 0.9, 0.2, 1.2)',
+                transform: `translate(${x}px, ${y}px) rotate(${rotate}deg) scale(${scale})`,
+                opacity: opacity,
+                // 줌인 된 카드는 맨 위로 올림
+                zIndex: isFocused ? 500 : (card.isTarget ? 100 + index : index)
+              }}
+            >
               <div style={{ width: '100%', height: '100%', position: 'relative', transformStyle: 'preserve-3d', transition: 'transform 0.5s', transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)', boxShadow: '2px 4px 8px rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', border: '4px solid white', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.1)' }}><img src={card.frontImage} alt="front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
-                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', border: '1px solid #ddd', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.05)' }}><img src={card.backImage} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+                {/* 앞면 (그림) */}
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', border: '4px solid white', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.1)' }}>
+                  <img src={card.frontImage} alt="front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                {/* 뒷면 (강아지) - 중앙에 작게 배치 */}
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', border: '1px solid #ddd', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={card.backImage} alt="cover" style={{ width: '60%', height: '60%', objectFit: 'contain' }} />
+                </div>
               </div>
             </div>
           );
