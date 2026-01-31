@@ -53,38 +53,14 @@ export default function Setup() {
   // URL에 방번호가 있으면 스토어에 뭐가 있든 무조건 게스트입니다.
   const isHost = !paramRoomId && !!roomConfig;
 
-  // ⭐️ [수정 2] 게스트로 들어왔는데 스토어에 방장 데이터가 남아있으면 청소
-  const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
-
-  // ⭐️ [수정 2] 게스트 입장 시방 유효성 검사
+  // ⭐️ [수정 2] 게스트 입장 시: 좀비 데이터 정리용
+  // 방 유효성 검사는 RouteGuard가 처리합니다.
   useEffect(() => {
-    // 1. 게스트인데 방 번호가 있는 경우 -> 서버에 방 존재 여부 확인
-    if (paramRoomId) {
-      if (socket.disconnected) socket.connect();
-
-      console.log("🔍 방 유효성 검사 중...", paramRoomId);
-      socket.emit('request_room_info', { roomId: paramRoomId }, (response: any) => {
-        if (response.status === 'success') {
-          console.log("✅ 유효한 방입니다.");
-          setIsValidRoom(true);
-        } else {
-          console.error("❌ 유효하지 않은 방:", response.message);
-          navigate('/error/not-found', { replace: true });
-        }
-      });
-
-      // 좀비 데이터 정리
-      if (roomConfig) {
-        console.log("🧹 게스트 입장: 이전 방장 데이터 초기화");
-        reset();
-      }
-    } else {
-      // 방장이거나, 잘못된 접근(방번호 없음)
-      setIsValidRoom(true);
+    if (paramRoomId && roomConfig) {
+      console.log("🧹 게스트 입장: 이전 방장 데이터 초기화");
+      reset();
     }
-  }, [paramRoomId, navigate]);
-
-
+  }, [paramRoomId, roomConfig, reset]);
 
   const handlePrev = () => {
     if (totalDogs === 0) return;
@@ -207,10 +183,6 @@ export default function Setup() {
     arrowBtn: { background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '5px', transition: 'transform 0.1s' },
     arrowIcon: { width: '100px', height: '100px', objectFit: 'contain' as const, filter: 'drop-shadow(2px 2px 0px rgba(0,0,0,0.2))' }
   };
-
-  if (isValidRoom === null && paramRoomId) {
-    return <div style={{ ...styles.container, color: 'white', fontSize: '1.5rem', fontWeight: 'bold' }}>방 확인 중... 🔍</div>;
-  }
 
   return (
     <div style={styles.container}>

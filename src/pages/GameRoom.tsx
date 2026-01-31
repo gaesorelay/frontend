@@ -126,24 +126,12 @@ const GameRoom = () => {
     setGamePhase('LOBBY');
     if (TEST_MODE) return;
 
-    // 0. ⭐️ [보안] 입장 절차를 거치지 않은 유저(hasEntered=false)는 Setup으로 추방
-    // 단, TEST_MODE거나 내가 방장(isHost=true)인 경우는 스토어 초기화 이슈일 수 있으니 예외 처리 (혹은 방장도 쫓아내야 안전함)
-    if (!TEST_MODE && !hasEntered && !isHost) {
-      console.warn("⛔️ 정상적인 입장 절차가 아닙니다. Setup으로 이동합니다.");
-      navigate(`/setup/${roomId}`, { replace: true });
-      return;
-    }
-
     // 1. 방 정보 요청 (게스트는 들어오자마자 이게 필요함)
     socket.emit('request_room_info', { roomId }, (response: any) => {
       if (response.status === 'success') {
         // 방이 존재함: 스토어에 데이터 저장 및 게임 진행
         console.log('방 정보 로드 성공:', response.data);
         setRoomInfo(response.data);
-      } else {
-        // 방이 없거나 에러 발생: 404 페이지로 이동
-        console.error('유효하지 않은 방:', response.message);
-        navigate('/error/not-found', { replace: true });
       }
     });
 
