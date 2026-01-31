@@ -1,38 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Background } from '@/components/common/background';
 import voteLogoImg from '@/assets/logo/logo_vote.png';
+import voteFinishImg from '@/assets/logo/vote_finish.png';
 import ChatArea from '../ChatArea';
 
-const getVoteMentions = () => [
-  "이족 보행의 자격이 없다고 느껴지는 팀에게 낙인을 찍으십시오.",
-  "솔직해지세요. 당신도 이 개소리에 설득당하지 않았나요?",
-  "인간으로 남을지, 개가 될지 결정하는 것은 오직 당신의 판결뿐입니다.",
-  "나는 인간이길 포기했다는 저들이 보이십니까? 꿈을 이뤄주세요.",
-  '개풀 뜯어먹는 소리 하고 있는 팀은 누구 인가?',
-  '누가 더 미친 소리를 하였는가?'
-];
-
-const mentionList = getVoteMentions();
-const randomIdx = Math.floor(Math.random() * mentionList.length);
-const finalMent = mentionList[randomIdx];
-
 const VotingPhase = () => {
-  // 실시간 투표수 상태 (테스트용 초기값)
   const [votesA, setVotesA] = useState(15);
   const [votesB, setVotesB] = useState(12);
+  const totalTime = 30;
+  const [timeLeft, setTimeLeft] = useState(totalTime);
+  const [isTimeUp, setIsTimeUp] = useState(false);
 
-  const totalVotes = votesA + votesB || 1; // 0 나누기 방지
-  const ratioA = (votesA / totalVotes) * 100;
-  const ratioB = (votesB / totalVotes) * 100;
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      setIsTimeUp(true);
+      return;
+    }
+    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
   const onVote = (team: 'A' | 'B') => {
-    if (team === 'A') setVotesA(prev => prev + 1);
-    else setVotesB(prev => prev + 1);
-    // 실제 환경에서는 여기서 socket.emit('vote', team) 등을 호출
+    if (isTimeUp) return;
+    team === 'A' ? setVotesA(prev => prev + 1) : setVotesB(prev => prev + 1);
   };
 
+  const timeRatio = (timeLeft / totalTime) * 100;
+  const getTimerColor = () => {
+    if (timeRatio > 50) return '#4ade80';
+    if (timeRatio > 30) return '#facc15';
+    return '#f87171';
+  };
 
+  // 1. 단계별 흔들림 강도 결정 로직
+  const getShakeClass = () => {
+    if (timeRatio <= 30) return 'shake-hard'; // 빨간색: 격렬하게
+    if (timeRatio <= 50) return 'shake-soft'; // 노란색: 미세하게
+    return ''; // 초록색: 평온
+  };
 
   return (
     <Background>
@@ -40,168 +46,155 @@ const VotingPhase = () => {
         @import url('https://fonts.googleapis.com/css2?family=Gungsuh&display=swap');
         .gungsuh-font { font-family: 'Gungsuh', '궁서', serif !important; }
 
-        /* 🔥 박진감 넘치는 로고 애니메이션 */
-        @keyframes intense-shake {
-          0% { transform: scale(1.2) rotate(0deg); }
-          25% { transform: scale(1.25) rotate(-2deg); }
-          50% { transform: scale(1.2) rotate(2deg); }
-          75% { transform: scale(1.25) rotate(-1deg); }
-          100% { transform: scale(1.2) rotate(0deg); }
+        /* 🫨 미세한 흔들림 (노란색 단계) */
+        @keyframes shake-soft {
+          0% { transform: translate(0, 0); }
+          25% { transform: translate(1px, 1px); }
+          50% { transform: translate(-1px, -1px); }
+          75% { transform: translate(1px, -1px); }
+          100% { transform: translate(0, 0); }
         }
-        .shake-logo { animation: intense-shake 0.5s infinite ease-in-out; }
 
-        /* ⚡ 게이지 진동 효과 */
-        @keyframes gauge-vibe {
-          0% { filter: brightness(1); }
-          50% { filter: brightness(1.2); }
-          100% { filter: brightness(1); }
+        /* 🤯 격렬한 흔들림 (빨간색 단계) */
+        @keyframes shake-hard {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          20% { transform: translate(-3px, 2px) rotate(-1deg); }
+          40% { transform: translate(-3px, -2px) rotate(1deg); }
+          60% { transform: translate(3px, 2px) rotate(0deg); }
+          80% { transform: translate(3px, -2px) rotate(-1deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
         }
-        .vibe-gauge { animation: gauge-vibe 0.1s infinite; }
+
+        .shake-soft { animation: shake-soft 0.3s infinite; }
+        .shake-hard { animation: shake-hard 0.1s infinite; }
+        
+        @keyframes v-pulse-red {
+          0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.7); }
+          70% { box-shadow: 10px 0 20px 15px rgba(248, 113, 113, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
+        }
+        .urgent-v { animation: v-pulse-red 1s infinite; }
       `}</style>
 
-      <div style={styles.container}>
-        <div style={styles.leftSection}>
-          <AnimatePresence>
+      <div style={{ ...styles.container, filter: isTimeUp ? 'blur(6px)' : 'none' }}>
+
+        {/* 📏 세로형 사이드 타이머 바 (흔들림 클래스 추가) */}
+        <div style={styles.sideTimerContainer} className={getShakeClass()}>
+          <div style={styles.vTimerTrack}>
             <motion.div
-              key="vote-time"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              style={styles.voteTimeContainer}
-            >
-              {/* 로고: 흔들리는 효과 적용 */}
-              <div className="shake-logo">
-                <img src={voteLogoImg} alt="로고" style={styles.logo} />
-              </div>
-
-              <h1 className="gungsuh-font" style={styles.voteTitle}>투 표 시 간</h1>
-              <p className="gungsuh-font" style={styles.voteSubTitle}>{finalMent}</p>
-
-              {/* 📊 실시간 병맛 게이지 */}
-              <div style={styles.gaugeContainer}>
-                {/* A팀 게이지 */}
-                <motion.div
-                  className="vibe-gauge"
-                  initial={{ width: '50%' }}
-                  animate={{ width: `${ratioA}%` }}
-                  style={{ ...styles.gaugeBar, backgroundColor: '#FF6B6B', borderRight: '4px solid #333' }}
-                >
-                  <span style={styles.gaugeLabel}>A팀: {votesA}표</span>
-                </motion.div>
-
-                {/* B팀 게이지 */}
-                <motion.div
-                  className="vibe-gauge"
-                  initial={{ width: '50%' }}
-                  animate={{ width: `${ratioB}%` }}
-                  style={{ ...styles.gaugeBar, backgroundColor: '#4D96FF' }}
-                >
-                  <span style={styles.gaugeLabel}>B팀: {votesB}표</span>
-                </motion.div>
-
-                {/* 중앙 번개 데코 */}
-                <div style={styles.vsBadge}>VS</div>
-              </div>
-
-              {/* 투표 버튼 */}
-              <div style={styles.voteButtons}>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9, rotate: -5 }}
-                  style={{ ...styles.voteBtn, backgroundColor: '#FF6B6B' }}
-                  onClick={() => onVote('A')}
-                >
-                  A팀 투표!
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9, rotate: 5 }}
-                  style={{ ...styles.voteBtn, backgroundColor: '#4D96FF' }}
-                  onClick={() => onVote('B')}
-                >
-                  B팀 투표!
-                </motion.button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+              initial={{ height: '100%' }}
+              animate={{ height: `${timeRatio}%`, backgroundColor: getTimerColor() }}
+              transition={{ duration: 1, ease: "linear" }}
+              className={timeRatio <= 20 ? 'urgent-v' : ''}
+              style={styles.vTimerFill}
+            />
+          </div>
+          <div style={{ ...styles.vTimerText, color: getTimerColor() }}>
+            {timeLeft}
+          </div>
         </div>
+
+        <div style={styles.leftSection}>
+          {/* 로고 상단 중앙 배치 */}
+          <div style={styles.topLogoArea}>
+            <img src={voteLogoImg} alt="로고" style={styles.mainLogo} />
+          </div>
+
+          <div style={styles.voteTimeContainer}>
+            <h1 className="gungsuh-font" style={styles.voteTitle}>투 표 시 간</h1>
+            <p className="gungsuh-font" style={styles.voteSubTitle}>누가 더 미친 소리를 하였는가?</p>
+
+            {/* 실시간 득표 게이지 */}
+            <div style={styles.gaugeContainer}>
+              <motion.div animate={{ width: `${(votesA / (votesA + votesB || 1)) * 100}%` }} style={{ ...styles.gaugeBar, backgroundColor: '#FF6B6B' }}>
+                <span style={styles.gaugeLabel}>A팀: {votesA}</span>
+              </motion.div>
+              <motion.div animate={{ width: `${(votesB / (votesA + votesB || 1)) * 100}%` }} style={{ ...styles.gaugeBar, backgroundColor: '#4D96FF' }}>
+                <span style={styles.gaugeLabel}>B팀: {votesB}</span>
+              </motion.div>
+              {/* <div style={styles.vsBadge}>VS</div> */}
+            </div>
+
+            <div style={styles.voteButtons}>
+              <button disabled={isTimeUp} style={{ ...styles.voteBtn, backgroundColor: '#FF6B6B' }} onClick={() => onVote('A')}>A팀 투표!</button>
+              <button disabled={isTimeUp} style={{ ...styles.voteBtn, backgroundColor: '#4D96FF' }} onClick={() => onVote('B')}>B팀 투표!</button>
+            </div>
+          </div>
+        </div>
+
         <aside style={styles.chatSection}><ChatArea /></aside>
       </div>
+
+      <AnimatePresence>
+        {isTimeUp && (
+          <motion.div
+            initial={{ scale: 4, opacity: 0, rotate: -30 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            style={styles.finishOverlay}
+          >
+            <img src={voteFinishImg} alt="종료" style={styles.finishImg} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Background>
   );
 };
 
 const styles: { [key: string]: React.CSSProperties } = {
-  container: { display: 'flex', width: '100vw', height: '100vh' },
-  leftSection: {
-    flex: 3,
+  container: { display: 'flex', width: '100vw', height: '100vh', position: 'relative', transition: 'all 0.5s' },
+
+  // 📏 세로형 타이머 스타일
+  sideTimerContainer: {
+    position: 'absolute',
+    left: '40px',
+    top: '10vh',
+    bottom: '10vh',
+    width: '40px',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center',
     alignItems: 'center',
+    gap: '15px',
+    zIndex: 100,
   },
-  logo: {
-    width: '450px',
-    height: 'auto',
-    filter: 'drop-shadow(5px 5px 0px rgba(0,0,0,0.2))',
-  },
-  voteTimeContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' },
-  voteTitle: { fontSize: '5rem', fontWeight: 900, marginBottom: '10px', color: '#333', textShadow: '4px 4px 0 #fff' },
-  voteSubTitle: { fontSize: '1.8rem', color: '#555', marginBottom: '40px' },
-
-  /* 📊 게이지 스타일 */
-  gaugeContainer: {
-    width: '80%',
-    height: '80px',
-    backgroundColor: '#333',
-    borderRadius: '15px',
-    border: '6px solid #333',
+  vTimerTrack: {
+    flex: 1,
+    width: '20px',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: '10px',
+    border: '4px solid #333',
     display: 'flex',
-    position: 'relative',
+    flexDirection: 'column',
+    justifyContent: 'flex-end', // 아래에서 위로 차오르게 설정 (반대는 flex-start)
     overflow: 'hidden',
-    marginBottom: '60px',
-    boxShadow: '10px 10px 0 rgba(0,0,0,0.2)',
+    boxShadow: '4px 4px 0 rgba(0,0,0,0.1)',
   },
-  gaugeBar: {
-    height: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'width 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+  vTimerFill: {
+    width: '100%',
+    borderRadius: '2px',
   },
-  gaugeLabel: {
-    color: '#fff',
+  vTimerText: {
     fontSize: '2rem',
     fontWeight: 900,
-    textShadow: '2px 2px 0 #000',
-    whiteSpace: 'nowrap'
-  },
-  vsBadge: {
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    transform: 'translate(-50%, -50%)',
-    backgroundColor: '#fff',
-    border: '4px solid #333',
-    padding: '5px 15px',
-    fontSize: '1.5rem',
-    fontWeight: 900,
-    borderRadius: '50%',
-    zIndex: 10,
+    fontFamily: 'monospace',
+    textShadow: '2px 2px 0px #fff',
   },
 
-  voteButtons: { display: 'flex', gap: '40px' },
-  voteBtn: {
-    padding: '25px 80px',
-    border: '5px solid #333',
-    color: '#fff',
-    fontSize: '2.2rem',
-    fontWeight: 900,
-    borderRadius: '20px',
-    cursor: 'pointer',
-    boxShadow: '10px 10px 0 #333',
-    transition: 'all 0.1s'
-  },
-  chatSection: { flex: 1, padding: '10px' }
+  leftSection: { flex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '80px' },
+  mainLogo: { width: '400px' },
+  voteTimeContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' },
+  voteTitle: { fontSize: '4.5rem', fontWeight: 900, marginBottom: '10px' },
+  voteSubTitle: { fontSize: '1.6rem', color: '#555', marginBottom: '40px', textAlign: 'center' },
+
+  gaugeContainer: { width: '85%', height: '85px', backgroundColor: '#333', borderRadius: '15px', display: 'flex', position: 'relative', overflow: 'hidden', marginBottom: '60px', border: '6px solid #333' },
+  gaugeBar: { height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'width 0.3s' },
+  gaugeLabel: { color: '#fff', fontSize: '2.2rem', fontWeight: 900 },
+  // vsBadge: { position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', backgroundColor: '#fff', border: '4px solid #333', padding: '8px 20px', fontSize: '1.5rem', fontWeight: 900, borderRadius: '50%' },
+
+  voteButtons: { display: 'flex', gap: '30px' },
+  voteBtn: { padding: '25px 80px', border: '5px solid #333', color: '#fff', fontSize: '2.2rem', fontWeight: 900, borderRadius: '20px', cursor: 'pointer', boxShadow: '10px 10px 0 #333' },
+  chatSection: { flex: 1, padding: '10px' },
+  finishOverlay: { position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)' },
+  finishImg: { width: '600px' }
 };
 
 export default VotingPhase;
