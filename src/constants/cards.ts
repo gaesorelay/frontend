@@ -1,9 +1,9 @@
 //카드에 들어갈 이미지들 저장
 
-import card01 from '@/assets/cards/card_01.png';
-import card02 from '@/assets/cards/card_02.png';
-import card03 from '@/assets/cards/card_03.png';
-import card04 from '@/assets/cards/card_04.png';
+import card01 from '@/assets/cards/card_01.webp';
+import card02 from '@/assets/cards/card_02.webp';
+import card03 from '@/assets/cards/card_03.webp';
+import card04 from '@/assets/cards/card_04.webp';
 
 export const CARD_LIST = [
   { id: 0, src: card01, alt: '비 오는 거리' },
