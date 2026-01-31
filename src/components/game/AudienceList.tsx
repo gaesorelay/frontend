@@ -17,6 +17,11 @@ interface AudienceListProps {
 
 export const AudienceList = ({ list, isHost, onSelect, onClose }: AudienceListProps) => {
   const { nickname: myNickname } = useUserStore();
+  const sortedList = [...list].sort((a, b) => {
+    if (a.nickname === myNickname) return -1; // 내가 앞쪽으로
+    if (b.nickname === myNickname) return 1; // 상대방이 뒤쪽으로
+    return 0; // 나머지는 순서 유지
+  });
   return (
     <div className={styles.audienceContainer}>
       {onClose && (
@@ -27,12 +32,12 @@ export const AudienceList = ({ list, isHost, onSelect, onClose }: AudienceListPr
       <div className={styles.titleBar}>
         <h3 className={styles.title}>
           <span className={styles.pingDot} />
-          관전자 ({list.length})
+          관전자 ({sortedList.length})
         </h3>
       </div>
 
       <ul className={styles.scrollArea}>
-        {list.map((user) => {
+        {sortedList.map((user) => {
           // 3. 현재 렌더링 중인 유저가 나인지 체크
           const isMe = user.nickname === myNickname;
 
