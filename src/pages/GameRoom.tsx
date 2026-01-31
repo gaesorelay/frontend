@@ -10,6 +10,7 @@ import LobbyPhase from '@/components/game/phases/LobbyPhase';
 import CardShufflePhase from '@/components/game/phases/CardShufflePhase';
 import JudgeShufflePhase from '@/components/game/phases/JudgeShufflePhase';
 import WritingPhase from '@/components/game/phases/WritingPhase';
+import StoryPhase from '@/components/game/phases/StoryPhase';
 import VotingPhase from '@/components/game/phases/VotingPhase';
 import JudgeResultPhase from '@/components/game/phases/JudgeResultPhase';
 import FinalResultPhase from '@/components/game/phases/FinalResultPhase';
@@ -157,16 +158,16 @@ const GameRoom = () => {
 
   // 🛠️ [개발용] 페이즈 순서 정의
   const PHASE_ORDER: GamePhase[] = [
-      'LOBBY',
-      'CARD_SHUFFLE',
-      'JUDGE_SHUFFLE',
-      'TURN1', 'TURN2', 'TURN3', 'TURN4', 
-      'TURN5', 'TURN6', 'TURN7', 'TURN8',
-      'STORY', 
-      'VOTING', 
-      'JUDGE_RESULT', 
-      'FINAL_RESULT'
-    ];
+    'LOBBY',
+    'CARD_SHUFFLE',
+    'JUDGE_SHUFFLE',
+    'TURN1', 'TURN2', 'TURN3', 'TURN4',
+    'TURN5', 'TURN6', 'TURN7', 'TURN8',
+    'STORY',
+    'VOTING',
+    'JUDGE_RESULT',
+    'FINAL_RESULT'
+  ];
 
   // 🛠️ [개발용] 제어 상태
   const [isAutoPlay, setIsAutoPlay] = useState(false); // 기본값: 수동 (일시정지 상태)
@@ -184,8 +185,8 @@ const GameRoom = () => {
     setGamePhase(PHASE_ORDER[prevIndex]);
   };
 
-  
-  
+
+
   // 📺 페이즈 렌더러
   const renderPhase = () => {
     const commonProps = {
@@ -197,35 +198,35 @@ const GameRoom = () => {
       roomId
     };
 
-   // ⭐️ 1. 턴(글쓰기) 페이즈 처리
+    // ⭐️ 1. 턴(글쓰기) 페이즈 처리
     // TURN1 ~ TURN8은 모두 WritingPhase를 사용하되, prop으로 몇 턴인지 넘겨줌
     if (gamePhase.startsWith('TURN')) {
-        return <WritingPhase currentRound={gamePhase} />;
+      return <WritingPhase currentRound={gamePhase} />;
     }
 
     // ⭐️ 2. 나머지 페이즈 처리
     switch (gamePhase) {
-      case 'LOBBY': 
+      case 'LOBBY':
         return <LobbyPhase {...commonProps} />;
-      
-      case 'CARD_SHUFFLE': 
+
+      case 'CARD_SHUFFLE':
         // onFinish 삭제! (시간 지나면 서버가 바꿔줌)
-        return <CardShufflePhase />; 
-      
-      case 'JUDGE_SHUFFLE': 
+        return <CardShufflePhase />;
+
+      case 'JUDGE_SHUFFLE':
         // onFinish 삭제!
         return <JudgeShufflePhase />;
-      
+
       // case 'WRITING': (이제 안 씀. 위 if문에서 처리됨)
 
       case 'STORY':
-         // TODO: 스토리 낭독 컴포넌트 추가 필요
-         return <div className="text-white text-3xl font-bold flex justify-center items-center h-full">📖 스토리 낭독 시간 (개발중)</div>;
+        // TODO: 스토리 낭독 컴포넌트 추가 필요
+        return <StoryPhase />;
 
       case 'VOTING': return <VotingPhase />;
       case 'JUDGE_RESULT': return <JudgeResultPhase />;
       case 'FINAL_RESULT': return <FinalResultPhase />;
-      
+
       default: return <div className="text-white flex items-center justify-center h-full">로딩 중... ({gamePhase})</div>;
     }
   };
