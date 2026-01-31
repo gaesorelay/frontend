@@ -30,23 +30,30 @@ interface LobbyProps {
   // onStartGame?: () => void;
 }
 
-const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUsers, roomId }: LobbyProps) => {
-  // 🐶 Avatar ID -> Image 변환 
+const LobbyPhase = ({
+  users: rawUsers,
+  isHost,
+  maxStorytellers,
+  TEST_MODE,
+  setUsers,
+  roomId,
+}: LobbyProps) => {
+  // 🐶 Avatar ID -> Image 변환
   // 이제 전역 Mapper를 사용합니다.
-  const users = rawUsers.map(user => ({
+  const users = rawUsers.map((user) => ({
     ...user,
-    avatar: getAvatarSrc(user.avatarId) || user.avatar
+    avatar: getAvatarSrc(user.avatarId) || user.avatar,
   }));
 
-  console.log("🔍 유저 데이터 구조 확인:", users);
+  console.log('🔍 유저 데이터 구조 확인:', users);
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
 
   const { roomConfig, roomTitle } = useGameStore(); // 1. roomTitle을 스토어에서 직접 가져옴
 
   // 로비 전용 UI 상태 (모달 등)는 여기서 관리해도 OK
-  const [targetSlot, setTargetSlot] = useState<{ team: 'A' | 'B', index: number } | null>(null);
+  const [targetSlot, setTargetSlot] = useState<{ team: 'A' | 'B'; index: number } | null>(null);
   const [selectedAudience, setSelectedAudience] = useState<any | null>(null);
-  const displayTitle = roomTitle || (isHost ? "내가 만든 방 👑" : "남의 방 구경 중 👀");
+  const displayTitle = roomTitle || (isHost ? '내가 만든 방 👑' : '남의 방 구경 중 👀');
   const [isAudienceBarOpen, setIsAudienceBarOpen] = useState(true);
 
   // =========================================================
@@ -58,13 +65,20 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
 
     if (TEST_MODE) {
       const newUsers = [...users];
-      const audience = newUsers.filter(u => u.role === 'AUDIENCE');
+      const audience = newUsers.filter((u) => u.role === 'AUDIENCE');
 
       const fillTeam = (team: string) => {
         for (let i = 0; i < maxStorytellers; i++) {
-          if (!newUsers.find(u => u.role === 'PLAYER' && u.team === team && u.slotIndex === i) && audience.length) {
+          if (
+            !newUsers.find((u) => u.role === 'PLAYER' && u.team === team && u.slotIndex === i) &&
+            audience.length
+          ) {
             const target = audience.pop();
-            if (target) { target.role = 'PLAYER'; target.team = team; target.slotIndex = i; }
+            if (target) {
+              target.role = 'PLAYER';
+              target.team = team;
+              target.slotIndex = i;
+            }
           }
         }
       };
@@ -77,7 +91,9 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
   };
 
   const handleSlotClick = (teamType: 'A' | 'B', slotIndex: number) => {
-    const userInSlot = users.find(u => u.role === 'PLAYER' && u.team === teamType && u.slotIndex === slotIndex);
+    const userInSlot = users.find(
+      (u) => u.role === 'PLAYER' && u.team === teamType && u.slotIndex === slotIndex
+    );
 
     // [방장]
     // [CASE 1: 방장이 클릭]
@@ -87,13 +103,19 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
         if (!window.confirm(`${userInSlot.nickname}님을 관전석으로 보낼까요?`)) return;
 
         if (TEST_MODE) {
-          setUsers(users.map(u => u.userToken === userInSlot.userToken ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null } : u));
+          setUsers(
+            users.map((u) =>
+              u.userToken === userInSlot.userToken
+                ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
+                : u
+            )
+          );
         } else {
           // ✅ [수정] leave_team 이벤트 전송
           socket.emit('leave_team', {
             public_user_id: userInSlot.publicUserId, // userToken 아님!
             team: teamType,
-            slot_index: slotIndex
+            slot_index: slotIndex,
           });
         }
         return;
@@ -104,36 +126,70 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
 
     // [게스트]
     if (!isHost) {
+      const isMe = userInSlot?.nickname === myNickname;
+
+      if (isMe) {
+        // 내가 내 자리를 눌렀다면 퇴장(관전) 확인
+        if (!window.confirm('팀에서 나가 관전석으로 돌아가시겠습니까?')) return;
+
+        if (TEST_MODE) {
+          setUsers(
+            users.map((u) =>
+              u.nickname === myNickname
+                ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
+                : u
+            )
+          );
+        } else {
+          const me = users.find((u) => u.nickname === myNickname);
+          socket.emit('leave_team', {
+            public_user_id: me.publicUserId,
+            team: teamType,
+            slot_index: slotIndex,
+          });
+        }
+        return; // 퇴장 처리 후 종료
+      }
       if (userInSlot) return;
       if (!window.confirm(`${teamType}팀 ${slotIndex + 1}번 자리에 참가하시겠습니까?`)) return;
 
       if (TEST_MODE) {
         // 테스트용: Guest인 나를 생성해서 넣음
         const myToken = 'me_guest_token';
-        const amIAlreadyIn = users.find(u => u.userToken === myToken);
+        const amIAlreadyIn = users.find((u) => u.userToken === myToken);
 
         if (amIAlreadyIn) {
-          setUsers(users.map(u => u.userToken === myToken ? { ...u, role: 'PLAYER', team: teamType, slotIndex: slotIndex } : u));
+          setUsers(
+            users.map((u) =>
+              u.userToken === myToken
+                ? { ...u, role: 'PLAYER', team: teamType, slotIndex: slotIndex }
+                : u
+            )
+          );
         } else {
           const me = {
             userToken: myToken,
-            nickname: myNickname || "나(게스트)",
-            role: 'PLAYER', team: teamType, slotIndex: slotIndex,
-            isHost: false, avatarId: myAvatarId || 1, avatar: '🐣'
+            nickname: myNickname || '나(게스트)',
+            role: 'PLAYER',
+            team: teamType,
+            slotIndex: slotIndex,
+            isHost: false,
+            avatarId: myAvatarId || 1,
+            avatar: '🐣',
           };
           setUsers([...users, me]);
         }
       } else {
-        const me = users.find(u => u.nickname === myNickname);
+        const me = users.find((u) => u.nickname === myNickname);
         if (me) {
           // ✅ [수정] join_team 이벤트 전송
           socket.emit('join_team', {
             public_user_id: me.publicUserId,
             team: teamType,
-            slot_index: slotIndex
+            slot_index: slotIndex,
           });
         } else {
-          console.error("내 정보를 찾을 수 없습니다.");
+          console.error('내 정보를 찾을 수 없습니다.');
         }
       }
     }
@@ -144,20 +200,27 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
 
     let emptyIndex = -1;
     for (let i = 0; i < maxStorytellers; i++) {
-      if (!users.find(u => u.role === 'PLAYER' && u.team === teamType && u.slotIndex === i)) {
-        emptyIndex = i; break;
+      if (!users.find((u) => u.role === 'PLAYER' && u.team === teamType && u.slotIndex === i)) {
+        emptyIndex = i;
+        break;
       }
     }
-    if (emptyIndex === -1) return alert("빈 자리가 없어요!");
+    if (emptyIndex === -1) return alert('빈 자리가 없어요!');
 
     if (TEST_MODE) {
-      setUsers(users.map(u => u.userToken === selectedAudience.userToken ? { ...u, role: 'PLAYER', team: teamType, slotIndex: emptyIndex } : u));
+      setUsers(
+        users.map((u) =>
+          u.userToken === selectedAudience.userToken
+            ? { ...u, role: 'PLAYER', team: teamType, slotIndex: emptyIndex }
+            : u
+        )
+      );
     } else {
       // ✅ [수정] join_team 전송
       socket.emit('join_team', {
         public_user_id: selectedAudience.publicUserId, // 선택된 사람의 ID
         team: teamType,
-        slot_index: emptyIndex
+        slot_index: emptyIndex,
       });
     }
     setSelectedAudience(null);
@@ -168,7 +231,7 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
     if (!window.confirm(`${selectedAudience.nickname}님을 강퇴하시겠습니까?`)) return;
 
     if (TEST_MODE) {
-      setUsers(users.filter(u => u.userToken !== selectedAudience.userToken));
+      setUsers(users.filter((u) => u.userToken !== selectedAudience.userToken));
     } else {
       socket.emit('kick_user', { public_user_id: selectedAudience.publicUserId });
     }
@@ -180,13 +243,19 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
     const { team, index } = targetSlot;
 
     if (TEST_MODE) {
-      setUsers(users.map(u => u.userToken === user.userToken ? { ...u, role: 'PLAYER', team: team, slotIndex: index } : u));
+      setUsers(
+        users.map((u) =>
+          u.userToken === user.userToken
+            ? { ...u, role: 'PLAYER', team: team, slotIndex: index }
+            : u
+        )
+      );
     } else {
       // ✅ [수정] join_team 전송
       socket.emit('join_team', {
         public_user_id: user.publicUserId,
         team: team,
-        slot_index: index
+        slot_index: index,
       });
     }
     setTargetSlot(null);
@@ -194,12 +263,21 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
 
   const renderSlots = (teamType: 'A' | 'B') => {
     return Array.from({ length: maxStorytellers }).map((_, i) => {
-      const user = users.find(u => u.role === 'PLAYER' && u.team === teamType && u.slotIndex === i);
-      return <TeamSlot key={i} status={user ? "FILLED" : "EMPTY"} user={user} onClick={() => handleSlotClick(teamType, i)} />;
+      const user = users.find(
+        (u) => u.role === 'PLAYER' && u.team === teamType && u.slotIndex === i
+      );
+      return (
+        <TeamSlot
+          key={i}
+          status={user ? 'FILLED' : 'EMPTY'}
+          user={user}
+          onClick={() => handleSlotClick(teamType, i)}
+        />
+      );
     });
   };
 
-  const audienceList = users.filter(u => u.role === 'AUDIENCE');
+  const audienceList = users.filter((u) => u.role === 'AUDIENCE');
   const [copied, setCopied] = useState(false);
 
   // 방 코드 복사
@@ -218,7 +296,7 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
 
   // 게임시작
   const handleStartGame = () => {
-    console.log("🚀 게임 시작 버튼 클릭됨");
+    console.log('🚀 게임 시작 버튼 클릭됨');
     if (!isHost) return;
 
     // (선택) 인원 수 체크 등을 여기서 미리 막아도 됨
@@ -228,21 +306,20 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
     if (TEST_MODE) {
       // 테스트 모드면 바로 다음 페이즈로 강제 이동
       // (부모 GameRoom의 devSwitchPhase 등을 호출해야 하는데, 여기선 socket만 보냄)
-      alert("테스트 모드: 개발자 컨트롤 패널을 이용하세요.");
+      alert('테스트 모드: 개발자 컨트롤 패널을 이용하세요.');
     } else {
       // 📡 백엔드에 시작 신호 전송
       socket.emit('start_game', { roomId });
     }
   };
 
-
   // 나가기 처리
   const navigate = useNavigate();
 
   const handleExit = () => {
-    if (window.confirm("정말 방에서 나가시겠어요? 🐾")) {
+    if (window.confirm('정말 방에서 나가시겠어요? 🐾')) {
       // ⭐️ [추가] 서버에 "나 나간다"고 말하고 가야 함!
-      socket.emit('leave_room'); 
+      socket.emit('leave_room');
       navigate('/');
     }
   };
@@ -252,10 +329,11 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
   return (
     <Background>
       <div className={styles.container}>
-
         {/* 메인 콘텐츠 */}
         <div className={styles.contentWrapper}>
-          <aside className={`${styles.audienceBar} ${isAudienceBarOpen ? styles.open : styles.closed}`}>
+          <aside
+            className={`${styles.audienceBar} ${isAudienceBarOpen ? styles.open : styles.closed}`}
+          >
             <AudienceList
               list={audienceList}
               isHost={isHost}
@@ -327,11 +405,7 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
 
                   <div className={styles.settingField}>
                     <label>방 제목</label>
-                    <input
-                      type="text"
-                      defaultValue={roomTitle}
-                      className={styles.settingInput}
-                    />
+                    <input type="text" defaultValue={roomTitle} className={styles.settingInput} />
                   </div>
 
                   <div className={styles.settingField}>
@@ -356,10 +430,21 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
               <TeamBoard
                 teamName="A"
                 maxStorytellers={maxStorytellers}
-                renderSlots={(team) => Array.from({ length: maxStorytellers }).map((_, i) => {
-                  const user = users.find(u => u.role === 'PLAYER' && u.team === team && u.slotIndex === i);
-                  return <TeamSlot key={i} status={user ? "FILLED" : "EMPTY"} user={user} onClick={() => handleSlotClick(team, i)} />;
-                })}
+                renderSlots={(team) =>
+                  Array.from({ length: maxStorytellers }).map((_, i) => {
+                    const user = users.find(
+                      (u) => u.role === 'PLAYER' && u.team === team && u.slotIndex === i
+                    );
+                    return (
+                      <TeamSlot
+                        key={i}
+                        status={user ? 'FILLED' : 'EMPTY'}
+                        user={user}
+                        onClick={() => handleSlotClick(team, i)}
+                      />
+                    );
+                  })
+                }
               />
 
               <div className={styles.vsContainer}>
@@ -370,10 +455,21 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
               <TeamBoard
                 teamName="B"
                 maxStorytellers={maxStorytellers}
-                renderSlots={(team) => Array.from({ length: maxStorytellers }).map((_, i) => {
-                  const user = users.find(u => u.role === 'PLAYER' && u.team === team && u.slotIndex === i);
-                  return <TeamSlot key={i} status={user ? "FILLED" : "EMPTY"} user={user} onClick={() => handleSlotClick(team, i)} />;
-                })}
+                renderSlots={(team) =>
+                  Array.from({ length: maxStorytellers }).map((_, i) => {
+                    const user = users.find(
+                      (u) => u.role === 'PLAYER' && u.team === team && u.slotIndex === i
+                    );
+                    return (
+                      <TeamSlot
+                        key={i}
+                        status={user ? 'FILLED' : 'EMPTY'}
+                        user={user}
+                        onClick={() => handleSlotClick(team, i)}
+                      />
+                    );
+                  })
+                }
               />
             </div>
             {isHost && (
@@ -382,7 +478,10 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
                   <button onClick={handleRandomAssign} className={styles.randomButton}>
                     랜덤 팀 배정
                   </button>
-                  <button onClick={handleStartGame} className={`${styles.randomButton} ${styles.startButton}`}>
+                  <button
+                    onClick={handleStartGame}
+                    className={`${styles.randomButton} ${styles.startButton}`}
+                  >
                     게임 시작!
                   </button>
                 </div>
@@ -397,14 +496,35 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
         <>
           <Modal isOpen={!!selectedAudience} onClose={() => setSelectedAudience(null)}>
             <div className={styles.modalContent}>
-              <img src={selectedAudience?.avatar} alt={selectedAudience?.nickname} className={styles.modalAvatar} />
+              <img
+                src={selectedAudience?.avatar}
+                alt={selectedAudience?.nickname}
+                className={styles.modalAvatar}
+              />
               <h2 className={styles.modalTitle}>
-                <span className={styles.modalTitleHighlight}>{selectedAudience?.nickname}</span>님을<br />어떻게 할까요?
+                <span className={styles.modalTitleHighlight}>{selectedAudience?.nickname}</span>님을
+                <br />
+                어떻게 할까요?
               </h2>
               <div className={styles.modalButtonGrid}>
-                <button onClick={() => moveUserToTeam('A')} className={`${styles.modalButton} ${styles.buttonTeamA}`}>🟦 A팀 배정</button>
-                <button onClick={() => moveUserToTeam('B')} className={`${styles.modalButton} ${styles.buttonTeamB}`}>🟥 B팀 배정</button>
-                <button onClick={handleKickUser} className={`${styles.modalButton} ${styles.buttonKick}`}>🚪 강퇴하기</button>
+                <button
+                  onClick={() => moveUserToTeam('A')}
+                  className={`${styles.modalButton} ${styles.buttonTeamA}`}
+                >
+                  🟦 A팀 배정
+                </button>
+                <button
+                  onClick={() => moveUserToTeam('B')}
+                  className={`${styles.modalButton} ${styles.buttonTeamB}`}
+                >
+                  🟥 B팀 배정
+                </button>
+                <button
+                  onClick={handleKickUser}
+                  className={`${styles.modalButton} ${styles.buttonKick}`}
+                >
+                  🚪 강퇴하기
+                </button>
               </div>
             </div>
           </Modal>
@@ -413,16 +533,28 @@ const LobbyPhase = ({ users: rawUsers, isHost, maxStorytellers, TEST_MODE, setUs
             <div className={styles.targetSlotContent}>
               <h2 className={styles.targetSlotTitle}>
                 <span className={styles.targetSlotTeamHighlight}>{targetSlot?.team}팀</span>
-                <span className={styles.targetSlotIndexHighlight}>{targetSlot ? targetSlot.index + 1 : 0}번 자리</span>에<br />누구를 앉힐까요?
+                <span className={styles.targetSlotIndexHighlight}>
+                  {targetSlot ? targetSlot.index + 1 : 0}번 자리
+                </span>
+                에<br />
+                누구를 앉힐까요?
               </h2>
               <div className={styles.playerGrid}>
-                {users.filter(u => u.role === 'AUDIENCE').map((user) => (
-                  <button key={user.userToken} onClick={() => handleSelectPlayer(user)} className={styles.playerButton}>
-                    <img src={user.avatar} alt={user.nickname} className={styles.playerAvatar} />
-                    <span className={styles.playerNickname}>{user.nickname}</span>
-                  </button>
-                ))}
-                {users.filter(u => u.role === 'AUDIENCE').length === 0 && <div className={styles.emptyMessage}>대기 중인 사람이 없습니다 텅~ 🍃</div>}
+                {users
+                  .filter((u) => u.role === 'AUDIENCE')
+                  .map((user) => (
+                    <button
+                      key={user.userToken}
+                      onClick={() => handleSelectPlayer(user)}
+                      className={styles.playerButton}
+                    >
+                      <img src={user.avatar} alt={user.nickname} className={styles.playerAvatar} />
+                      <span className={styles.playerNickname}>{user.nickname}</span>
+                    </button>
+                  ))}
+                {users.filter((u) => u.role === 'AUDIENCE').length === 0 && (
+                  <div className={styles.emptyMessage}>대기 중인 사람이 없습니다 텅~ 🍃</div>
+                )}
               </div>
             </div>
           </Modal>
