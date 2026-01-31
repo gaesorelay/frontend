@@ -98,6 +98,7 @@ const ChatArea = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === 'Enter') {
       handleSend();
     }
