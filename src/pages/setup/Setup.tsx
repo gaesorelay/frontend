@@ -22,7 +22,7 @@ export default function Setup() {
   const { roomId: paramRoomId } = useParams(); // URL의 방 번호 (Guest일 때 존재)
 
   // 1. GameStore
-  const { roomConfig, roomTitle, setRoomInfo, reset } = useGameStore(); // 👈 reset 추가
+  const { roomConfig, roomTitle, setRoomInfo, setHasEntered, reset } = useGameStore(); // 👈 reset 추가
 
   // 2. UserStore
   const {
@@ -54,22 +54,37 @@ export default function Setup() {
   const isHost = !paramRoomId && !!roomConfig;
 
   // ⭐️ [수정 2] 게스트로 들어왔는데 스토어에 방장 데이터가 남아있으면 청소
+  const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
+
+  // ⭐️ [수정 2] 게스트 입장 시방 유효성 검사
   useEffect(() => {
-    // URL에 방 번호가 있는데(Guest), roomConfig가 남아있다면? -> 좀비 데이터임!
-    if (paramRoomId && roomConfig) {
-      console.log("🧹 게스트 입장: 이전 방장 데이터 초기화");
-      // reset(); // GameStore 전체 초기화 (필요시 주석 해제)
-      // 혹은 그냥 무시하고 진행 (isHost가 false라서 안전함)
-    }
+    // 1. 게스트인데 방 번호가 있는 경우 -> 서버에 방 존재 여부 확인
+    if (paramRoomId) {
+      if (socket.disconnected) socket.connect();
 
-    // 잘못된 접근 차단 (방장도 아니고 방번호도 없음)
-    if (!isHost && !paramRoomId) {
-      alert("잘못된 접근입니다.");
-      navigate('/');
-    }
+      console.log("🔍 방 유효성 검사 중...", paramRoomId);
+      socket.emit('request_room_info', { roomId: paramRoomId }, (response: any) => {
+        if (response.status === 'success') {
+          console.log("✅ 유효한 방입니다.");
+          setIsValidRoom(true);
+        } else {
+          console.error("❌ 유효하지 않은 방:", response.message);
+          navigate('/error/not-found', { replace: true });
+        }
+      });
 
-    console.log("Setup Page Check:", { paramRoomId, isRealHost: isHost, staleConfig: !!roomConfig });
-  }, [isHost, paramRoomId, roomConfig, navigate]);
+      // 좀비 데이터 정리
+      if (roomConfig) {
+        console.log("🧹 게스트 입장: 이전 방장 데이터 초기화");
+        reset();
+      }
+    } else {
+      // 방장이거나, 잘못된 접근(방번호 없음)
+      setIsValidRoom(true);
+    }
+  }, [paramRoomId, navigate]);
+
+
 
   const handlePrev = () => {
     if (totalDogs === 0) return;
@@ -142,6 +157,7 @@ export default function Setup() {
           setStoreNickname(user.nickname);
           setStoreAvatarId(user.avatarId);
           setRoomId(currentRoomId);
+          setHasEntered(true);
           setUserStatus(user.role, user.isHost);
 
           if (isHost) {
@@ -191,6 +207,10 @@ export default function Setup() {
     arrowBtn: { background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '5px', transition: 'transform 0.1s' },
     arrowIcon: { width: '100px', height: '100px', objectFit: 'contain' as const, filter: 'drop-shadow(2px 2px 0px rgba(0,0,0,0.2))' }
   };
+
+  if (isValidRoom === null && paramRoomId) {
+    return <div style={{ ...styles.container, color: 'white', fontSize: '1.5rem', fontWeight: 'bold' }}>방 확인 중... 🔍</div>;
+  }
 
   return (
     <div style={styles.container}>
