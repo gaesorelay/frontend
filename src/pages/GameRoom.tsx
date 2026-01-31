@@ -38,6 +38,7 @@ const GameRoom = () => {
     players,
     setPlayers,
     setRoomActions,
+    hasEntered,
   } = useGameStore();
   const [isVerifying, setIsVerifying] = useState(true);
 
@@ -125,18 +126,12 @@ const GameRoom = () => {
     setGamePhase('LOBBY');
     if (TEST_MODE) return;
 
-    console.log(`🔌 GameRoom 소켓 리스너 연결 (Room: ${roomId})`);
-
     // 1. 방 정보 요청 (게스트는 들어오자마자 이게 필요함)
     socket.emit('request_room_info', { roomId }, (response: any) => {
       if (response.status === 'success') {
         // 방이 존재함: 스토어에 데이터 저장 및 게임 진행
         console.log('방 정보 로드 성공:', response.data);
         setRoomInfo(response.data);
-      } else {
-        // 방이 없거나 에러 발생: 메인으로 쫓아냄
-        alert(response.message || '유효하지 않은 방이거나 입장할 수 없습니다.');
-        navigate('/', { replace: true });
       }
     });
 
