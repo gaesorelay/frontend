@@ -19,11 +19,12 @@ export function initSocketHandlers() {
   // ⭐️ [이벤트] 강퇴 알림 (Kicked)
   const handleKicked = (data: { roomUuid: string; reason: string }) => {
     console.warn(`🚨 방에서 강퇴되었습니다. (사유: ${data.reason})`);
-    alert(data.reason ? `방장에 의해 강퇴되었습니다.\n(사유: ${data.reason})` : '방장에 의해 강퇴되었습니다.');
 
-    // 소켓 끊고 홈으로 이동 (완전 초기화)
+    // 1. 소켓 먼저 끊기 
     socket.disconnect();
-    window.location.href = '/';
+
+    // 2. 스토어 업데이트 -> UI(App.tsx)에서 모달 표시
+    useGameStore.getState().setKickReason(data.reason || "방장에 의해 강퇴되었습니다.");
   };
 
   socket.on('test_response', handleTestResponse);
