@@ -229,16 +229,45 @@ const GameRoom = () => {
   const [isAutoPlay, setIsAutoPlay] = useState(false); // 기본값: 수동 (일시정지 상태)
   const [isDevExpanded, setIsDevExpanded] = useState(true); // 개발자 바 펼침 여부
 
+  // ⭐️ [복구] userToken 필요
+  const { userToken } = useUserStore(); // << 추가 필요 (Line 31 근처)
+
   const handleNextPhase = () => {
-    const currentIndex = PHASE_ORDER.indexOf(gamePhase as GamePhase);
-    const nextIndex = (currentIndex + 1) % PHASE_ORDER.length;
-    setGamePhase(PHASE_ORDER[nextIndex]);
+    // 🛠️ Dev: "제출 후 스킵" (draftText가 있으면 제출)
+    const { draftText, setDraftText } = useGameStore.getState();
+
+    // 내 팀 찾기
+    const myPlayer = players.find(p => p.userToken === userToken);
+
+    // 현재 턴 번호 계산 (TURN1 -> 1)
+    const turnNumber = gamePhase.startsWith('TURN')
+      ? parseInt(gamePhase.replace('TURN', ''))
+      : 0;
+
+    if (draftText && draftText.trim().length > 0 && myPlayer && myPlayer.team && turnNumber > 0) {
+      console.log(`🛠️ Dev: 스킵 전 강제 제출 시도: ${draftText}, Turn: ${turnNumber}`);
+
+      // ⭐️ 중복 제출 방지: emit 전에 먼저 비우기
+      setDraftText('');
+
+      socket.emit('submit_story', {
+        roomId,
+        text: draftText,
+        team: myPlayer.team,
+        userToken,
+        turn: turnNumber
+      }, (res: any) => {
+        console.log("🛠️ Dev: 강제 제출 결과:", res);
+      });
+    }
+
+    // 🛠️ Dev: 서버에 단계 건너뛰기 요청
+    socket.emit('skip_phase');
   };
 
   const handlePrevPhase = () => {
-    const currentIndex = PHASE_ORDER.indexOf(gamePhase as GamePhase);
-    const prevIndex = (currentIndex - 1 + PHASE_ORDER.length) % PHASE_ORDER.length;
-    setGamePhase(PHASE_ORDER[prevIndex]);
+    // 🛠️ Dev: 서버에 이전 단계로 되돌리기 요청
+    socket.emit('prev_phase');
   };
 
   // 📺 페이즈 렌더러

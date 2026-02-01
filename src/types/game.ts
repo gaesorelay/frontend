@@ -96,4 +96,5 @@ export type GamePhase =
 export interface RoundData {
   cardIds: number[];
   judgeIds: number[];
+  startedAt?: string; // ⭐️ 타이머 동기화용 시작 시간
 }

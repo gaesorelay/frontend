@@ -25,6 +25,10 @@ interface GameStoreState {
   hasEntered: boolean;
   kickReason: string | null; // ⭐️ 강퇴 사유 (null이면 강퇴 아님)
 
+  // ⭐️ [추가] 진행 중인 스토리 텍스트 (Dev Bar 제출용)
+  draftText: string;
+  setDraftText: (text: string) => void;
+
   teamAStory: string[];
   teamBStory: string[];
 
@@ -71,6 +75,9 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   })),
   resetStory: () => set({ teamAStory: [], teamBStory: [] }),
   kickReason: null, // 초기값 null
+
+  draftText: '',
+  setDraftText: (text) => set({ draftText: text }),
 
   setRoomActions: (title, config) => {
     console.log("💾 [GameStore] setRoomActions:", { title, config });
