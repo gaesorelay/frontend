@@ -1,10 +1,19 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import ChatArea from '../ChatArea';
 
 import bgImg from '@/assets/background.png';
 import resultLogo from '@/assets/logo/resultlogo.png';
+import finalLogo from '@/assets/logo/finallogo.png';
+import ateam from '@/assets/logo/A.png';
+import bteam from '@/assets/logo/B.png';
+import airesult from '@/assets/logo/AIresult.png';
+import Ateam from '@/assets/logo/Ateam.png';
+import Bteam from '@/assets/logo/Bteam.png';
+import teamALogo from '@/assets/logo/Ateamresult.png';
+import teamBLogo from '@/assets/logo/Bteamresult.png';
 
-// ✅ 심사위원 이미지 import
+// 심사위원 이미지 import
 import judge1 from '@/assets/judge/result/1.png';
 import judge2 from '@/assets/judge/result/2.png';
 import judge3 from '@/assets/judge/result/3.png';
@@ -18,9 +27,15 @@ import judge10 from '@/assets/judge/result/10.png';
 import judge11 from '@/assets/judge/result/11.png';
 import judge12 from '@/assets/judge/result/12.png';
 
-interface Props { }
+interface Judge {
+  id: number;
+  name: string;
+  image: string;
+  commentA: string;
+  commentB: string;
+}
 
-const MASTER_DB = [
+const MASTER_DB: Judge[] = [
   { id: 1, name: 'AI 판독기 V1', image: judge1, commentA: "창의적이야! (멍!)", commentB: "데이터 부족. (왈!)" },
   { id: 2, name: '멍성재 2.0', image: judge2, commentA: "완벽한 개소리!", commentB: "너무 논리적이야. 탈락." },
   { id: 3, name: '팩트사망 로봇', image: judge3, commentA: "팩트 0%? 훌륭해.", commentB: "팩트가 섞였어. 불순해." },
@@ -40,43 +55,32 @@ const MOCK_RESULT = {
   teamB: { name: 'B팀', public: 38, ai: [10, 25, 30] },
 };
 
-const getVictoryMentions = (teamName: string) => [
-  `[속보] ${teamName}, '인간 실격' 처분 확정!`,
-  `${teamName} 전원, 지능 반납 절차 완료.`,
-  `금일부터 ${teamName}의 직립 보행을 금지합니다.`,
-  `검사 결과: ${teamName}의 전두엽 기능 영구 정지.`,
-  `${teamName}의 노예 계약 효력 발생! 왈왈!`,
-  `${teamName}, 이성(Reason) 수치 0% 도달 축하.`,
-  `DNA 정밀 판독 결과: ${teamName} = 100% 짐승.`,
-  `${teamName}의 영혼 판매 계약 성사 (환불 불가).`,
-  `국가공인 '멍멍이' 자격증 발급: ${teamName} 귀하.`,
-  `${teamName}의 언어 구사 능력이 완전히 소멸됨.`
+const WIN_MENTS = [
+  "${teamName} 승리! 뇌를 거치지 않고 뱉는 주둥이, 짐승 그 자체군요!",
+  "${teamName} 승리! 개소리에 감동해서 동네 개들이 절하러 오는 중!",
+  "${teamName} 승리! 오늘부로 지능 포기, 개소리 1위 등극 축하!",
+  "${teamName} 승리! 똥개도 안 믿을 소리에 심사위원이 감동했멍!",
+  "${teamName} 승리! 당신들의 논리는 이미 전봇대에 마킹되어 버려짐!"
 ];
 
-const JudgeResultPhase = ({ }: Props) => {
-  const [selectedJudges, setSelectedJudges] = useState<typeof MASTER_DB>(() => {
-    const savedData = localStorage.getItem('SELECTED_JUDGES_DB');
+const JudgeResultPhase = () => {
+  const [selectedJudges] = useState<Judge[]>(() => {
+    const savedData = localStorage.getItem('SELECTED_JUDGES_V2');
     if (savedData) return JSON.parse(savedData);
-    const shuffled = [...MASTER_DB].sort(() => 0.5 - Math.random());
-    const picked = shuffled.slice(0, 3);
-    localStorage.setItem('SELECTED_JUDGES_DB', JSON.stringify(picked));
+    const picked = [...MASTER_DB].sort(() => 0.5 - Math.random()).slice(0, 3);
+    localStorage.setItem('SELECTED_JUDGES_V2', JSON.stringify(picked));
     return picked;
   });
 
   const [introPhase, setIntroPhase] = useState(1);
-  const [step, setStep] = useState(0);
-
-  const [scoreA, setScoreA] = useState({ public: 0, aiSteps: [0, 0, 0] });
-  const [scoreB, setScoreB] = useState({ public: 0, aiSteps: [0, 0, 0] });
-  const [chats, setChats] = useState([{ user: '시스템', msg: '🐶 개소리 분석기 가동 중... 삐빅!', color: '#ff4444' }]);
-  const [inputValue, setInputValue] = useState('');
   const [finalMent, setFinalMent] = useState("");
+  const [animScore, setAnimScore] = useState(0);
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; rot: number }[]>([]);
 
-  const [animPublic, setAnimPublic] = useState(0);
-  const [animAI, setAnimAI] = useState(0);
-  const [isCounting, setIsCounting] = useState(false);
-
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [stagePublicA, setStagePublicA] = useState(0);
+  const [stagePublicB, setStagePublicB] = useState(0);
+  const [stageAIA, setStageAIA] = useState(0);
+  const [stageAIB, setStageAIB] = useState(0);
 
   const aiTotalA = MOCK_RESULT.teamA.ai.reduce((a, b) => a + b, 0);
   const aiTotalB = MOCK_RESULT.teamB.ai.reduce((a, b) => a + b, 0);
@@ -84,303 +88,280 @@ const JudgeResultPhase = ({ }: Props) => {
   const totalB = MOCK_RESULT.teamB.public + aiTotalB;
 
   useEffect(() => {
-    setTimeout(() => setIntroPhase(2), 3000);
-    setTimeout(() => setIntroPhase(3), 8500);
+    const timers = [
+      setTimeout(() => setIntroPhase(2), 2000),   // Start Phase 2 (A Score)
+      setTimeout(() => setIntroPhase(3), 6000),   // Start Phase 3 (B Score) -> 4s (Fast)
+      setTimeout(() => setIntroPhase(4), 10000),  // Start Phase 4 (Main Stage Gauge) -> 7s (Slow & Tensor)
+      setTimeout(() => setIntroPhase(5), 17000),  // Start Phase 5 (A AI)
+      setTimeout(() => setIntroPhase(6), 22000),  // Start Phase 6 (B AI)
+      setTimeout(() => setIntroPhase(7), 27000),  // Start Phase 7 (Total Gauge) -> 7s (Slow & Tensor)
+      setTimeout(() => {
+        setIntroPhase(8); // Start Phase 8 (Game Over)
+        const winner = totalA > totalB ? 'A팀' : 'B팀';
+        setFinalMent(WIN_MENTS[Math.floor(Math.random() * WIN_MENTS.length)].replace('${teamName}', winner));
+      }, 34000),
+    ];
+    return () => timers.forEach(t => clearTimeout(t));
+  }, [totalA, totalB]);
 
-    setTimeout(() => {
-      setIntroPhase(4);
-      setStep(5);
-
-      setScoreA({ public: MOCK_RESULT.teamA.public, aiSteps: MOCK_RESULT.teamA.ai });
-      setScoreB({ public: MOCK_RESULT.teamB.public, aiSteps: MOCK_RESULT.teamB.ai });
-
-      const winnerName = totalA > totalB ? MOCK_RESULT.teamA.name : MOCK_RESULT.teamB.name;
-      const mentionList = getVictoryMentions(winnerName);
-      const randomIdx = Math.floor(Math.random() * mentionList.length);
-      setFinalMent(mentionList[randomIdx]);
-
-    }, 14000);
-  }, []);
-
-  // 🔢 병맛 점수 카운트업
   useEffect(() => {
-    let targetPublic = 0;
-    let targetAI = 0;
-
-    if (introPhase === 2) { targetPublic = MOCK_RESULT.teamA.public; targetAI = aiTotalA; }
-    else if (introPhase === 3) { targetPublic = MOCK_RESULT.teamB.public; targetAI = aiTotalB; }
-    else { return; }
-
-    setAnimPublic(0);
-    setAnimAI(0);
-    setIsCounting(true);
-
-    const duration = 2000;
-    const interval = 40;
-    const steps = duration / interval;
+    if (introPhase !== 2 && introPhase !== 3) return;
     let current = 0;
-
-    const timer = setInterval(() => {
-      current++;
-      const progress = current / steps;
-
-      let jitterPublic = Math.random() * (targetPublic * 0.3) * (Math.random() > 0.5 ? 1 : -1);
-      let jitterAI = Math.random() * (targetAI * 0.3) * (Math.random() > 0.5 ? 1 : -1);
-
-      let currentPublic = Math.floor(targetPublic * progress + jitterPublic * (1 - progress));
-      let currentAI = Math.floor(targetAI * progress + jitterAI * (1 - progress));
-
-      setAnimPublic(Math.max(0, Math.min(currentPublic, targetPublic + 10)));
-      setAnimAI(Math.max(0, Math.min(currentAI, targetAI + 5)));
-
-      if (current >= steps) {
-        setAnimPublic(targetPublic);
-        setAnimAI(targetAI);
-        setIsCounting(false);
-        clearInterval(timer);
+    const target = introPhase === 2 ? MOCK_RESULT.teamA.public : MOCK_RESULT.teamB.public;
+    setAnimScore(0);
+    const interval = setInterval(() => {
+      if (current < target) {
+        current++;
+        setAnimScore(current);
+        const newParticle = { id: Math.random(), x: Math.random() * 100, y: Math.random() * 100, rot: Math.random() * 360 };
+        setParticles(prev => [...prev.slice(-20), newParticle]);
+      } else {
+        clearInterval(interval);
       }
-    }, interval);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [introPhase]);
 
-    return () => clearInterval(timer);
+  useEffect(() => {
+    if (introPhase === 4) {
+      let curA = 0, curB = 0;
+      const interval = setInterval(() => {
+        let done = true;
+        if (curA < MOCK_RESULT.teamA.public) { curA++; done = false; }
+        if (curB < MOCK_RESULT.teamB.public) { curB++; done = false; }
+        setStagePublicA(curA);
+        setStagePublicB(curB);
+        if (done) clearInterval(interval);
+      }, 40);
+      return () => clearInterval(interval);
+    }
+    if (introPhase === 7) {
+      let aiA = 0, aiB = 0;
+      const interval = setInterval(() => {
+        let done = true;
+        if (aiA < aiTotalA) { aiA++; done = false; }
+        if (aiB < aiTotalB) { aiB++; done = false; }
+        setStageAIA(aiA);
+        setStageAIB(aiB);
+        if (done) clearInterval(interval);
+      }, 40);
+      return () => clearInterval(interval);
+    }
   }, [introPhase, aiTotalA, aiTotalB]);
-
-
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chats]);
-
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
-    setChats(prev => [...prev, { user: '나', msg: inputValue, color: '#facc15' }]);
-    setInputValue('');
-  };
-
-  if (selectedJudges.length === 0) return null;
-
-  const winnerName = totalA > totalB ? 'A팀' : 'B팀';
 
   return createPortal(
     <div style={{
-      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-      backgroundImage: `url(${bgImg})`,
-      backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
-      fontFamily: '"Gaegu", cursive', overflow: 'hidden', zIndex: 9999, display: 'flex', flexDirection: 'column',
+      position: 'fixed', inset: 0, backgroundImage: `url(${bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center',
+      fontFamily: '"Gaegu", cursive', overflow: 'hidden', zIndex: 9999, display: 'flex', flexDirection: 'column'
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+        @keyframes full-screen-pop { 0% { transform: scale(0); opacity: 0; } 50% { opacity: 1; transform: scale(1.5); } 100% { transform: scale(1) translateY(-50px); opacity: 0; } }
+        @keyframes stamp-slam { 0% { transform: translate(-50%, -50%) scale(5); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1) rotate(-15deg); opacity: 1; } }
+        @keyframes elastic-zoomies { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slide-in-right { 0% { transform: translateX(100%) scale(0.5); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }
+        @keyframes slide-in-left { 0% { transform: translateX(-100%) scale(0.5); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }
+        @keyframes zoom-in-judge { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes pop-comment { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-        body::after {
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCI+PGZpbHRlciBpZD0ibm9pc2UiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjY1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlc30ic3RpdGNoIiAvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMDUiLz48L3N2Zz4=');
-            pointer-events: none; z-index: 99999; opacity: 0.4;
-        }
 
-        @keyframes popIn { 
-            0% { transform: scale(0) rotate(-10deg); opacity: 0; } 
-            70% { transform: scale(1.1) rotate(5deg); opacity: 1; } 
-            100% { transform: scale(1) rotate(0deg); } 
-        }
-        
-        @keyframes wobble-mad { 
-          0% { transform: translate(0, 0) rotate(0deg) scale(1); } 
-          25% { transform: translate(-5px, 5px) rotate(-3deg) scale(1.1); color: #ff0000; } 
-          50% { transform: translate(-5px, -5px) rotate(2deg) scale(0.9); color: #ffff00; } 
-          75% { transform: translate(5px, 5px) rotate(-2deg) scale(1.05); color: #00ff00; } 
-          100% { transform: translate(0, 0) rotate(0deg) scale(1); } 
-        }
-        .wobble-text { display: inline-block; animation: wobble-mad 0.1s infinite; font-weight: 900; text-shadow: 4px 4px 0 #000 !important; -webkit-text-stroke: 2px #000; }
-
-        @keyframes stamp-slam { 0% { transform: scale(5) rotate(20deg); opacity: 0; } 60% { transform: scale(0.8) rotate(-10deg); opacity: 1; } 80% { transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1) rotate(-5deg); } }
-
-        .text-outline { text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000; letter-spacing: 2px; font-weight: 900; }
-        
-        .intro-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #111; 
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCI+PGZpbHRlciBpZD0ibm9pc2UiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjkiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giIC8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4zIiBmaWxsPSIjZmZmIi8+PC9zdmc+');
-            z-index: 10000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #fff; text-align: center;
-            transition: opacity 0.5s ease-out, visibility 0.5s; opacity: 1; visibility: visible;
-        }
-        .intro-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-
-        .intro-text { font-size: 4rem; font-weight: 900; animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); margin-bottom: 30px; text-shadow: 5px 5px 0 #000; transform: rotate(-3deg); }
-        .intro-content { display: flex; flex-direction: column; align-items: center; gap: 30px; width: 95%; max-width: 1200px; }
-        
-        .judges-row { display: flex; justify-content: center; gap: 30px; width: 100%; margin-top: 40px; flex-wrap: wrap; }
-        
-        .judge-item { display: flex; flex-direction: column; align-items: center; width: 28%; min-width: 200px; animation: popIn 0.5s both; }
-        .judge-item:nth-child(1) { animation-delay: 0.1s; transform: rotate(2deg); } 
-        .judge-item:nth-child(2) { animation-delay: 0.3s; transform: rotate(-2deg); } 
-        .judge-item:nth-child(3) { animation-delay: 0.5s; transform: rotate(1deg); }
-        
-        .judge-img-circle { width: 140px; height: 140px; border-radius: 50%; border: 6px dashed #fff; object-fit: cover; background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.5); margin-bottom: 15px; transform: rotate(-5deg); }
-        .judge-bubble-small { background: #fff; color: #111; padding: 15px 20px; border-radius: 30px; border: 4px solid #111; font-size: 1.3rem; font-weight: 900; position: relative; width: 100%; word-break: keep-all; box-shadow: 6px 6px 0 #000; transform: rotate(1deg); }
-        .judge-bubble-small::after { content: ''; position: absolute; top: -15px; left: 50%; width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 15px solid #111; transform: translateX(-50%) rotate(-5deg); }
-
-        .final-result-container {
-          width: 100%; height: 100%; display: flex; flex-direction: column; 
-          align-items: center; justify-content: center;
-          animation: popIn 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .crayon-text {
-            background-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
-            background-size: 300% auto; animation: rainbow-move 2s linear infinite;
-            -webkit-background-clip: text; background-clip: text;
-            color: transparent; text-shadow: 3px 3px 0 rgba(0,0,0,0.3); font-weight: 900;
-            -webkit-text-stroke: 1px #000;
-        }
-        @keyframes rainbow-move { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
-        
-        .sketch-box-container { 
-            border: 5px solid #111 !important; 
-            border-radius: 10px 30px 10px 30px / 30px 10px 30px 10px !important; 
-            box-shadow: 10px 10px 0 rgba(0,0,0,0.2) !important;
-            background: #fffdf0 !important; 
-            position: relative;
-            transform: rotate(1deg);
-        }
-        .sketch-box-container::before {
-            content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 20px;
-            background-image: radial-gradient(circle at 10px 10px, #333 4px, transparent 5px);
-            background-size: 20px 30px; background-repeat: repeat-y;
-        }
-
-        .chat-bubble { 
-            padding: 10px 15px; border: 3px solid #111; 
-            border-radius: 20px 5px 25px 10px / 10px 25px 5px 20px; 
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.2); margin-bottom: 10px; 
-            font-size: 1.2rem; word-break: break-all; 
-            transform: rotate(-0.5deg);
-            font-family: 'Nanum Pen Script', cursive;
-        }
+        .particle-full { position: absolute; color: #facc15; font-size: 3rem; font-weight: 900; animation: full-screen-pop 0.4s forwards; text-shadow: 4px 4px 0 #000; z-index: 11000; }
+        .intro-overlay { position: fixed; top: 0; left: 0; width: calc(100% - 380px); height: 100%; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; transition: 0.5s; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .score-huge { font-size: 11rem; color: #fff; text-shadow: 0 0 30px #ff4444; font-weight: 900; }
+        .gauge-container { width: 300px; height: 35px; background: #333; border: 3px solid #111; border-radius: 20px; overflow: hidden; position: relative; }
+        .gauge-fill { height: 100%; transition: width 0.1s ease-out; }
+        .judge-card-mini { width: 110px; text-align: center; background: #fff; padding: 10px; border-radius: 10px; border: 2px solid #111; font-size: 0.8rem; }
       `}</style>
 
-      {/* 🖼️ 로고 영역 */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, width: '100%',
-        height: '12vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'flex-start', paddingLeft: '3.5vw', paddingTop: '1vh',
-        zIndex: 50, pointerEvents: 'none', transform: 'rotate(-2deg)'
-      }}>
-        <img
-          src={resultLogo}
-          alt="Title Logo"
-          style={{ height: '500px', marginTop: '100px', objectFit: 'contain', filter: 'drop-shadow(5px 5px 0 #000)' }}
-        />
-      </div>
+      {[4, 7].includes(introPhase) && <img src={resultLogo} style={{
+        position: 'absolute', top: '-100px',
+        left: 'calc((100vw - 380px) / 2)', transform: 'translateX(-50%)',
+        height: '350px', width: 'auto', zIndex: 20001, filter: 'drop-shadow(4px 4px 0 #000)',
+        objectFit: 'contain'
+      }} />}
 
-      {/* 🎬 인트로 블랙아웃 (거친 질감) */}
-      <div className={`intro-overlay ${introPhase === 4 ? 'hidden' : ''}`}>
+      <div className={`intro-overlay ${[1, 2, 3, 5, 6, 8].includes(introPhase) ? '' : 'hidden'}`}>
+        {particles.map(p => (
+          <span key={p.id} className="particle-full" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: `rotate(${p.rot}deg)` }}>+1</span>
+        ))}
 
-        {introPhase === 1 && (
-          <div className="intro-text" style={{ color: '#facc15', fontSize: '5rem' }}>
-            🤔 너네 팀의<br />개소리는 얼마나?
-          </div>
-        )}
+        {introPhase === 1 && <img src={finalLogo} style={{ width: '50%', objectFit: 'contain', animation: 'elastic-zoomies 0.8s' }} />}
 
         {(introPhase === 2 || introPhase === 3) && (
-          <div className="intro-content" key={introPhase}>
-            <div className="intro-text" style={{ color: introPhase === 2 ? '#ef4444' : '#3b82f6', textDecoration: 'underline wavy #fff' }}>
-              {introPhase === 2 ? '🔴 A팀' : '🔵 B팀'} 심사 결과 발표!
+          <div key={`phase-${introPhase}`} style={{ textAlign: 'center', animation: introPhase === 2 ? 'slide-in-left 0.5s both' : 'slide-in-right 0.5s both' }}>
+            <div style={{ marginBottom: '-30px' }}>
+              <img src={introPhase === 2 ? Ateam : Bteam} style={{ width: '650px', objectFit: 'contain', filter: 'drop-shadow(5px 5px 0 #000)' }} />
+            </div>
+            <div className="score-huge">{animScore}</div>
+          </div>
+        )}
+
+        {(introPhase === 5 || introPhase === 6) && (
+          <div key={`judge-${introPhase}`} style={{ textAlign: 'center', width: '100%', animation: 'zoom-in-judge 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '30px', marginBottom: '40px', background: 'rgba(255,255,255,0.1)', padding: '20px 50px', borderRadius: '20px', border: '3px solid #333' }}>
+              <img src={introPhase === 5 ? ateam : bteam} style={{ height: '110px', objectFit: 'contain' }} />
+              <img src={airesult} style={{ height: '220px', objectFit: 'contain' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '15px', justifyContent: 'center', width: '100%' }}>
+              {selectedJudges.map((j, i) => {
+                const pScore = introPhase === 5 ? MOCK_RESULT.teamA.ai[i] : MOCK_RESULT.teamB.ai[i];
+                return (
+                  <div key={i} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+                    background: '#fff', padding: '20px', borderRadius: '20px', border: '4px solid #111',
+                    width: '220px',
+                    animation: `slide-in-right 0.4s ${i * 0.15}s both`,
+                    boxShadow: '10px 10px 0 rgba(0,0,0,0.2)', position: 'relative'
+                  }}>
+                    <img src={j.image} style={{ width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #ddd' }} />
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#111', marginBottom: '5px' }}>{j.name}</div>
+                      <div style={{ fontSize: '1.1rem', color: '#555', wordBreak: 'keep-all', lineHeight: '1.2', animation: `pop-comment 0.5s ${0.3 + i * 0.2}s both` }}>
+                        "{introPhase === 5 ? j.commentA : j.commentB}"
+                      </div>
+                    </div>
+                    {/* Individual Score Badge */}
+                    <div style={{
+                      position: 'absolute', top: '-15px', right: '-15px',
+                      background: '#ff0000', color: '#fff', fontSize: '1.5rem', fontWeight: 900,
+                      padding: '5px 15px', borderRadius: '20px', border: '3px solid #fff',
+                      boxShadow: '4px 4px 0 rgba(0,0,0,0.3)', transform: 'rotate(15deg)',
+                      animation: `pop-comment 0.5s ${0.6 + i * 0.2}s both`
+                    }}>
+                      +{pScore}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: '2.5rem', color: '#facc15', marginTop: '30px', fontWeight: 900, textShadow: '2px 2px 0 #000', animation: 'elastic-zoomies 0.5s 1.5s both' }}>
+              AI Score: {introPhase === 5 ? aiTotalA : aiTotalB}점
+            </div>
+          </div>
+        )}
+
+        {introPhase === 8 && (
+          <div style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both', padding: '0 5vw', position: 'relative', marginTop: '15vh' }}>
+            <div style={{ fontSize: '7rem', fontWeight: 900, color: '#facc15', marginBottom: '40px', textShadow: '0 0 30px #ff0000' }}>GAME OVER</div>
+            <div style={{ fontSize: '3.5rem', background: '#fff', padding: '40px 80px', border: '8px solid #111', borderRadius: '40px', lineHeight: '1.4', transform: 'rotate(-2deg)', boxShadow: '20px 20px 0 #000' }}>{finalMent}</div>
+
+            {/* Stamp Effect */}
+            <div style={{
+              position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-15deg)',
+              border: '10px solid #ff0000', color: '#ff0000', padding: '20px 50px', borderRadius: '20px',
+              fontSize: '5rem', fontWeight: 900, background: 'rgba(255,255,255,0.9)',
+              animation: 'stamp-slam 0.3s 1s both', zIndex: 12000, whiteSpace: 'nowrap',
+              boxShadow: '0 0 50px rgba(255,0,0,0.5)'
+            }}>
+              인간 포기 완료!
             </div>
 
-            <div className="score-breakdown" style={{ fontSize: '3.5rem', background: 'rgba(255,255,255,0.1)', padding: '20px', borderRadius: '30px', border: '4px dashed #fff', transform: 'rotate(-1deg)' }}>
-              🗣️ <span className={`text-outline ${isCounting ? 'wobble-text' : ''}`} style={{ color: '#facc15' }}>{animPublic}</span> +
-              🤖 <span className={`text-outline ${isCounting ? 'wobble-text' : ''}`} style={{ color: '#facc15' }}>{animAI}</span>
-              = <span className={`text-outline ${isCounting ? 'wobble-text' : ''}`} style={{ color: '#fff', fontSize: '4.5rem', textDecoration: 'underline solid #facc15' }}>{animPublic + animAI}</span>
-            </div>
-
-            <div className="judges-row">
-              {selectedJudges.map((j, i) => (
-                <div key={i} className="judge-item">
-                  <img src={j.image} className="judge-img-circle" />
-                  <div className="judge-bubble-small">{introPhase === 2 ? j.commentA : j.commentB}</div>
-                </div>
-              ))}
+            <div style={{ marginTop: '80px', display: 'flex', gap: '30px', justifyContent: 'center', position: 'relative', zIndex: 13000 }}>
+              <button
+                onClick={() => setIntroPhase(7)}
+                style={{
+                  fontFamily: '"Gaegu", cursive', fontSize: '2.5rem', fontWeight: 900,
+                  padding: '15px 40px', borderRadius: '50px', border: '5px solid #fff',
+                  background: '#333', color: '#fff', cursor: 'pointer',
+                  boxShadow: '8px 8px 0 rgba(0,0,0,0.5)', transition: '0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                결과 화면 보기
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  fontFamily: '"Gaegu", cursive', fontSize: '2.5rem', fontWeight: 900,
+                  padding: '15px 40px', borderRadius: '50px', border: '5px solid #111',
+                  background: '#facc15', color: '#111', cursor: 'pointer',
+                  boxShadow: '8px 8px 0 rgba(0,0,0,0.5)', transition: '0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                한 판 더 하기
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* 메인 컨테이너 */}
-      <div style={{ flex: 1, display: 'flex', padding: '1vh 4vw', gap: '3vw', minHeight: 0, position: 'relative', marginTop: '10vh' }}>
+      <div style={{ flex: 1, display: 'flex', padding: '0 0 4vw 4vw', gap: '2vw' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15vh', justifyContent: 'flex-start', opacity: [4, 7].includes(introPhase) ? 1 : 0, transition: '0.5s' }}>
+          <div style={{ display: 'flex', gap: '60px', marginTop: '2vh' }}>
+            {/* A팀 섹션 */}
+            <div style={{ textAlign: 'center' }}>
+              <img src={teamALogo} style={{ width: '420px', objectFit: 'contain' }} />
 
-        {/* 👈 왼쪽: 메인 스테이지 */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative', marginTop: '15vh' }}>
-
-          {/* ✅ 메인 화면 (결과 멘트만 병맛스럽게 크게!) */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', zIndex: 10 }}>
-            {step === 5 && (
-              <div className="final-result-container">
-                {/* 승리 팀 이름 */}
-                <div className="crayon-text" style={{ fontSize: '8rem', marginBottom: '10px', lineHeight: 1.1, transform: 'rotate(-3deg) skew(-5deg)' }}>
-                  {winnerName} 승리!
-                </div>
-
-                {/* ✅ [수정] 멘트와 도장 래퍼 */}
-                <div style={{ position: 'relative', display: 'inline-block', marginTop: '30px' }}>
-
-                  {/* 웃긴 멘트 */}
-                  <div style={{
-                    fontSize: '3.5rem', fontWeight: 900, color: '#333', wordBreak: 'keep-all', textAlign: 'center',
-                    padding: '20px 40px', textShadow: '3px 3px 0 #fff', lineHeight: 1.4,
-                    background: 'linear-gradient(to top, #ffeb3b 50%, transparent 50%)',
-                    transform: 'rotate(2deg)', border: '4px solid #111', borderRadius: '20px'
-                  }}>
-                    "{finalMent}"
-                  </div>
-
-                  {/* ✅ [수정] 쾅 찍히는 도장 (더 밑으로, 더 왼쪽으로) */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '-70px', right: '-30px', /* ✅ 위치 수정됨 (더 아래로, 더 안쪽으로) */
-                    border: '10px solid #ff0000', color: '#ff0000', borderRadius: '50% 45% 55% 50% / 50% 55% 45% 50%',
-                    width: '180px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '3.5rem', fontWeight: 'bold', fontFamily: '"Nanum Pen Script", cursive', transform: 'rotate(-15deg)',
-                    boxShadow: '0 0 30px rgba(255,0,0,0.8), inset 0 0 20px rgba(255,0,0,0.5)',
-                    textShadow: '3px 3px 2px #990000', background: 'rgba(255,255,255,0.7)',
-                    animation: 'stamp-slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.2s both',
-                    zIndex: 100, filter: 'blur(0.5px)'
-                  }}>
-                    포기 완료
-                  </div>
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
+                <span style={{ color: '#ffb3b3' }}>관객 {stagePublicA}</span>
+                <span style={{ color: '#ff3333' }}>AI {stageAIA}</span>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* 👉 오른쪽: 채팅창 */}
-        <div className="sketch-box-container" style={{
-          width: '24vw', maxWidth: '350px', height: '100%',
-          display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', zIndex: 50,
-          paddingLeft: '30px'
-        }}>
-          <div style={{ padding: '15px', background: 'transparent', borderBottom: '4px dashed #111', fontWeight: '900', textAlign: 'center', fontSize: '1.6rem', fontFamily: '"Nanum Pen Script", cursive' }}>
-            💬 실시간 개소리판
+              <div className="gauge-container">
+                <div className="gauge-fill" style={{ width: `${((stagePublicA + stageAIA) / (totalA + totalB || 1)) * 100}%`, background: '#ff4444' }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${(stagePublicA / (totalA + totalB || 1)) * 100}%`, background: '#ff7f7f', opacity: 0.8 }} />
+              </div>
+            </div>
+
+            <div style={{ fontSize: '5rem', fontWeight: 900, alignSelf: 'center' }}>VS</div>
+
+            {/* B팀 섹션 */}
+            <div style={{ textAlign: 'center' }}>
+              <img src={teamBLogo} style={{ width: '420px', objectFit: 'contain' }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
+                <span style={{ color: '#99ccff' }}>관객 {stagePublicB}</span>
+                <span style={{ color: '#3385ff' }}>AI {stageAIB}</span>
+              </div>
+
+              <div className="gauge-container">
+                <div className="gauge-fill" style={{ width: `${((stagePublicB + stageAIB) / (totalA + totalB || 1)) * 100}%`, background: '#3b82f6' }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${(stagePublicB / (totalA + totalB || 1)) * 100}%`, background: '#7fb2ff', opacity: 0.8 }} />
+              </div>
+            </div>
           </div>
-          <div style={{ flex: 1, padding: '15px', overflowY: 'auto', background: 'transparent' }}>
-            {chats.map((c, i) => (
-              <div key={i} className="chat-bubble" style={{
-                alignSelf: c.user === '나' ? 'flex-end' : 'flex-start',
-                background: c.user === '나' ? '#fff' : '#fff',
-                border: c.user === '나' ? '3px solid #facc15' : '3px solid #111',
-                textAlign: c.user === '나' ? 'right' : 'left',
-                transform: `rotate(${Math.random() * 2 - 1}deg)`
-              }}>
-                <strong style={{ color: '#555', fontSize: '1rem' }}>{c.user}</strong>
-                <div style={{ fontWeight: 700, fontSize: '1.3rem' }}>{c.msg}</div>
+
+
+          {/* AI 심사위원단 Label added here */}
+          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', marginTop: '30px', marginBottom: '10px', background: '#333', padding: '5px 30px', borderRadius: '20px', border: '2px solid #fff', boxShadow: '5px 5px 0 #000' }}>
+            AI 심사위원단
+          </div>
+
+          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+            {selectedJudges.map((j, i) => (
+              <div key={i} className="judge-card-mini" style={{ animation: `elastic-zoomies 0.5s ${i * 0.1}s both` }}>
+                <img src={j.image} style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ddd', marginBottom: '5px' }} />
+                <div style={{ fontWeight: 900 }}>{j.name}</div>
               </div>
             ))}
-            <div ref={chatEndRef} />
           </div>
-          <div style={{ display: 'flex', padding: '15px', background: 'transparent', borderTop: '4px dashed #111' }}>
-            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              style={{ flex: 1, padding: '12px', border: '3px solid #111', borderRadius: '15px', outline: 'none', marginRight: '10px', fontSize: '1.2rem', fontFamily: '"Nanum Pen Script", cursive', background: '#fffdf0' }} placeholder="멍멍! 짖어봐!" />
-            <button onClick={handleSend} style={{ background: '#111', color: '#fff', border: '3px solid #111', borderRadius: '15px', padding: '0 20px', cursor: 'pointer', fontWeight: 900, fontSize: '1.3rem', fontFamily: '"Nanum Pen Script", cursive', transform: 'rotate(-2deg)' }}>Go!</button>
-          </div>
+
+
+        </div>
+
+        {/* Floating Play Again Button */}
+        {introPhase === 7 && (
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              position: 'fixed', bottom: '30px', right: '400px', zIndex: 11000,
+              fontFamily: '"Gaegu", cursive', fontSize: '1.5rem', fontWeight: 900,
+              padding: '10px 30px', borderRadius: '30px', border: '3px solid #fff',
+              background: '#333', color: '#fff', cursor: 'pointer',
+              boxShadow: '5px 5px 0 rgba(0,0,0,0.5)', transition: '0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            한 판 더 하기
+          </button>
+        )}
+
+        <div style={{ width: '380px', height: '100%', display: 'flex', paddingTop: '50px', paddingRight: '15px' }}>
+          <ChatArea />
         </div>
       </div>
     </div>,
