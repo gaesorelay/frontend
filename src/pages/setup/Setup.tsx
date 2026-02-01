@@ -22,7 +22,7 @@ export default function Setup() {
   const { roomId: paramRoomId } = useParams(); // URL의 방 번호 (Guest일 때 존재)
 
   // 1. GameStore
-  const { roomConfig, roomTitle, setRoomInfo, reset } = useGameStore(); // 👈 reset 추가
+  const { roomConfig, roomTitle, setRoomInfo, setHasEntered, reset } = useGameStore(); // 👈 reset 추가
 
   // 2. UserStore
   const {
@@ -54,23 +54,14 @@ export default function Setup() {
   // URL에 방번호가 있으면 스토어에 뭐가 있든 무조건 게스트입니다.
   const isHost = !paramRoomId && !!roomConfig;
 
-  // ⭐️ [수정 2] 게스트로 들어왔는데 스토어에 방장 데이터가 남아있으면 청소
+  // ⭐️ [수정 2] 게스트 입장 시: 좀비 데이터 정리용
+  // 방 유효성 검사는 RouteGuard가 처리합니다.
   useEffect(() => {
-    // URL에 방 번호가 있는데(Guest), roomConfig가 남아있다면? -> 좀비 데이터임!
     if (paramRoomId && roomConfig) {
       console.log("🧹 게스트 입장: 이전 방장 데이터 초기화");
-      // reset(); // GameStore 전체 초기화 (필요시 주석 해제)
-      // 혹은 그냥 무시하고 진행 (isHost가 false라서 안전함)
+      reset();
     }
-
-    // 잘못된 접근 차단 (방장도 아니고 방번호도 없음)
-    if (!isHost && !paramRoomId) {
-      alert("잘못된 접근입니다.");
-      navigate('/');
-    }
-
-    console.log("Setup Page Check:", { paramRoomId, isRealHost: isHost, staleConfig: !!roomConfig });
-  }, [isHost, paramRoomId, roomConfig, navigate]);
+  }, [paramRoomId, roomConfig, reset]);
 
   const handlePrev = () => {
     if (totalDogs === 0) return;
@@ -143,6 +134,7 @@ export default function Setup() {
           setStoreNickname(user.nickname);
           setStoreAvatarId(user.avatarId);
           setRoomId(currentRoomId);
+          setHasEntered(true);
           setUserStatus(user.role, user.isHost);
 
           // 방장, 게스트 공통으로 토큰 저장하도록 변경

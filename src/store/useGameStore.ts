@@ -22,7 +22,8 @@ interface GameStoreState {
   gamePhase: GamePhase;
   roundData: RoundData | null;
   visitedRoomId: string | null;
-  hasEntered: boolean; // ⭐️ 추가
+  hasEntered: boolean;
+  kickReason: string | null; // ⭐️ 강퇴 사유 (null이면 강퇴 아님)
 
   teamAStory: string[];
   teamBStory: string[];
@@ -31,7 +32,8 @@ interface GameStoreState {
   setJoinCode: (code: string | null) => void;
   setRoomInfo: (info: RoomInfo | null) => void;
   setVisitedRoomId: (id: string | null) => void;
-  setHasEntered: (entered: boolean) => void; // ⭐️ 추가
+  setHasEntered: (entered: boolean) => void;
+  setKickReason: (reason: string | null) => void; // ⭐️ 강퇴 알림 표시용
   setPlayers: (players: Player[]) => void;
   upsertPlayer: (player: Player) => void;
   removePlayer: (userToken: string) => void;
@@ -68,6 +70,7 @@ export const useGameStore = create<GameStoreState>()((set) => ({
     teamBStory: team === 'B' ? [...state.teamBStory, text] : state.teamBStory,
   })),
   resetStory: () => set({ teamAStory: [], teamBStory: [] }),
+  kickReason: null, // 초기값 null
 
   setRoomActions: (title, config) => {
     console.log("💾 [GameStore] setRoomActions:", { title, config });
@@ -76,7 +79,8 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   setJoinCode: (code) => set({ joinCode: code }),
   setRoomInfo: (info) => set({ roomInfo: info }),
   setVisitedRoomId: (id) => set({ visitedRoomId: id }),
-  setHasEntered: (entered) => set({ hasEntered: entered }), // ⭐️ 액션 추가
+  setHasEntered: (entered) => set({ hasEntered: entered }),
+  setKickReason: (reason) => set({ kickReason: reason }),
   setPlayers: (players) => set({ players }),
   upsertPlayer: (player) =>
     set((state) => {
@@ -93,9 +97,9 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   setGameState: (state) => set({ gameState: state }),
   setVoteResult: (result) => set({ voteResult: result }),
   setGamePhase: (phase) => set({ gamePhase: phase }),
-  setRoundData: (newData) => 
-    set((state) => ({ 
-      roundData: state.roundData ? { ...state.roundData, ...newData } : newData 
+  setRoundData: (newData) =>
+    set((state) => ({
+      roundData: state.roundData ? { ...state.roundData, ...newData } : newData
     })),
   reset: () =>
     set({
@@ -111,5 +115,6 @@ export const useGameStore = create<GameStoreState>()((set) => ({
       voteResult: null,
       gamePhase: 'LOBBY',
       roundData: null,
+      kickReason: null,
     }),
 }));
