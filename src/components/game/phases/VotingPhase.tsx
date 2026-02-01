@@ -5,12 +5,17 @@ import voteLogoImg from '@/assets/logo/logo_vote.png';
 import voteFinishImg from '@/assets/logo/vote_finish.png';
 import ChatArea from '../ChatArea';
 import { socket } from '@/lib/socket';
+import { useGameStore } from '@/store/useGameStore';
+
 
 const VotingPhase = () => {
   const [votesA, setVotesA] = useState(0);
   const [votesB, setVotesB] = useState(0);
 
-  const totalTime = 25;
+  const roomConfig = useGameStore((state) => state.roomConfig);
+
+  const totalTime = roomConfig?.voteTime || 20;
+  
   const [timeLeft, setTimeLeft] = useState(totalTime);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [aiResult, setAiResult] = useState<any | null>(null);

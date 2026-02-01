@@ -19,10 +19,10 @@ export default function CreatePage() {
   // 1. 상태값들 (State)
   // 초기값은 범위 내 안전한 값으로 설정해두는 것이 좋습니다.
   const [roomName, setRoomName] = useState('');
-  const [maxPlayers, setMaxPlayers] = useState(10);  // 초기값 10명
-  const [storytellers, setStorytellers] = useState(3); // 초기값 3명
+  const [maxPlayers, setMaxPlayers] = useState(20);  // 초기값 20명
+  const [storytellers, setStorytellers] = useState(4); // 초기값 4명
   const [rounds, setRounds] = useState(3);           // 초기값 3라운드
-  const [roundTime, setRoundTime] = useState(60);    // 초기값 60초
+  const [roundTime, setRoundTime] = useState(30);    // 초기값 30초
   const [voteTime, setVoteTime] = useState(20);      // 초기값 20초
 
   // 2. ⚙️ 컨트롤러 설정 (여기에 Min/Max 제한 적용!)
@@ -35,7 +35,7 @@ export default function CreatePage() {
       unit: '명',
       step: 1,
       min: 8,   // ✅ 최소 8명
-      max: 30   // ✅ 최대 30명
+      max: 50   // ✅ 최대 50명
     },
     {
       label: '이야기꾼 수',
@@ -43,7 +43,7 @@ export default function CreatePage() {
       setValue: setStorytellers,
       unit: '명',
       step: 1,
-      min: 2,   // ✅ 최소 2명
+      min: 3,   // ✅ 최소 3명
       max: 8    // ✅ 최대 8명
     },
     {
@@ -61,8 +61,8 @@ export default function CreatePage() {
       setValue: setRoundTime,
       unit: '초',
       step: 5,  // 5초 단위 이동
-      min: 10,  // ✅ 최소 10초
-      max: 60   // ✅ 최대 60초
+      min: 15,  // ✅ 최소 15초
+      max: 45   // ✅ 최대 45초
     },
     {
       label: '투표 시간',
@@ -70,8 +70,8 @@ export default function CreatePage() {
       setValue: setVoteTime,
       unit: '초',
       step: 5,
-      min: 5,   // ✅ 최소 5초
-      max: 20   // ✅ 최대 20초
+      min: 15,   // ✅ 최소 15초
+      max: 25   // ✅ 최대 25초
     },
   ];
 
