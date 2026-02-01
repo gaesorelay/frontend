@@ -519,12 +519,14 @@ const LobbyPhase = ({
                 >
                   🟥 B팀 배정
                 </button>
-                <button
-                  onClick={handleKickUser}
-                  className={`${styles.modalButton} ${styles.buttonKick}`}
-                >
-                  🚪 강퇴하기
-                </button>
+                {(!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname) && (
+                  <button
+                    onClick={handleKickUser}
+                    className={`${styles.modalButton} ${styles.buttonKick}`}
+                  >
+                    🚪 강퇴하기
+                  </button>
+                )}
               </div>
             </div>
           </Modal>
