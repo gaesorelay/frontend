@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import ChatArea from '../ChatArea';
+import { socket } from '@/lib/socket';
 
 import bgImg from '@/assets/background.png';
 import resultLogo from '@/assets/logo/resultlogo.png';
@@ -35,6 +36,22 @@ interface Judge {
   commentB: string;
 }
 
+export interface AiJudgeScore {
+  judgeName: string;
+  commentA: string;
+  commentB: string;
+  scoreTeamA: number;
+  scoreTeamB: number;
+}
+
+export interface VoteOutcome {
+  roomUuid: string;
+  votesTeamA: number;
+  votesTeamB: number;
+  winner: 'A' | 'B' | 'DRAW';
+  aiJudges?: AiJudgeScore[];
+}
+
 const MASTER_DB: Judge[] = [
   { id: 1, name: 'AI 판독기 V1', image: judge1, commentA: "창의적이야! (멍!)", commentB: "데이터 부족. (왈!)" },
   { id: 2, name: '멍성재 2.0', image: judge2, commentA: "완벽한 개소리!", commentB: "너무 논리적이야. 탈락." },
@@ -64,6 +81,7 @@ const WIN_MENTS = [
 ];
 
 const JudgeResultPhase = () => {
+	const [resultData, setResultData] = useState<VoteOutcome | null>(null);
   const [selectedJudges] = useState<Judge[]>(() => {
     const savedData = localStorage.getItem('SELECTED_JUDGES_V2');
     if (savedData) return JSON.parse(savedData);
@@ -148,6 +166,21 @@ const JudgeResultPhase = () => {
       return () => clearInterval(interval);
     }
   }, [introPhase, aiTotalA, aiTotalB]);
+
+  useEffect(() => {
+  const handleVoteResult = (data: VoteOutcome) => {
+		// 🔍 [확인용 콘솔] 데이터가 어떻게 들어오는지 여기서 확인하세요!
+		console.log("🏆 서버로부터 최종 결과 데이터를 받았습니다:", data);
+		
+		setResultData(data);
+	};
+
+	socket.on('vote_result', handleVoteResult);
+
+	return () => {
+		socket.off('vote_result', handleVoteResult);
+	};
+	}, []);
 
   return createPortal(
     <div style={{
