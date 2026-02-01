@@ -4,38 +4,14 @@ import { Background } from '@/components/common/background';
 import voteLogoImg from '@/assets/logo/logo_vote.png';
 import voteFinishImg from '@/assets/logo/vote_finish.png';
 import ChatArea from '../ChatArea';
-import { useNavigate } from 'react-router-dom';
-import { useGameStore } from '@/store/useGameStore';
-import { socket } from '@/lib/socket';
 
 const VotingPhase = () => {
   const [votesA, setVotesA] = useState(15);
   const [votesB, setVotesB] = useState(12);
-  const navigate = useNavigate();
-  const { roomInfo } = useGameStore();
   const totalTime = 30;
   const [timeLeft, setTimeLeft] = useState(totalTime);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [aiResult, setAiResult] = useState<any | null>(null);
-  const [isNavigating, setIsNavigating] = useState(false);
-
-  useEffect(() => {
-    console.log(roomInfo);
-    // [수정 이유]: 사용자들이 투표하는 시간을 벌기 위해 페이지 진입 직후 AI 심사를 요청합니다.
-    socket.emit('request_judging', { roomId: roomInfo.roomId });
-
-    // [수정 이유]: 서버로부터 AI 결과가 도착하면 상태에 저장합니다.
-    const handleAiResult = (data: any) => {
-      console.log('✅ AI 심사 완료:', data);
-      setAiResult(data);
-    };
-
-    socket.on('judging_finished', handleAiResult);
-
-    return () => {
-      socket.off('judging_finished', handleAiResult);
-    };
-  }, [roomInfo.roomId]);
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -45,25 +21,6 @@ const VotingPhase = () => {
     const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
-
-  useEffect(() => {
-    // 1. 시간도 다 됐고, 2. AI 결과도 왔다면? -> 결과 페이지로 이동!
-    if (isTimeUp && aiResult && !isNavigating) {
-      setIsNavigating(true); // 이동 시작했으니 중복 실행 금지
-
-      console.log('🏃 모든 데이터 준비 완료! 결과 페이지로 이동합니다.');
-
-      // 사용자에게 "종료" 화면을 잠깐 보여주기 위해 2.5초 뒤에 이동
-      // setTimeout(() => {
-      //   navigate('/final-result', {
-      //     state: {
-      //       votes: { A: votesA, B: votesB },
-      //       aiJudge: aiResult,
-      //     },
-      //   });
-      // }, 2500);
-    }
-  }, [isTimeUp, aiResult, votesA, votesB, isNavigating, navigate]);
 
   const onVote = (team: 'A' | 'B') => {
     if (isTimeUp) return;
