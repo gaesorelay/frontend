@@ -1,6 +1,7 @@
 import { Background } from '@/components/common/background';
 import { Timer } from 'lucide-react';
 import ChatArea from '@/components/game/ChatArea';
+import StoryBoardArea from '../StoryBoardArea';
 import { useGameStore } from '@/store/useGameStore'; // 스토어 import
 import { useState, useMemo } from 'react';
 import { getCardImage } from '@/lib/cardMapper';
@@ -250,7 +251,15 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
               <div style={storytellersStyle}>
                 {renderTeamAvatars(teamAPlayers, activeUserA, '#ef4444')}
               </div>
-              <div style={storyContentStyle}>(작성 내용 표시 예정)</div>
+              {/* ⭐️ [교체] 스토리 보드 A */}
+              {/* roomUuid는 roundData나 store에서 가져오거나 props로 받아야 함 */}
+              <div style={{flex: 1, minHeight: 0}}>
+                 <StoryBoardArea 
+                    team="A" 
+                    activeUser={activeUserA} 
+                    roomId={players[0]?.roomUuid || ''} // 유저 정보에 roomUuid가 있으니 그걸 씀
+                 />
+              </div>
             </div>
 
             <div style={teamSectionStyle}>
@@ -264,7 +273,14 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
               <div style={storytellersStyle}>
                 {renderTeamAvatars(teamBPlayers, activeUserB, '#3b82f6')}
               </div>
-              <div style={storyContentStyle}>(작성 내용 표시 예정)</div>
+              {/* ⭐️ [교체] 스토리 보드 B */}
+              <div style={{flex: 1, minHeight: 0}}>
+                 <StoryBoardArea 
+                    team="B" 
+                    activeUser={activeUserB} 
+                    roomId={players[0]?.roomUuid || ''}
+                 />
+              </div>
             </div>
           </div>
 

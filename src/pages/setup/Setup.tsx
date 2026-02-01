@@ -29,7 +29,8 @@ export default function Setup() {
     setNickname: setStoreNickname,
     setAvatarId: setStoreAvatarId,
     setUserStatus,
-    setRoomId
+    setRoomId,
+    setUserToken,
   } = useUserStore();
 
   const [nickname, setNickname] = useState("");
@@ -44,7 +45,7 @@ export default function Setup() {
     maxPlayers: 8,
     storytellerCount: 4,
     rounds: 3,
-    roundTime: 60,
+    roundTime: 10,
     voteTime: 30,
   };
 
@@ -136,21 +137,29 @@ export default function Setup() {
           setHasEntered(true);
           setUserStatus(user.role, user.isHost);
 
+          // 방장, 게스트 공통으로 토큰 저장하도록 변경
+          if (user.userToken) {
+             console.log("🔑 토큰 저장 완료:", user.userToken);
+             setUserToken(user.userToken); // Store 저장
+             socket.auth = { token: user.userToken }; // 소켓 재연결 대비
+          }
+
+
           if (isHost) {
             setRoomInfo({
               roomUuid: currentRoomId,
               title: roomTitle || "즐거운 게임",
               status: 'WAITING',
               config: roomConfig || defaultConfig,
-              ownerUserToken: myToken,
+              ownerUserToken: user.userToken,
               createdAt: new Date().toISOString()
             });
           }
 
-          if (!isHost && user.userToken) {
-            console.log("🔑 게스트 토큰 저장:", user.userToken);
-            socket.auth = { token: user.userToken };
-          }
+          // if (!isHost && user.userToken) {
+          //   console.log("🔑 게스트 토큰 저장:", user.userToken);
+          //   socket.auth = { token: user.userToken };
+          // }
 
           console.log("🚀 게임방으로 이동!");
           navigate(`/gameroom/${currentRoomId}`);
