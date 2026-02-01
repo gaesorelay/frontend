@@ -8,12 +8,13 @@ interface StoryBoardProps {
   team: 'A' | 'B';
   activeUser: any;
   roomId: string;
+  turnNumber?: number;
 }
 
 const StoryBoardArea = ({ team, activeUser, roomId }: StoryBoardProps) => {
   const { userToken } = useUserStore();
-  const { teamAStory, teamBStory, addStoryLine } = useGameStore();
-  
+  const { teamAStory, teamBStory, addStoryLine, setDraftText } = useGameStore();
+
   // 팀에 맞는 데이터 가져오기
   const storyLog = team === 'A' ? teamAStory : teamBStory;
 
@@ -23,38 +24,42 @@ const StoryBoardArea = ({ team, activeUser, roomId }: StoryBoardProps) => {
 
   useEffect(() => {
     textRef.current = currentTypingText;
-  }, [currentTypingText]);
+    // ⭐️ [추가] 스토어와 동기화 (Dev Bar 등 외부 접근용)
+    if (activeUser && activeUser.userToken === userToken) {
+      setDraftText(currentTypingText);
+    }
+  }, [currentTypingText, activeUser, userToken, setDraftText]);
 
   const isMyTurn = activeUser && activeUser.userToken === userToken;
   const scrollRef = useRef<HTMLDivElement>(null);
 
- // StoryBoardArea.tsx 내부
-useEffect(() => {
-  console.log("📡 스토리 리스너 등록됨!"); // 이게 찍히는지 확인
+  // StoryBoardArea.tsx 내부
+  useEffect(() => {
+    console.log("📡 스토리 리스너 등록됨!"); // 이게 찍히는지 확인
 
-  const handleUpdate = (data: any) => {
-    console.log("📝 실시간 업데이트 수신:", data); // 남이 칠 때 이게 찍혀야 함
-    if (data.team === team && data.writerToken !== userToken) {
-      setCurrentTypingText(data.text);
-    }
-  };
+    const handleUpdate = (data: any) => {
+      console.log("📝 실시간 업데이트 수신:", data); // 남이 칠 때 이게 찍혀야 함
+      if (data.team === team && data.writerToken !== userToken) {
+        setCurrentTypingText(data.text);
+      }
+    };
 
-  const handleSubmit = (data: any) => {
-    console.log("💾 제출 완료 수신:", data); // 제출 시 이게 전원에게 찍혀야 함
-    if (data.team === team) {
-      addStoryLine(data.team, data.text); 
-      setCurrentTypingText('');
-    }
-  };
+    const handleSubmit = (data: any) => {
+      console.log("💾 제출 완료 수신:", data); // 제출 시 이게 전원에게 찍혀야 함
+      if (data.team === team) {
+        addStoryLine(data.team, data.text);
+        setCurrentTypingText('');
+      }
+    };
 
-  socket.on('story_update', handleUpdate);
-  socket.on('story_submitted', handleSubmit);
+    socket.on('story_update', handleUpdate);
+    socket.on('story_submitted', handleSubmit);
 
-  return () => {
-    socket.off('story_update', handleUpdate);
-    socket.off('story_submitted', handleSubmit);
-  };
-}, [team, userToken]); // addStoryLine은 뺍니다 (안정성 위해)
+    return () => {
+      socket.off('story_update', handleUpdate);
+      socket.off('story_submitted', handleSubmit);
+    };
+  }, [team, userToken]); // addStoryLine은 뺍니다 (안정성 위해)
 
   // 자동 스크롤: 새 로그가 쌓이거나 누군가 타이핑할 때
   useEffect(() => {
@@ -64,63 +69,43 @@ useEffect(() => {
   }, [storyLog, currentTypingText]);
 
   // 내 턴일 때 타이핑 핸들러
- const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-  const text = e.target.value;
-  setCurrentTypingText(text);
-  console.log("📤 타이핑 전송 시도:", { roomId, text, team }); // 로그 찍기
-  socket.emit('story_typing', { roomId, text, team, userToken });
-};
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setCurrentTypingText(text);
+    console.log("📤 타이핑 전송 시도:", { roomId, text, team }); // 로그 찍기
+    socket.emit('story_typing', { roomId, text, team, userToken });
+  };
 
 
 
-  // 💾 턴 종료 시 자동 제출 (Ref 사용으로 클로저 방지)
-  const prevActiveUserRef = useRef(activeUser?.userToken);
-  useEffect(() => {
-    const prevToken = prevActiveUserRef.current;
-    const currentToken = activeUser?.userToken;
-
-    // 내 턴이 끝나는 순간 서버로 최종본 제출
-    if (prevToken === userToken && currentToken !== userToken) {
-      if (textRef.current.trim().length > 0) {
-        // 턴 종료 제출 시에도 동일하게
-        console.log("📤 제출 시도:", textRef.current);
-        socket.emit('submit_story', { 
-          roomId, 
-          text: textRef.current, 
-          team, 
-          userToken 
-        });
-      }
-    }
-    prevActiveUserRef.current = currentToken;
-  }, [activeUser, roomId, team, userToken]);
-
+  // 💾 턴 종료 시 자동 제출 로직 제거됨
+  // 이유: Timer(WritingPhase)와 DevBar(GameRoom)에서 턴이 끝나기 '직전'에 미리 제출하도록 변경됨.
   return (
     <div className={styles.container}>
-    {/* 📜 1. 스토리 히스토리 및 실시간 입력 통합 영역 */}
-    <div className={styles.logSection} ref={scrollRef}>
+      {/* 📜 1. 스토리 히스토리 및 실시간 입력 통합 영역 */}
+      <div className={styles.logSection} ref={scrollRef}>
         <div className={styles.storyParagraph}>
-            {/* A. 이미 확정된 이전 문장들을 공백과 함께 합침 */}
-            <span className={styles.historyText}>
+          {/* A. 이미 확정된 이전 문장들을 공백과 함께 합침 */}
+          <span className={styles.historyText}>
             {storyLog.length > 0 ? storyLog.join(' ') : ''}
-            </span>
+          </span>
 
-            {/* B. 현재 누군가 작성 중인 텍스트를 바로 뒤에 이어 붙임 */}
-            {currentTypingText && (
+          {/* B. 현재 누군가 작성 중인 텍스트를 바로 뒤에 이어 붙임 */}
+          {currentTypingText && (
             <span className={styles.liveLine}>
-                {/* 앞 문장이 있다면 공백을 하나 추가하여 자연스럽게 연결 */}
-                {storyLog.length > 0 ? ' ' : ''}
-                {currentTypingText}
-                {!isMyTurn && <span className={styles.cursorSmall} />}
+              {/* 앞 문장이 있다면 공백을 하나 추가하여 자연스럽게 연결 */}
+              {storyLog.length > 0 ? ' ' : ''}
+              {currentTypingText}
+              {!isMyTurn && <span className={styles.cursorSmall} />}
             </span>
-            )}
-            
-            {/* C. 아무 내용이 없을 때 보여줄 가이드 (선택 사항) */}
-            {storyLog.length === 0 && !currentTypingText && (
+          )}
+
+          {/* C. 아무 내용이 없을 때 보여줄 가이드 (선택 사항) */}
+          {storyLog.length === 0 && !currentTypingText && (
             <span className={styles.placeholder}>첫 문장을 시작해 보세요...</span>
-            )}
+          )}
         </div>
-    </div>
+      </div>
 
       {/* ⌨️ 3. 입력 창 영역 (내 턴일 때만 활성화) */}
       <div className={`${styles.inputWrapper} ${isMyTurn ? styles.myTurn : ''}`}>
