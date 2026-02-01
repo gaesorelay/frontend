@@ -1,303 +1,321 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-
+import { useGameStore } from '@/store/useGameStore'; // ⭐️ Store
+import { getJudgeImage } from '@/lib/judgeMapper';   // ⭐️ Mapper
+// 🖼️ [배경 이미지]
 import bgImg from '@/assets/background.png';
-import resultLogo from '@/assets/logo/resultlogo.png';
-import finalLogo from '@/assets/logo/finallogo.png';
-import teamALogo from '@/assets/logo/Ateamresult.png';
-import teamBLogo from '@/assets/logo/Bteamresult.png';
 
-// 심사위원 이미지 import
-import judge1 from '@/assets/judge/result/1.png';
-import judge2 from '@/assets/judge/result/2.png';
-import judge3 from '@/assets/judge/result/3.png';
-import judge4 from '@/assets/judge/result/4.png';
-import judge5 from '@/assets/judge/result/5.png';
-import judge6 from '@/assets/judge/result/6.png';
-import judge7 from '@/assets/judge/result/7.png';
-import judge8 from '@/assets/judge/result/8.png';
-import judge9 from '@/assets/judge/result/9.png';
-import judge10 from '@/assets/judge/result/10.png';
-import judge11 from '@/assets/judge/result/11.png';
-import judge12 from '@/assets/judge/result/12.png';
+// ✨ [로고 이미지]
+import titleLogo from '@/assets/logo/judgelogo1.png';
+import finishLogo from '@/assets/logo/judgelogo2.png';
 
-interface Props { }
-
-const MASTER_DB = [
-    { id: 1, name: 'AI 판독기 V1', image: judge1, commentA: "창의적이야! (멍!)", commentB: "데이터 부족. (왈!)" },
-    { id: 2, name: '멍성재 2.0', image: judge2, commentA: "완벽한 개소리!", commentB: "너무 논리적이야. 탈락." },
-    { id: 3, name: '팩트사망 로봇', image: judge3, commentA: "팩트 0%? 훌륭해.", commentB: "팩트가 섞였어. 불순해." },
-    { id: 4, name: '엄근진 햄스터', image: judge4, commentA: "볼주머니 저장각.", commentB: "해바라기씨 압수." },
-    { id: 5, name: '개소리 소믈리에', image: judge5, commentA: "1등급 똥오줌 향기.", commentB: "숙성이 덜 됐어." },
-    { id: 6, name: '논리 파괴자', image: judge6, commentA: "뇌가 녹는다... 합격!", commentB: "말이 되잖아? 재미없어." },
-    { id: 7, name: '왈왈 박사', image: judge7, commentA: "학계에 보고하겠네.", commentB: "공부 더 해오게." },
-    { id: 8, name: '사오정 귀', image: judge8, commentA: "뭐라고? 안들려! 합격!", commentB: "너무 잘 들려. 감점." },
-    { id: 9, name: '투머치 토커', image: judge9, commentA: "진짜가 나타났다.", commentB: "말이 짧아. 더 짖어." },
-    { id: 10, name: '단호박 판사', image: judge10, commentA: "인정. 땅땅땅!", commentB: "기각한다." },
-    { id: 11, name: '꿈꾸는 강아지', image: judge11, commentA: "꿈결 같구나...", commentB: "잠이 확 깨네." },
-    { id: 12, name: '알고리즘 신', image: judge12, commentA: "알고리즘의 선택.", commentB: "노출수 떡락 예상." },
+// 🛠️ [심사위원 전체 데이터 (ID 1~12)]
+// 이미지는 Mapper로 가져오므로, 여기선 이름만 정의하면 됩니다.
+const ALL_JUDGES = [
+  { id: 1, name: '개소리 미식가 멍성재' },
+  { id: 2, name: '침소리 성급맨' },
+  { id: 3, name: '과몰입 F 공감이' },
+  { id: 4, name: 'AI 판사 알빠노' },
+  { id: 5, name: '도파민 쇼츠왕' },
+  { id: 6, name: '낭만주의자 줄리엣' },
+  { id: 7, name: '음모론자 일루미' },
+  { id: 8, name: '칠 가이 (Chill Guy)' },
+  { id: 9, name: 'K-암행어사 조나단' },
+  { id: 10, name: '퍼포먼스 카니' },
+  { id: 11, name: '팩트 폭격기 조' },
+  { id: 12, name: '긍정왕 운동현' },
 ];
+const BARK_SOUNDS = ["월!", "멍!", "왈왈!", "Grrr...", "컹!", "깨갱!", "개소리!", "Woof!", "으르렁", "왕!"];
 
-const MOCK_RESULT = {
-    teamA: { name: 'A팀', public: 45, ai: [15, 20, 25] },
-    teamB: { name: 'B팀', public: 38, ai: [10, 25, 30] },
-};
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const getVictoryMentions = (teamName: string) => [
-    `[속보] ${teamName}, '인간 실격' 처분 확정!`,
-    `${teamName} 전원, 지능 반납 절차 완료.`,
-    `금일부터 ${teamName}의 직립 보행을 금지합니다.`,
-    `검사 결과: ${teamName}의 전두엽 기능 영구 정지.`,
-    `${teamName}의 노예 계약 효력 발생! 왈왈!`,
-    `${teamName}, 이성(Reason) 수치 0% 도달 축하.`,
-    `DNA 정밀 판독 결과: ${teamName} = 100% 짐승.`,
-    `${teamName}의 영혼 판매 계약 성사 (환불 불가).`,
-    `국가공인 '멍멍이' 자격증 발급: ${teamName} 귀하.`,
-    `${teamName}의 언어 구사 능력이 완전히 소멸됨.`
-];
 
-const JudgeResultPhase = ({ }: Props) => {
-    const [selectedJudges] = useState<typeof MASTER_DB>(() => {
-        const savedData = localStorage.getItem('SELECTED_JUDGES_DB');
-        if (savedData) return JSON.parse(savedData);
-        const shuffled = [...MASTER_DB].sort(() => 0.5 - Math.random());
-        const picked = shuffled.slice(0, 3);
-        localStorage.setItem('SELECTED_JUDGES_DB', JSON.stringify(picked));
-        return picked;
-    });
 
-    const [introPhase, setIntroPhase] = useState(1);
-    const [step, setStep] = useState(0);
-    const [chats, setChats] = useState([{ user: '시스템', msg: '🐶 개소리 분석기 가동 중... 삐빅!', color: '#ff4444' }]);
-    const [inputValue, setInputValue] = useState('');
-    const [finalMent, setFinalMent] = useState("");
-    const [animPublic, setAnimPublic] = useState(0);
-    const [animAI, setAnimAI] = useState(0);
-    const [isCounting, setIsCounting] = useState(false);
+const JudgeShufflePhase = () => {
+  // 1. ⭐️ Store에서 당첨된 심사위원 데이터 가져오기
+  const { roundData } = useGameStore();
 
-    const chatEndRef = useRef<HTMLDivElement>(null);
+  // 2. ⭐️ 당첨자 명단 확정 (서버 데이터 사용)
+  const targetWinners = useMemo(() => {
+    // 서버에서 온 데이터가 없으면 fallback (1,2,3번)
+    // roundData.judgeIds는 [{id, name, persona}, ...] 객체 배열임
+    if (roundData?.judgeIds && roundData.judgeIds.length > 0) {
+      return roundData.judgeIds.map((j: any) => ({
+        id: j.id,
+        name: j.name, // 서버 이름 사용
+        image: getJudgeImage(j.id) // Mapper로 이미지 로딩
+      }));
+    }
 
-    const aiTotalA = MOCK_RESULT.teamA.ai.reduce((a, b) => a + b, 0);
-    const aiTotalB = MOCK_RESULT.teamB.ai.reduce((a, b) => a + b, 0);
-    const totalA = MOCK_RESULT.teamA.public + aiTotalA;
-    const totalB = MOCK_RESULT.teamB.public + aiTotalB;
+    // Fallback: 랜덤 3명
+    return ALL_JUDGES.slice(0, 3).map(j => ({ ...j, image: getJudgeImage(j.id) }));
+  }, [roundData]);
 
-    useEffect(() => {
-        setTimeout(() => setIntroPhase(2), 3000);
-        setTimeout(() => setIntroPhase(3), 8500);
-        setTimeout(() => {
-            setIntroPhase(4);
-            setStep(5);
-            const winnerName = totalA > totalB ? MOCK_RESULT.teamA.name : MOCK_RESULT.teamB.name;
-            const mentionList = getVictoryMentions(winnerName);
-            setFinalMent(mentionList[Math.floor(Math.random() * mentionList.length)]);
-        }, 14000);
-    }, []);
+  // 3. ⭐️ 전체 풀(Pool) 구성 (화면에 보여질 12명)
+  const displayPool = useMemo(() => {
+    return ALL_JUDGES.map(j => ({
+      ...j,
+      image: getJudgeImage(j.id)
+    }));
+  }, []);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
+  const [pickedIds, setPickedIds] = useState<number[]>([]);
+  const [isFinished, setIsFinished] = useState(false);
+  const isRunningRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        let targetPublic = 0, targetAI = 0;
-        if (introPhase === 2) { targetPublic = MOCK_RESULT.teamA.public; targetAI = aiTotalA; }
-        else if (introPhase === 3) { targetPublic = MOCK_RESULT.teamB.public; targetAI = aiTotalB; }
-        else return;
+  const [floatingTexts, setFloatingTexts] = useState<any[]>([]);
 
-        setAnimPublic(0); setAnimAI(0); setIsCounting(true);
-        const duration = 2000, interval = 40, steps = duration / interval;
-        let current = 0;
-        const timer = setInterval(() => {
-            current++;
-            const progress = current / steps;
-            setAnimPublic(Math.floor(targetPublic * progress + (Math.random() * 10 - 5)));
-            setAnimAI(Math.floor(targetAI * progress + (Math.random() * 10 - 5)));
-            if (current >= steps) {
-                setAnimPublic(targetPublic); setAnimAI(targetAI); setIsCounting(false);
-                clearInterval(timer);
-            }
-        }, interval);
-        return () => clearInterval(timer);
-    }, [introPhase, aiTotalA, aiTotalB]);
+  useEffect(() => {
+    setMounted(true);
+    const texts = Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      text: BARK_SOUNDS[Math.floor(Math.random() * BARK_SOUNDS.length)],
+      left: Math.random() * 90 + 5 + '%',
+      duration: Math.random() * 5 + 5 + 's',
+      delay: Math.random() * 5 + 's',
+      size: Math.random() * 1.5 + 1 + 'rem',
+      rotation: Math.random() * 40 - 20
+    }));
+    setFloatingTexts(texts);
+  }, []);
 
-    useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chats]);
+  useEffect(() => {
+    if (isRunningRef.current) return;
+    isRunningRef.current = true;
 
-    const handleSend = () => {
-        if (!inputValue.trim()) return;
-        setChats(prev => [...prev, { user: '나', msg: inputValue, color: '#facc15' }]);
-        setInputValue('');
+    const runSequence = async () => {
+      await wait(800);
+
+      for (let round = 0; round < targetWinners.length; round++) {
+        const winner = targetWinners[round];
+        let speed = 50;
+        const spinCount = 20 + round * 5;
+
+        for (let i = 0; i < spinCount; i++) {
+          const pool = displayPool.filter(j => !pickedIds.includes(j.id) && !targetWinners.slice(0, round).map(w => w.id).includes(j.id));
+          if (pool.length > 0) {
+            const randomIdx = Math.floor(Math.random() * pool.length);
+            setHighlightId(pool[randomIdx].id);
+          }
+          if (i > spinCount - 5) speed += 50;
+          else if (i > spinCount - 10) speed += 20;
+          await wait(speed);
+        }
+
+        setHighlightId(winner.id);
+        setPickedIds(prev => [...prev, winner.id]);
+        await wait(1000);
+      }
+
+      setHighlightId(null);
+      setIsFinished(true);
+
     };
 
-    const winnerName = totalA > totalB ? 'A팀' : 'B팀';
+    runSequence();
+  }, [targetWinners, displayPool]);
 
-    return createPortal(
-        <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            backgroundImage: `url(${bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center',
-            fontFamily: '"Gaegu", cursive', overflow: 'hidden', zIndex: 9999, display: 'flex', flexDirection: 'column',
-        }}>
-            <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+  if (!mounted) return null;
 
-        /* 🤪 병맛 애니메이션 추가 */
-        @keyframes kitch-shake {
-          0% { transform: translate(2px, 1px) rotate(0deg); }
-          20% { transform: translate(-1px, -2px) rotate(-2deg); }
-          40% { transform: translate(-3px, 0px) rotate(3deg); }
-          60% { transform: translate(3px, 2px) rotate(-1deg); }
-          80% { transform: translate(-1px, -1px) rotate(4deg); }
-          100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        @keyframes kitch-sway {
-          0%, 100% { transform: rotate(-3deg); }
-          50% { transform: rotate(3deg); }
-        }
-
-        .kitch-shake-anim { animation: kitch-shake 0.1s infinite; }
-        .kitch-sway-anim { animation: kitch-sway 0.5s infinite ease-in-out; }
-
-        body::after {
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCI+PGZpbHRlciBpZD0ibm9pc2UiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjY1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlc30ic3RpdGNoIiAvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMDUiLz48L3N2Zz4=');
-            pointer-events: none; z-index: 99999; opacity: 0.4;
-        }
-
-        @keyframes popIn { 0% { transform: scale(0) rotate(-10deg); opacity: 0; } 70% { transform: scale(1.1) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(0deg); } }
-        @keyframes stamp-slam { 0% { transform: scale(5) rotate(20deg); opacity: 0; } 60% { transform: scale(0.8) rotate(-10deg); opacity: 1; } 80% { transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1) rotate(-5deg); } }
-        .text-outline { text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000; letter-spacing: 2px; font-weight: 900; }
+  return (
+    <div style={{
+      position: 'absolute',
+      top: 0, left: 0, width: '100%', height: '100%',
+      zIndex: 50, // 9999 -> 50 (헤더보다 낮아야 함)
+      backgroundImage: `url(${bgImg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      fontFamily: '"Gaegu", cursive',
+      margin: 0, padding: 0,
+      overflow: 'hidden'
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Black+Han+Sans&display=swap');
         
-        .intro-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #111; 
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCI+PGZpbHRlciBpZD0ibm9pc2UiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjkiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giIC8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4zIiBmaWxsPSIjZmZmIi8+PC9zdmc+');
-            z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #fff; text-align: center; transition: opacity 0.5s ease-out, visibility 0.5s; opacity: 1; visibility: visible;
+        /* 결과 로고 쾅! 효과 */
+        @keyframes slam {
+          0% { transform: scale(3) rotate(-20deg); opacity: 0; }
+          50% { transform: scale(0.9) rotate(-10deg); opacity: 1; }
+          75% { transform: scale(1.1) rotate(-12deg); }
+          100% { transform: scale(1) rotate(-12deg); }
         }
-        .intro-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .intro-img-anim { animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), kitch-shake 0.1s infinite 0.6s; }
 
-        .judges-row { display: flex; justify-content: center; gap: 30px; width: 100%; margin-top: 40px; flex-wrap: wrap; }
-        .judge-item { display: flex; flex-direction: column; align-items: center; width: 28%; min-width: 200px; animation: popIn 0.5s both; }
-        .judge-img-circle { width: 140px; height: 140px; border-radius: 50%; border: 6px dashed #fff; object-fit: cover; background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.5); margin-bottom: 15px; }
-        .judge-bubble-small { background: #fff; color: #111; padding: 15px 20px; border-radius: 30px; border: 4px solid #111; font-size: 1.3rem; font-weight: 900; position: relative; width: 100%; word-break: keep-all; box-shadow: 6px 6px 0 #000; }
-        .judge-bubble-small::after { content: ''; position: absolute; top: -15px; left: 50%; width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 15px solid #111; transform: translateX(-50%); }
+        /* ✨ [NEW] 진행 중 로고 "두구두구" 떨리는 효과 */
+        @keyframes dugu-dugu {
+          0% { transform: translate(0, 0); }
+          10% { transform: translate(-3px, -3px) rotate(-1deg); }
+          20% { transform: translate(3px, 3px) rotate(1deg); }
+          30% { transform: translate(-3px, 3px) rotate(-1deg); }
+          40% { transform: translate(3px, -3px) rotate(1deg); }
+          50% { transform: translate(-2px, 0) rotate(0); }
+          60% { transform: translate(2px, 0) rotate(0); }
+          70% { transform: translate(0, 2px) rotate(0); }
+          80% { transform: translate(0, -2px) rotate(0); }
+          90% { transform: translate(-1px, 1px) rotate(0); }
+          100% { transform: translate(0, 0); }
+        }
 
-        .crayon-text {
-            background-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
-            background-size: 300% auto; animation: rainbow-move 2s linear infinite;
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            font-weight: 900; -webkit-text-stroke: 1px #000;
-        }
-        @keyframes rainbow-move { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
-        
-        .sketch-box-container { 
-            border: 5px solid #111 !important; border-radius: 10px 30px 10px 30px / 30px 10px 30px 10px !important; 
-            box-shadow: 10px 10px 0 rgba(0,0,0,0.2) !important; background: #fffdf0 !important; position: relative; transform: rotate(1deg);
-        }
-        .chat-bubble { 
-            padding: 10px 15px; border: 3px solid #111; border-radius: 20px 5px 25px 10px / 10px 25px 5px 20px; 
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.2); margin-bottom: 10px; font-size: 1.2rem; word-break: break-all; font-family: 'Nanum Pen Script', cursive;
+        @keyframes float-up {
+          0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.4; }
+          90% { opacity: 0.4; }
+          100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
         }
       `}</style>
 
-            {/* 🖼️ 상단 로고 (병맛 진동 추가) */}
-            <div style={{
-                position: 'absolute', top: 0, left: 0, width: '100%', height: '12vh', display: 'flex', alignItems: 'center',
-                justifyContent: 'flex-start', paddingLeft: '3.5vw', paddingTop: '1vh', zIndex: 50, pointerEvents: 'none'
-            }}>
-                <img
-                    src={resultLogo}
-                    className="kitch-sway-anim"
-                    alt="Title Logo"
-                    style={{ height: '500px', marginTop: '100px', objectFit: 'contain', filter: 'drop-shadow(5px 5px 0 #000)' }}
-                />
-            </div>
+      {/* 배경 둥둥 텍스트 */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: 0, width: '100%', height: '100%',
+        pointerEvents: 'none',
+        zIndex: 0,
+        overflow: 'hidden'
+      }}>
+        {floatingTexts.map((item) => (
+          <div key={item.id} style={{
+            position: 'absolute',
+            left: item.left,
+            fontSize: item.size,
+            color: '#78716c',
+            fontWeight: 'bold',
+            opacity: 0,
+            animation: `float-up ${item.duration} linear infinite`,
+            animationDelay: item.delay,
+            whiteSpace: 'nowrap'
+          }}>
+            {item.text}
+          </div>
+        ))}
+      </div>
 
-            {/* 🎬 인트로 블랙아웃 */}
-            <div className={`intro-overlay ${introPhase === 4 ? 'hidden' : ''}`}>
-                {introPhase === 1 && (
-                    <img src={finalLogo} className="intro-img-anim" style={{ width: '60%', maxWidth: '800px' }} />
-                )}
+      {/* 로고 영역 */}
+      {/* 로고 & 타이틀 영역 */}
+      <div style={{ marginBottom: '20px', textAlign: 'center', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <img
+          src={isFinished ? finishLogo : titleLogo}
+          alt="Judge Logo"
+          style={{
+            // 1. 크기 설정 (기존 동일)
+            width: isFinished ? '900px' : '900px',
+            maxWidth: isFinished ? '80%' : '95%',
+            height: 'auto',
 
-                {(introPhase === 2 || introPhase === 3) && (
-                    <div className="intro-content" key={introPhase}>
-                        <img
-                            src={introPhase === 2 ? teamALogo : teamBLogo}
-                            className="intro-img-anim"
-                            style={{ width: '50%', maxWidth: '600px', marginBottom: '-20px' }}
-                        />
 
-                        <div className={`score-breakdown ${isCounting ? 'kitch-shake-anim' : ''}`}
-                            style={{ fontSize: '3.5rem', background: 'rgba(255,255,255,0.1)', padding: '20px', borderRadius: '30px', border: '4px dashed #fff' }}>
-                            🗣️ <span className="text-outline" style={{ color: '#facc15' }}>{animPublic}</span> +
-                            🤖 <span className="text-outline" style={{ color: '#facc15' }}>{animAI}</span>
-                            = <span className="text-outline" style={{ color: '#fff', fontSize: '4.5rem', textDecoration: 'underline solid #facc15' }}>{animPublic + animAI}</span>
-                        </div>
+            // ▼ 위쪽 여백 (Top)
+            marginTop: isFinished
+              ? '-100px'   // 🟢 로고 2 (완료)일 때: 덜 올라감
+              : '-150px', // 🔵 로고 1 (진행)일 때: 많이 올라감
 
-                        <div className="judges-row">
-                            {selectedJudges.map((j, i) => (
-                                <div key={i} className="judge-item" style={{ animationDelay: `${i * 0.2}s` }}>
-                                    <img src={j.image} className="judge-img-circle kitch-sway-anim" />
-                                    <div className="judge-bubble-small" style={{ transform: `rotate(${i % 2 === 0 ? 2 : -2}deg)` }}>
-                                        {introPhase === 2 ? j.commentA : j.commentB}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
+            // ▼ 아래쪽 여백 (Bottom)
+            marginBottom: isFinished
+              ? '-150px'   // 🟢 로고 2 (완료)일 때: 그리드랑 좀 떨어짐
+              : '-175px', // 🔵 로고 1 (진행)일 때: 그리드랑 딱 붙음
 
-            {/* 메인 스테이지 */}
-            <div style={{ flex: 1, display: 'flex', padding: '1vh 4vw', gap: '3vw', minHeight: 0, position: 'relative', marginTop: '10vh' }}>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative', marginTop: '15vh' }}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}>
-                        {step === 5 && (
-                            <div className="final-result-container">
-                                <div className="crayon-text kitch-shake-anim" style={{ fontSize: '8rem', marginBottom: '10px' }}>
-                                    {winnerName} 승리!
-                                </div>
-                                <div style={{ position: 'relative', display: 'inline-block', marginTop: '30px' }}>
-                                    <div className="kitch-sway-anim" style={{
-                                        fontSize: '3.5rem', fontWeight: 900, color: '#333', padding: '20px 40px', background: 'linear-gradient(to top, #ffeb3b 50%, transparent 50%)',
-                                        border: '4px solid #111', borderRadius: '20px'
-                                    }}>
-                                        "{finalMent}"
-                                    </div>
-                                    <div style={{
-                                        position: 'absolute', bottom: '-70px', right: '-30px', border: '10px solid #ff0000', color: '#ff0000',
-                                        borderRadius: '50%', width: '180px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '3.5rem', fontWeight: 'bold', fontFamily: '"Nanum Pen Script", cursive',
-                                        animation: 'stamp-slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.2s both', zIndex: 100
-                                    }}>포기 완료</div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))',
+
+            // 3. 애니메이션 (기존 동일)
+            animation: isFinished
+              ? 'slam 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+              : 'dugu-dugu 0.2s linear infinite'
+          }}
+        />
+      </div>
+
+      {/* Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+        gap: '16px',
+        width: '90%', maxWidth: '800px',
+        zIndex: 10
+      }}>
+        {displayPool.map((judge) => {
+          const isPicked = pickedIds.includes(judge.id);
+          const isHighlight = highlightId === judge.id;
+          const isLoser = isFinished && !isPicked;
+
+          let cardStyle: React.CSSProperties = {
+            position: 'relative',
+            borderRadius: '15px',
+            overflow: 'hidden',
+            backgroundColor: 'transparent',
+            transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)',
+            opacity: 1,
+            transform: 'scale(1)',
+            border: '3px solid #e5e7eb',
+          };
+
+          if (isLoser) {
+            cardStyle = { ...cardStyle, opacity: 0.3, filter: 'grayscale(100%)', transform: 'scale(0.95)' };
+          }
+          else if (isPicked) {
+            cardStyle = {
+              ...cardStyle,
+              border: '5px solid #ef4444',
+              boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)',
+              transform: 'scale(1.05)',
+              zIndex: 20
+            };
+          }
+          else if (isHighlight) {
+            cardStyle = {
+              ...cardStyle,
+              border: '5px solid #fbbf24',
+              boxShadow: '0 0 10px rgba(251, 191, 36, 0.4)',
+              transform: 'scale(1.02)',
+              zIndex: 10
+            };
+          }
+
+          return (
+            <div key={judge.id} style={cardStyle}>
+              <img
+                src={judge.image}
+                alt={judge.name}
+                style={{ width: '100%', height: 'auto', display: 'block' }}
+              />
+
+              {isPicked && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  zIndex: 30,
+                  animation: 'slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+                }}>
+                  <div style={{
+                    border: '5px solid #dc2626',
+                    color: '#dc2626',
+                    fontFamily: '"Black Han Sans", sans-serif',
+                    fontSize: '1.8rem',
+                    fontWeight: '900',
+                    padding: '5px 15px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    boxShadow: '5px 5px 10px rgba(0,0,0,0.2)',
+                    transform: 'rotate(-12deg)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    당첨!
+                  </div>
                 </div>
+              )}
 
-                {/* 채팅창 (기존 구성 유지) */}
-                <div className="sketch-box-container" style={{ width: '24vw', maxWidth: '350px', height: '100%', display: 'flex', flexDirection: 'column', paddingLeft: '30px' }}>
-                    <div style={{ padding: '15px', borderBottom: '4px dashed #111', fontWeight: '900', textAlign: 'center', fontSize: '1.6rem', fontFamily: '"Nanum Pen Script", cursive' }}>
-                        💬 실시간 개소리판
-                    </div>
-                    <div style={{ flex: 1, padding: '15px', overflowY: 'auto' }}>
-                        {chats.map((c, i) => (
-                            <div key={i} className="chat-bubble" style={{ alignSelf: c.user === '나' ? 'flex-end' : 'flex-start', border: c.user === '나' ? '3px solid #facc15' : '3px solid #111' }}>
-                                <strong style={{ color: '#555', fontSize: '1rem' }}>{c.user}</strong>
-                                <div style={{ fontWeight: 700, fontSize: '1.3rem' }}>{c.msg}</div>
-                            </div>
-                        ))}
-                        <div ref={chatEndRef} />
-                    </div>
-                    <div style={{ display: 'flex', padding: '15px', borderTop: '4px dashed #111' }}>
-                        <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                            style={{ flex: 1, padding: '12px', border: '3px solid #111', borderRadius: '15px', fontSize: '1.2rem', fontFamily: '"Nanum Pen Script", cursive', background: '#fffdf0' }} placeholder="멍멍! 짖어봐!" />
-                        <button onClick={handleSend} style={{ background: '#111', color: '#fff', borderRadius: '15px', padding: '0 20px', fontWeight: 900, fontSize: '1.3rem', fontFamily: '"Nanum Pen Script", cursive' }}>Go!</button>
-                    </div>
-                </div>
+              {isHighlight && !isPicked && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                  zIndex: 20
+                }}></div>
+              )}
             </div>
-        </div>,
-        document.body
-    );
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
-export default JudgeResultPhase;
+export default JudgeShufflePhase;
