@@ -1,0 +1,116 @@
+/* StoryBoard.module.css */
+
+/* 📄 전체를 감싸는 종이 한 장 */
+.paper {
+    width: 100%;
+    height: 100%;
+    background-color: #fdfcf0; /* 종이 질감 색상 */
+    border-radius: 12px;
+    border: 2px solid #333; /* 종이 테두리 */
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.15);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    font-family: 'SchoolSafeLittleOne', sans-serif; /* 폰트 통일 */
+    overflow-y: auto; /* 내용이 길어지면 스크롤 */
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* 활성화(내 턴) 되었을 때 종이가 살짝 강조됨 */
+.paper.active {
+    box-shadow: 0 0 0 4px rgba(255, 217, 61, 0.5); /* 노란색 강조 */
+    border-color: #000;
+}
+
+/* 📜 이미 작성된 역사 (Commit 된 텍스트) */
+.historySection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 문단 간격 */
+    margin-bottom: 8px;
+}
+
+/* 지난 문장 스타일 (회색, 읽기 전용 느낌) */
+.committedText {
+    font-size: 1.1rem;
+    color: #666; /* 회색조 */
+    line-height: 1.5;
+    background-color: rgba(0, 0, 0, 0.03); /* 아주 연한 배경으로 구획감 살짝 */
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+/* ✍️ 지금 작성하는 영역 (가장 중요!) */
+.writingSection {
+    flex: 1; /* 남은 공간 다 차지 */
+    min-height: 100px; /* 최소 높이 확보 */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 실제 입력창 (투명화 작업) */
+.textarea {
+    width: 100%;
+    height: 100%;
+    border: none;       /* 테두리 제거 */
+    outline: none;      /* 포커스 라인 제거 */
+    resize: none;       /* 크기 조절 손잡이 제거 */
+    background: transparent; /* 배경 투명하게 */
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #000;        /* 작성 중인 글씨는 진하게 */
+    line-height: 1.5;
+    font-family: inherit;
+    padding: 0;
+    margin: 0;
+}
+
+/* placeholder 색상 */
+.textarea::placeholder {
+    color: #aaa;
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* 👁️ 관전자용 텍스트 (남이 쓰는 거 볼 때) */
+.liveText {
+    font-size: 1.2rem;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-all;
+    min-height: 24px;
+}
+
+/* 펜촉 효과 (커서) */
+.cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.2em;
+    background-color: #333;
+    vertical-align: middle;
+    animation: blink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+/* 작성자 표시 뱃지 (우측 상단) */
+.writerBadge {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background-color: #FFD93D;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #333;
+    border: 1px solid #333;
+    opacity: 0.8;
+    pointer-events: none; /* 입력 방해 안 하게 */
+}

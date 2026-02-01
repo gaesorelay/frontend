@@ -7,7 +7,10 @@ interface UserState {
   nickname: string;
   avatarId: number;
   roomId: string | null;
-  
+
+  // ⭐️ [추가] 나의 고유 토큰 (신분증)
+  userToken: string | null;
+
   // 내 신분증
   role: UserRole;
   isHost: boolean;
@@ -20,6 +23,9 @@ interface UserState {
 
   setRoomId: (roomId: string) => void;
   setUserStatus: (role: UserRole, isHost: boolean) => void;
+  // ⭐️ [추가] 토큰 저장 함수
+  setUserToken: (token: string) => void;
+
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -30,6 +36,9 @@ export const useUserStore = create<UserState>((set) => ({
   role: 'AUDIENCE', 
   isHost: false,
 
+  // ⭐️ [추가] 초기값 null
+  userToken: null,
+  
   setProfile: (nickname, avatarId) => set({ nickname, avatarId }),
   
   // 👇 [추가] 구현
@@ -38,4 +47,7 @@ export const useUserStore = create<UserState>((set) => ({
 
   setRoomId: (roomId) => set({ roomId }),
   setUserStatus: (role, isHost) => set({ role, isHost }),
+
+  // ⭐️ [추가] 구현
+  setUserToken: (userToken) => set({ userToken }),
 }));
