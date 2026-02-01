@@ -229,7 +229,36 @@ const GameRoom = () => {
   const [isAutoPlay, setIsAutoPlay] = useState(false); // 기본값: 수동 (일시정지 상태)
   const [isDevExpanded, setIsDevExpanded] = useState(true); // 개발자 바 펼침 여부
 
+  // ⭐️ [복구] userToken 필요
+  const { userToken } = useUserStore(); // << 추가 필요 (Line 31 근처)
+
   const handleNextPhase = () => {
+    // 🛠️ Dev: "제출 후 스킵" (draftText가 있으면 제출)
+    const { draftText, setDraftText } = useGameStore.getState();
+
+    // 내 팀 찾기
+    const myPlayer = players.find(p => p.userToken === userToken);
+
+    // 현재 턴 번호 계산 (TURN1 -> 1)
+    const turnNumber = gamePhase.startsWith('TURN')
+      ? parseInt(gamePhase.replace('TURN', ''))
+      : 0;
+
+    if (draftText && draftText.trim().length > 0 && myPlayer && myPlayer.team && turnNumber > 0) {
+      console.log(`🛠️ Dev: 스킵 전 강제 제출 시도: ${draftText}, Turn: ${turnNumber}`);
+      socket.emit('submit_story', {
+        roomId,
+        text: draftText,
+        team: myPlayer.team,
+        userToken,
+        turn: turnNumber
+      }, (res: any) => {
+        console.log("🛠️ Dev: 강제 제출 결과:", res);
+        // 제출 후 스토어 비우기
+        setDraftText('');
+      });
+    }
+
     // 🛠️ Dev: 서버에 단계 건너뛰기 요청
     socket.emit('skip_phase');
   };
