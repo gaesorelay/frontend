@@ -2,12 +2,15 @@ import { Background } from '@/components/common/background';
 import { Timer } from 'lucide-react';
 import ChatArea from '@/components/game/ChatArea';
 import StoryBoardArea from '../StoryBoardArea';
+import JudgeArea from '@/components/game/JudgeArea';
+import CardArea from '@/components/game/CardArea';
+
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import { useState, useMemo, useEffect } from 'react';
 import { getCardImage } from '@/lib/cardMapper';
-import { getJudgeImage } from '@/lib/judgeMapper';
+// import { getJudgeImage } from '@/lib/judgeMapper';
 
 // --- Assets (이미지) ---
 import dog1 from '@/assets/dog/dog1.png';
@@ -158,9 +161,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   const roundTitleStyle: React.CSSProperties = { fontSize: '1.5rem', fontWeight: 900, color: '#3d405b', textShadow: '1px 1px 0px white', margin: 0 };
   const roundInfoStyle: React.CSSProperties = { backgroundColor: '#fff', border: '2px dashed #333', borderRadius: '15px', padding: '4px 12px', fontSize: '1rem', fontWeight: 'bold' };
   const mainStyle: React.CSSProperties = { flex: 1, display: 'flex', padding: '0 40px 20px 40px', gap: '20px', alignItems: 'stretch', minHeight: 0 };
-  const leftColumnStyle: React.CSSProperties = { flex: 0.8, display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' };
-  const imageCardFrameStyle: React.CSSProperties = { width: '90%', maxWidth: '220px', alignSelf: 'center', aspectRatio: '1/1', backgroundColor: '#fff', border: '4px solid #333', borderRadius: '16px', boxShadow: '6px 6px 0px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', padding: '12px', position: 'relative' };
-  const imagePlaceholderStyle: React.CSSProperties = { flex: 1, width: '100%', backgroundColor: '#eee', border: '2px dashed #999', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#888' };
+  const leftColumnStyle: React.CSSProperties = { flex: 0.8, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' };
   const centerColumnStyle: React.CSSProperties = { flex: 1.5, display: 'flex', flexDirection: 'column', gap: '20px' };
   const teamSectionStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', ...paperBoxStyle, borderRadius: '20px', alignItems: 'stretch', padding: '15px', justifyContent: 'flex-start', minHeight: 0, overflow: 'hidden' };
   const teamHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '5px' };
@@ -168,8 +169,6 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   const storytellersStyle: React.CSSProperties = { display: 'flex', gap: '8px', marginBottom: '10px' };
   const storyContentStyle: React.CSSProperties = { flex: 1, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: '10px', border: '2px dashed #ccc', padding: '10px', overflowY: 'auto', fontSize: '1rem', lineHeight: 1.5, minHeight: 0 };
   const rightColumnStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' };
-  const judgeSectionStyle: React.CSSProperties = { ...paperBoxStyle, borderRadius: '30px', padding: '15px', gap: '15px', justifyContent: 'center', height: 'auto' };
-  const judgeAvatarStyle: React.CSSProperties = { width: '50px', height: '50px', borderRadius: '50%', border: '3px solid #333', backgroundColor: '#fff', objectFit: 'cover' };
 
   // 아바타 스타일
   const getAvatarStyle = (isActive: boolean, color: string): React.CSSProperties => ({
@@ -237,61 +236,11 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
         <div style={mainStyle}>
           {/* Left: Image & Judges */}
           <div style={leftColumnStyle}>
-            <div style={imageCardFrameStyle}>
-              <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', width: '60px', height: '15px', backgroundColor: 'rgba(255, 217, 61, 0.9)', border: '1px solid #333' }} />
-
-              {/* 🖼️ 카드 이미지 영역 */}
-              <div style={imagePlaceholderStyle}>
-                {currentCardId > 0 ? (
-                  <img
-                    src={getCardImage(currentCardId)}
-                    alt={`Card ${currentCardId}`}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }} // contain으로 전체 보이게
-                    onError={(e) => {
-                      // 이미지 로드 실패 시 대체 화면
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement!.innerHTML = `<span style="font-size: 2rem;">🖼️</span><p style="color:red; font-size:0.8rem">Missing: ${currentCardId}</p>`;
-                    }}
-                  />
-                ) : (
-                  <>
-                    <span style={{ fontSize: '2rem' }}>🖼️</span>
-                    <p>Waiting...</p>
-                  </>
-                )}
-              </div>
-
-              <div style={{ textAlign: 'center', marginTop: '5px', fontWeight: 'bold', fontSize: '0.9rem', color: '#555' }}>
-                CARD {currentCardId}
-              </div>
-            </div>
-
-            {/* 👨‍⚖️ 심사위원 영역 */}
-            <div style={judgeSectionStyle}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '5px' }}>심사위원</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {judges.length > 0 ? (
-                    judges.map((judge: any, _) => (
-                      <img
-                        key={judge.id}
-                        src={getJudgeImage(judge.id)}
-                        style={judgeAvatarStyle}
-                        alt={judge.name}
-                        title={`${judge.name}: ${judge.persona}`} // 마우스 올리면 설명 뜸
-                      />
-                    ))
-                  ) : (
-                    // 데이터가 없을 때 기본값
-                    <>
-                      <img src={dog1} style={judgeAvatarStyle} alt="j1" />
-                      <img src={dog2} style={judgeAvatarStyle} alt="j2" />
-                      <img src={dog3} style={judgeAvatarStyle} alt="j3" />
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+            <CardArea
+              cardIds={roundData?.cardIds || []}
+              currentTurn={turnNumber}
+            />
+            <JudgeArea judges={judges} />
           </div>
 
           <div style={centerColumnStyle}>
