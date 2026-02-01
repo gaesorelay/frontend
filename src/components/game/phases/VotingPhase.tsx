@@ -4,11 +4,13 @@ import { Background } from '@/components/common/background';
 import voteLogoImg from '@/assets/logo/logo_vote.png';
 import voteFinishImg from '@/assets/logo/vote_finish.png';
 import ChatArea from '../ChatArea';
+import { socket } from '@/lib/socket';
 
 const VotingPhase = () => {
-  const [votesA, setVotesA] = useState(15);
-  const [votesB, setVotesB] = useState(12);
-  const totalTime = 30;
+  const [votesA, setVotesA] = useState(0);
+  const [votesB, setVotesB] = useState(0);
+
+  const totalTime = 25;
   const [timeLeft, setTimeLeft] = useState(totalTime);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [aiResult, setAiResult] = useState<any | null>(null);
@@ -22,9 +24,29 @@ const VotingPhase = () => {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  // 2. 📡 실시간 투표 업데이트 리스너 추가
+    useEffect(() => {
+    const handleVoteUpdate = (data: { votesTeamA: number; votesTeamB: number }) => {
+      console.log("🗳️ 투표 데이터 수신:", data);
+      setVotesA(data.votesTeamA);
+      setVotesB(data.votesTeamB);
+    };
+
+    // 서버의 'vote_updated' 이벤트를 구독
+    socket.on('vote_updated', handleVoteUpdate);
+
+    return () => {
+      socket.off('vote_updated', handleVoteUpdate);
+    };
+  }, []);
+  
+ // 3. 🗳️ 투표 버튼 클릭 시 서버로 전송
   const onVote = (team: 'A' | 'B') => {
     if (isTimeUp) return;
-    team === 'A' ? setVotesA((prev) => prev + 1) : setVotesB((prev) => prev + 1);
+    
+    // 로컬 상태를 직접 바꾸지 않고 서버에 "나 투표했어!"라고 알립니다.
+    // 서버가 이를 처리한 후 'vote_updated'를 전원에게 쏴주면 그때 내 화면도 바뀝니다.
+    socket.emit('submit_vote', { team });
   };
 
   const timeRatio = (timeLeft / totalTime) * 100;
