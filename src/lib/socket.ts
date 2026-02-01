@@ -1,9 +1,7 @@
 ﻿import { io, Socket } from 'socket.io-client';
 
-
-
 // .env 파일에서 백엔드 주소를 가져옵니다 (없으면 로컬호스트)
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000';
 
 // 소켓 인스턴스를 하나만 생성합니다.
 export const socket: Socket = io(`${SOCKET_URL}/game`, {
