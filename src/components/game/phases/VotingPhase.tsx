@@ -4,26 +4,70 @@ import { Background } from '@/components/common/background';
 import voteLogoImg from '@/assets/logo/logo_vote.png';
 import voteFinishImg from '@/assets/logo/vote_finish.png';
 import ChatArea from '../ChatArea';
+import { useNavigate } from 'react-router-dom';
+import { useGameStore } from '@/store/useGameStore';
+import { socket } from '@/lib/socket';
 
 const VotingPhase = () => {
   const [votesA, setVotesA] = useState(15);
   const [votesB, setVotesB] = useState(12);
+  const navigate = useNavigate();
+  const { roomInfo } = useGameStore();
   const totalTime = 30;
   const [timeLeft, setTimeLeft] = useState(totalTime);
   const [isTimeUp, setIsTimeUp] = useState(false);
+  const [aiResult, setAiResult] = useState<any | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    console.log(roomInfo);
+    // [수정 이유]: 사용자들이 투표하는 시간을 벌기 위해 페이지 진입 직후 AI 심사를 요청합니다.
+    socket.emit('request_judging', { roomId: roomInfo.roomId });
+
+    // [수정 이유]: 서버로부터 AI 결과가 도착하면 상태에 저장합니다.
+    const handleAiResult = (data: any) => {
+      console.log('✅ AI 심사 완료:', data);
+      setAiResult(data);
+    };
+
+    socket.on('judging_finished', handleAiResult);
+
+    return () => {
+      socket.off('judging_finished', handleAiResult);
+    };
+  }, [roomInfo.roomId]);
 
   useEffect(() => {
     if (timeLeft <= 0) {
       setIsTimeUp(true);
       return;
     }
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  useEffect(() => {
+    // 1. 시간도 다 됐고, 2. AI 결과도 왔다면? -> 결과 페이지로 이동!
+    if (isTimeUp && aiResult && !isNavigating) {
+      setIsNavigating(true); // 이동 시작했으니 중복 실행 금지
+
+      console.log('🏃 모든 데이터 준비 완료! 결과 페이지로 이동합니다.');
+
+      // 사용자에게 "종료" 화면을 잠깐 보여주기 위해 2.5초 뒤에 이동
+      // setTimeout(() => {
+      //   navigate('/final-result', {
+      //     state: {
+      //       votes: { A: votesA, B: votesB },
+      //       aiJudge: aiResult,
+      //     },
+      //   });
+      // }, 2500);
+    }
+  }, [isTimeUp, aiResult, votesA, votesB, isNavigating, navigate]);
+
   const onVote = (team: 'A' | 'B') => {
     if (isTimeUp) return;
-    team === 'A' ? setVotesA(prev => prev + 1) : setVotesB(prev => prev + 1);
+    team === 'A' ? setVotesA((prev) => prev + 1) : setVotesB((prev) => prev + 1);
   };
 
   const timeRatio = (timeLeft / totalTime) * 100;
@@ -77,21 +121,18 @@ const VotingPhase = () => {
       `}</style>
 
       <div style={{ ...styles.container, filter: isTimeUp ? 'blur(6px)' : 'none' }}>
-
         {/* 📏 세로형 사이드 타이머 바 (흔들림 클래스 추가) */}
         <div style={styles.sideTimerContainer} className={getShakeClass()}>
           <div style={styles.vTimerTrack}>
             <motion.div
               initial={{ height: '100%' }}
               animate={{ height: `${timeRatio}%`, backgroundColor: getTimerColor() }}
-              transition={{ duration: 1, ease: "linear" }}
+              transition={{ duration: 1, ease: 'linear' }}
               className={timeRatio <= 20 ? 'urgent-v' : ''}
               style={styles.vTimerFill}
             />
           </div>
-          <div style={{ ...styles.vTimerText, color: getTimerColor() }}>
-            {timeLeft}
-          </div>
+          <div style={{ ...styles.vTimerText, color: getTimerColor() }}>{timeLeft}</div>
         </div>
 
         <div style={styles.leftSection}>
@@ -101,28 +142,52 @@ const VotingPhase = () => {
           </div>
 
           <div style={styles.voteTimeContainer}>
-            <h1 className="gungsuh-font" style={styles.voteTitle}>투 표 시 간</h1>
-            <p className="gungsuh-font" style={styles.voteSubTitle}>누가 더 미친 소리를 하였는가?</p>
+            <h1 className="gungsuh-font" style={styles.voteTitle}>
+              투 표 시 간
+            </h1>
+            <p className="gungsuh-font" style={styles.voteSubTitle}>
+              누가 더 미친 소리를 하였는가?
+            </p>
 
             {/* 실시간 득표 게이지 */}
             <div style={styles.gaugeContainer}>
-              <motion.div animate={{ width: `${(votesA / (votesA + votesB || 1)) * 100}%` }} style={{ ...styles.gaugeBar, backgroundColor: '#FF6B6B' }}>
+              <motion.div
+                animate={{ width: `${(votesA / (votesA + votesB || 1)) * 100}%` }}
+                style={{ ...styles.gaugeBar, backgroundColor: '#FF6B6B' }}
+              >
                 <span style={styles.gaugeLabel}>A팀: {votesA}</span>
               </motion.div>
-              <motion.div animate={{ width: `${(votesB / (votesA + votesB || 1)) * 100}%` }} style={{ ...styles.gaugeBar, backgroundColor: '#4D96FF' }}>
+              <motion.div
+                animate={{ width: `${(votesB / (votesA + votesB || 1)) * 100}%` }}
+                style={{ ...styles.gaugeBar, backgroundColor: '#4D96FF' }}
+              >
                 <span style={styles.gaugeLabel}>B팀: {votesB}</span>
               </motion.div>
               {/* <div style={styles.vsBadge}>VS</div> */}
             </div>
 
             <div style={styles.voteButtons}>
-              <button disabled={isTimeUp} style={{ ...styles.voteBtn, backgroundColor: '#FF6B6B' }} onClick={() => onVote('A')}>A팀 투표!</button>
-              <button disabled={isTimeUp} style={{ ...styles.voteBtn, backgroundColor: '#4D96FF' }} onClick={() => onVote('B')}>B팀 투표!</button>
+              <button
+                disabled={isTimeUp}
+                style={{ ...styles.voteBtn, backgroundColor: '#FF6B6B' }}
+                onClick={() => onVote('A')}
+              >
+                A팀 투표!
+              </button>
+              <button
+                disabled={isTimeUp}
+                style={{ ...styles.voteBtn, backgroundColor: '#4D96FF' }}
+                onClick={() => onVote('B')}
+              >
+                B팀 투표!
+              </button>
             </div>
           </div>
         </div>
 
-        <aside style={styles.chatSection}><ChatArea /></aside>
+        <aside style={styles.chatSection}>
+          <ChatArea />
+        </aside>
       </div>
 
       <AnimatePresence>
@@ -133,6 +198,12 @@ const VotingPhase = () => {
             style={styles.finishOverlay}
           >
             <img src={voteFinishImg} alt="종료" style={styles.finishImg} />
+
+            {!aiResult && (
+              <div className="gungsuh-font waiting-text">
+                심사위원의 점수를 집계 중입니다... 잠시만 기다려주세요! 🐶
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -141,7 +212,13 @@ const VotingPhase = () => {
 };
 
 const styles: { [key: string]: React.CSSProperties } = {
-  container: { display: 'flex', width: '100vw', height: '100vh', position: 'relative', transition: 'all 0.5s' },
+  container: {
+    display: 'flex',
+    width: '100vw',
+    height: '100vh',
+    position: 'relative',
+    transition: 'all 0.5s',
+  },
 
   // 📏 세로형 타이머 스타일
   sideTimerContainer: {
@@ -179,22 +256,68 @@ const styles: { [key: string]: React.CSSProperties } = {
     textShadow: '2px 2px 0px #fff',
   },
 
-  leftSection: { flex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '80px' },
+  leftSection: {
+    flex: 3,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: '80px',
+  },
   mainLogo: { width: '400px' },
-  voteTimeContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' },
+  voteTimeContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%',
+  },
   voteTitle: { fontSize: '4.5rem', fontWeight: 900, marginBottom: '10px' },
   voteSubTitle: { fontSize: '1.6rem', color: '#555', marginBottom: '40px', textAlign: 'center' },
 
-  gaugeContainer: { width: '85%', height: '85px', backgroundColor: '#333', borderRadius: '15px', display: 'flex', position: 'relative', overflow: 'hidden', marginBottom: '60px', border: '6px solid #333' },
-  gaugeBar: { height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'width 0.3s' },
+  gaugeContainer: {
+    width: '85%',
+    height: '85px',
+    backgroundColor: '#333',
+    borderRadius: '15px',
+    display: 'flex',
+    position: 'relative',
+    overflow: 'hidden',
+    marginBottom: '60px',
+    border: '6px solid #333',
+  },
+  gaugeBar: {
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'width 0.3s',
+  },
   gaugeLabel: { color: '#fff', fontSize: '2.2rem', fontWeight: 900 },
   // vsBadge: { position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', backgroundColor: '#fff', border: '4px solid #333', padding: '8px 20px', fontSize: '1.5rem', fontWeight: 900, borderRadius: '50%' },
 
   voteButtons: { display: 'flex', gap: '30px' },
-  voteBtn: { padding: '25px 80px', border: '5px solid #333', color: '#fff', fontSize: '2.2rem', fontWeight: 900, borderRadius: '20px', cursor: 'pointer', boxShadow: '10px 10px 0 #333' },
+  voteBtn: {
+    padding: '25px 80px',
+    border: '5px solid #333',
+    color: '#fff',
+    fontSize: '2.2rem',
+    fontWeight: 900,
+    borderRadius: '20px',
+    cursor: 'pointer',
+    boxShadow: '10px 10px 0 #333',
+  },
   chatSection: { flex: 1, padding: '10px' },
-  finishOverlay: { position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)' },
-  finishImg: { width: '600px' }
+  finishOverlay: {
+    position: 'fixed',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 3000,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    backdropFilter: 'blur(10px)',
+  },
+  finishImg: { width: '600px' },
 };
 
 export default VotingPhase;
