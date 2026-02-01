@@ -246,6 +246,10 @@ const GameRoom = () => {
 
     if (draftText && draftText.trim().length > 0 && myPlayer && myPlayer.team && turnNumber > 0) {
       console.log(`🛠️ Dev: 스킵 전 강제 제출 시도: ${draftText}, Turn: ${turnNumber}`);
+
+      // ⭐️ 중복 제출 방지: emit 전에 먼저 비우기
+      setDraftText('');
+
       socket.emit('submit_story', {
         roomId,
         text: draftText,
@@ -254,8 +258,6 @@ const GameRoom = () => {
         turn: turnNumber
       }, (res: any) => {
         console.log("🛠️ Dev: 강제 제출 결과:", res);
-        // 제출 후 스토어 비우기
-        setDraftText('');
       });
     }
 
