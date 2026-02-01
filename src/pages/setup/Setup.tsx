@@ -33,7 +33,7 @@ export default function Setup() {
     setUserToken,
   } = useUserStore();
 
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState('');
   const [avatarIdx, setAvatarIdx] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,7 +58,7 @@ export default function Setup() {
   // 방 유효성 검사는 RouteGuard가 처리합니다.
   useEffect(() => {
     if (paramRoomId && roomConfig) {
-      console.log("🧹 게스트 입장: 이전 방장 데이터 초기화");
+      console.log('🧹 게스트 입장: 이전 방장 데이터 초기화');
       reset();
     }
   }, [paramRoomId, roomConfig, reset]);
@@ -75,7 +75,7 @@ export default function Setup() {
 
   // ⭐️ 완료 버튼 핸들러
   const handleComplete = async () => {
-    if (!nickname.trim()) return alert("닉네임을 입력해주세요!");
+    if (!nickname.trim()) return alert('닉네임을 입력해주세요!');
 
     setIsLoading(true);
 
@@ -91,9 +91,9 @@ export default function Setup() {
       if (isHost) {
         if (!roomConfig) return;
 
-        console.log("📡 [Host] 방 생성 요청 중...");
+        console.log('📡 [Host] 방 생성 요청 중...');
         const res = await createRoomApi({
-          title: roomTitle || "즐거운 게임",
+          title: roomTitle || '즐거운 게임',
           config: roomConfig,
           nickname: nickname,
           avatarId: selectedDog.id,
@@ -101,7 +101,7 @@ export default function Setup() {
 
         currentRoomId = res.roomId;
         // myToken = res.token;
-        console.log("✅ 방 생성 완료:", currentRoomId);
+        console.log('✅ 방 생성 완료:', currentRoomId);
       } else {
         console.log(`📡 [Guest] 기존 방(${currentRoomId}) 입장 시도...`);
       }
@@ -110,87 +110,203 @@ export default function Setup() {
       // 2. 소켓 연결 및 입장 (공통)
       // ----------------------------------------------------
       if (socket.connected) {
-        console.log("♻️ 기존 소켓 연결 정리");
+        console.log('♻️ 기존 소켓 연결 정리');
         socket.disconnect();
       }
 
-      console.log("🔌 소켓 연결 시도...", { currentRoomId, myToken });
+      console.log('🔌 소켓 연결 시도...', { currentRoomId, myToken });
 
       socket.auth = { token: myToken };
       socket.connect();
 
-      socket.emit('join_room', {
-        roomId: currentRoomId,
-        nickname: nickname,
-        avatarId: selectedDog.id,
-        userToken: myToken || undefined,
-      }, (response: any) => {
-        console.log("📩 Gateway 응답:", response);
-        setIsLoading(false);
+      socket.emit(
+        'join_room',
+        {
+          roomId: currentRoomId,
+          nickname: nickname,
+          avatarId: selectedDog.id,
+          userToken: myToken || undefined,
+        },
+        (response: any) => {
+          console.log('📩 Gateway 응답:', response);
+          setIsLoading(false);
 
-        if (response.status === 'success') {
-          const user = response.data;
+          if (response.status === 'success') {
+            const user = response.data;
 
-          setStoreNickname(user.nickname);
-          setStoreAvatarId(user.avatarId);
-          setRoomId(currentRoomId);
-          setHasEntered(true);
-          setUserStatus(user.role, user.isHost);
+            setStoreNickname(user.nickname);
+            setStoreAvatarId(user.avatarId);
+            setRoomId(currentRoomId);
+            setHasEntered(true);
+            setUserStatus(user.role, user.isHost);
 
-          // 방장, 게스트 공통으로 토큰 저장하도록 변경
-          if (user.userToken) {
-             console.log("🔑 토큰 저장 완료:", user.userToken);
-             setUserToken(user.userToken); // Store 저장
-             socket.auth = { token: user.userToken }; // 소켓 재연결 대비
+            // 방장, 게스트 공통으로 토큰 저장하도록 변경
+            if (user.userToken) {
+              console.log('🔑 토큰 저장 완료:', user.userToken);
+              setUserToken(user.userToken); // Store 저장
+              socket.auth = { token: user.userToken }; // 소켓 재연결 대비
+            }
+
+            if (isHost) {
+              setRoomInfo({
+                roomId: currentRoomId,
+                title: roomTitle || '즐거운 게임',
+                status: 'WAITING',
+                config: roomConfig || defaultConfig,
+                ownerUserToken: user.userToken,
+                createdAt: new Date().toISOString(),
+              });
+            }
+
+            // if (!isHost && user.userToken) {
+            //   console.log("🔑 게스트 토큰 저장:", user.userToken);
+            //   socket.auth = { token: user.userToken };
+            // }
+
+            console.log('🚀 게임방으로 이동!');
+            navigate(`/gameroom/${currentRoomId}`);
+          } else {
+            alert(`입장 실패: ${response.message}`);
+            socket.disconnect();
           }
-
-
-          if (isHost) {
-            setRoomInfo({
-              roomUuid: currentRoomId,
-              title: roomTitle || "즐거운 게임",
-              status: 'WAITING',
-              config: roomConfig || defaultConfig,
-              ownerUserToken: user.userToken,
-              createdAt: new Date().toISOString()
-            });
-          }
-
-          // if (!isHost && user.userToken) {
-          //   console.log("🔑 게스트 토큰 저장:", user.userToken);
-          //   socket.auth = { token: user.userToken };
-          // }
-
-          console.log("🚀 게임방으로 이동!");
-          navigate(`/gameroom/${currentRoomId}`);
-        } else {
-          alert(`입장 실패: ${response.message}`);
-          socket.disconnect();
         }
-      });
-
+      );
     } catch (error) {
-      console.error("❌ 에러 발생:", error);
-      alert("오류가 발생했습니다.");
+      console.error('❌ 에러 발생:', error);
+      alert('오류가 발생했습니다.');
       setIsLoading(false);
     }
   };
 
   const styles = {
     // ... (스타일 기존 유지)
-    container: { position: 'fixed' as const, inset: 0, display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', alignItems: 'center', backgroundImage: `url(${paperBg})`, backgroundSize: 'cover', backgroundPosition: 'center', fontFamily: 'inherit', overflow: 'hidden' },
-    logo: { width: '600px', maxWidth: '90%', zIndex: 11, marginBottom: '20px', filter: 'drop-shadow(6px 6px 0px rgba(0,0,0,0.1))', objectFit: 'contain' as const },
-    centerRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', marginBottom: '20px', position: 'relative' as const, zIndex: 10 },
-    cardBox: { position: 'relative' as const, zIndex: 10, background: 'white', padding: '40px 45px 30px 45px', width: '450px', maxWidth: '85%', boxSizing: 'border-box' as const, boxShadow: '10px 10px 0px rgba(0,0,0,0.08)', border: '3px solid #333', borderRadius: '20px 225px 15px 255px / 255px 15px 225px 15px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center' },
-    imageContainer: { width: '180px', height: '180px', marginBottom: '20px', position: 'relative' as const, border: '3px solid #333', borderRadius: '20px', backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    container: {
+      position: 'fixed' as const,
+      inset: 0,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundImage: `url(${paperBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      fontFamily: 'inherit',
+      overflow: 'hidden',
+    },
+    logo: {
+      width: '600px',
+      maxWidth: '90%',
+      zIndex: 11,
+      marginBottom: '20px',
+      filter: 'drop-shadow(6px 6px 0px rgba(0,0,0,0.1))',
+      objectFit: 'contain' as const,
+    },
+    centerRow: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '10px',
+      width: '100%',
+      marginBottom: '20px',
+      position: 'relative' as const,
+      zIndex: 10,
+    },
+    cardBox: {
+      position: 'relative' as const,
+      zIndex: 10,
+      background: 'white',
+      padding: '40px 45px 30px 45px',
+      width: '450px',
+      maxWidth: '85%',
+      boxSizing: 'border-box' as const,
+      boxShadow: '10px 10px 0px rgba(0,0,0,0.08)',
+      border: '3px solid #333',
+      borderRadius: '20px 225px 15px 255px / 255px 15px 225px 15px',
+      display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+    },
+    imageContainer: {
+      width: '180px',
+      height: '180px',
+      marginBottom: '20px',
+      position: 'relative' as const,
+      border: '3px solid #333',
+      borderRadius: '20px',
+      backgroundColor: '#fff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     dogImage: { width: '90%', height: '90%', objectFit: 'contain' as const },
-    bubble: { position: 'absolute' as const, top: '-40px', right: '-40px', background: 'white', border: '2px solid #333', borderRadius: '50%', padding: '10px 15px', fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap' as const, boxShadow: '2px 2px 0px rgba(0,0,0,0.1)', transform: 'rotate(10deg)', zIndex: 15 },
-    label: { fontSize: '22px', fontWeight: 'bold', marginBottom: '10px', alignSelf: 'flex-start', color: '#333' },
-    input: { width: '100%', padding: '14px 22px', fontSize: '20px', textAlign: 'center' as const, border: '2.5px solid #333', borderRadius: '40px 10px 45px 8px / 8px 45px 10px 40px', outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit' },
-    buttonGroup: { display: 'flex', gap: '15px', width: '450px', maxWidth: '90%', zIndex: 10, position: 'relative' as const },
-    button: { flex: 1, padding: '14px', fontSize: '20px', fontWeight: 'bold', border: '2.5px solid #333', borderRadius: '15px', cursor: 'pointer', background: 'white', boxShadow: '4px 4px 0px rgba(0,0,0,0.15)', fontFamily: 'inherit', transition: 'transform 0.1s' },
-    arrowBtn: { background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '5px', transition: 'transform 0.1s' },
-    arrowIcon: { width: '100px', height: '100px', objectFit: 'contain' as const, filter: 'drop-shadow(2px 2px 0px rgba(0,0,0,0.2))' }
+    bubble: {
+      position: 'absolute' as const,
+      top: '-40px',
+      right: '-40px',
+      background: 'white',
+      border: '2px solid #333',
+      borderRadius: '50%',
+      padding: '10px 15px',
+      fontSize: '14px',
+      fontWeight: 'bold',
+      whiteSpace: 'nowrap' as const,
+      boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
+      transform: 'rotate(10deg)',
+      zIndex: 15,
+    },
+    label: {
+      fontSize: '22px',
+      fontWeight: 'bold',
+      marginBottom: '10px',
+      alignSelf: 'flex-start',
+      color: '#333',
+    },
+    input: {
+      width: '100%',
+      padding: '14px 22px',
+      fontSize: '20px',
+      textAlign: 'center' as const,
+      border: '2.5px solid #333',
+      borderRadius: '40px 10px 45px 8px / 8px 45px 10px 40px',
+      outline: 'none',
+      boxSizing: 'border-box' as const,
+      fontFamily: 'inherit',
+    },
+    buttonGroup: {
+      display: 'flex',
+      gap: '15px',
+      width: '450px',
+      maxWidth: '90%',
+      zIndex: 10,
+      position: 'relative' as const,
+    },
+    button: {
+      flex: 1,
+      padding: '14px',
+      fontSize: '20px',
+      fontWeight: 'bold',
+      border: '2.5px solid #333',
+      borderRadius: '15px',
+      cursor: 'pointer',
+      background: 'white',
+      boxShadow: '4px 4px 0px rgba(0,0,0,0.15)',
+      fontFamily: 'inherit',
+      transition: 'transform 0.1s',
+    },
+    arrowBtn: {
+      background: 'none',
+      border: 'none',
+      outline: 'none',
+      cursor: 'pointer',
+      padding: '5px',
+      transition: 'transform 0.1s',
+    },
+    arrowIcon: {
+      width: '100px',
+      height: '100px',
+      objectFit: 'contain' as const,
+      filter: 'drop-shadow(2px 2px 0px rgba(0,0,0,0.2))',
+    },
   };
 
   return (
@@ -198,25 +314,67 @@ export default function Setup() {
       <SetupDecorations selectedDogIcon={selectedDog.icon} />
       <img src={logoTitle} alt="방 만들기" style={styles.logo} />
       <div style={styles.centerRow}>
-        <button onClick={handlePrev} style={styles.arrowBtn} onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'} onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+        <button
+          onClick={handlePrev}
+          style={styles.arrowBtn}
+          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
+          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+        >
           <img src={leftArrowImg} alt="이전" style={styles.arrowIcon} />
         </button>
         <div style={styles.cardBox}>
           <div style={styles.imageContainer}>
-            <div style={styles.bubble}>멍멍!<br />나 어때?</div>
-            {totalDogs > 0 ? <img src={selectedDog.icon} alt={selectedDog.name} style={styles.dogImage} /> : <span style={{ fontSize: '12px', color: 'red' }}>이미지 없음</span>}
+            <div style={styles.bubble}>
+              멍멍!
+              <br />나 어때?
+            </div>
+            {totalDogs > 0 ? (
+              <img src={selectedDog.icon} alt={selectedDog.name} style={styles.dogImage} />
+            ) : (
+              <span style={{ fontSize: '12px', color: 'red' }}>이미지 없음</span>
+            )}
           </div>
           <label style={styles.label}>닉네임 입력</label>
-          <input style={styles.input} value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="닉네임을 적어줘!" maxLength={8} />
+          <input
+            style={styles.input}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder="닉네임을 적어줘!"
+            maxLength={8}
+          />
         </div>
-        <button onClick={handleNext} style={styles.arrowBtn} onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'} onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+        <button
+          onClick={handleNext}
+          style={styles.arrowBtn}
+          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
+          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+        >
           <img src={rightArrowImg} alt="다음" style={styles.arrowIcon} />
         </button>
       </div>
       <div style={styles.buttonGroup}>
-        <button onClick={() => navigate(-1)} style={{ ...styles.button, background: '#f5f5f5' }} onMouseDown={(e) => e.currentTarget.style.transform = 'translate(2px, 2px)'} onMouseUp={(e) => e.currentTarget.style.transform = 'translate(0, 0)'}>돌아가기</button>
-        <button onClick={handleComplete} disabled={isLoading} style={{ ...styles.button, background: isLoading ? '#ccc' : '#FFD700', cursor: isLoading ? 'not-allowed' : 'pointer' }} onMouseDown={(e) => !isLoading && (e.currentTarget.style.transform = 'translate(2px, 2px)')} onMouseUp={(e) => !isLoading && (e.currentTarget.style.transform = 'translate(0, 0)')}>
-          {isLoading ? "로딩 중..." : (isHost ? "설정 완료!" : "입장하기")}
+        <button
+          onClick={() => navigate(-1)}
+          style={{ ...styles.button, background: '#f5f5f5' }}
+          onMouseDown={(e) => (e.currentTarget.style.transform = 'translate(2px, 2px)')}
+          onMouseUp={(e) => (e.currentTarget.style.transform = 'translate(0, 0)')}
+        >
+          돌아가기
+        </button>
+        <button
+          onClick={handleComplete}
+          disabled={isLoading}
+          style={{
+            ...styles.button,
+            background: isLoading ? '#ccc' : '#FFD700',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+          }}
+          onMouseDown={(e) =>
+            !isLoading && (e.currentTarget.style.transform = 'translate(2px, 2px)')
+          }
+          onMouseUp={(e) => !isLoading && (e.currentTarget.style.transform = 'translate(0, 0)')}
+        >
+          {isLoading ? '로딩 중...' : isHost ? '설정 완료!' : '입장하기'}
         </button>
       </div>
     </div>
