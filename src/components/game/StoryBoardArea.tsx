@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { socket } from '@/lib/socket';
 import { useUserStore } from '@/store/useUserStore';
+import { useGameStore } from '@/store/useGameStore';
 import styles from './StoryBoardArea.module.css';
 
 interface StoryBoardProps {
@@ -11,111 +12,130 @@ interface StoryBoardProps {
 
 const StoryBoardArea = ({ team, activeUser, roomId }: StoryBoardProps) => {
   const { userToken } = useUserStore();
+  const { teamAStory, teamBStory, addStoryLine } = useGameStore();
   
-  // 📜 전체 스토리 로그
-  const [storyLog, setStoryLog] = useState<string[]>([]);
-  // ✍️ 현재 작성 텍스트
-  const [currentText, setCurrentText] = useState('');
-  
-  // 🦁 내 턴인가?
+  // 팀에 맞는 데이터 가져오기
+  const storyLog = team === 'A' ? teamAStory : teamBStory;
+
+  // ✍️ 현재 실시간으로 작성 중인 텍스트 (서버 제출 전)
+  const [currentTypingText, setCurrentTypingText] = useState('');
+  const textRef = useRef('');
+
+  useEffect(() => {
+    textRef.current = currentTypingText;
+  }, [currentTypingText]);
+
   const isMyTurn = activeUser && activeUser.userToken === userToken;
-  
-  // 📜 자동 스크롤을 위한 Ref
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 📡 소켓 리스너 (기존 로직 유지)
-  useEffect(() => {
-    const handleUpdate = (data: any) => {
-      if (data.team === team && data.writerToken !== userToken) {
-        setCurrentText(data.text);
-      }
-    };
+ // StoryBoardArea.tsx 내부
+useEffect(() => {
+  console.log("📡 스토리 리스너 등록됨!"); // 이게 찍히는지 확인
 
-    const handleSubmit = (data: any) => {
-      // 내 팀의 제출 신호라면?
-      if (data.team === team) {
-        // A. 서버가 보내준 "확정된 텍스트"를 역사책(Log)에 기록
-        setStoryLog((prev) => [...prev, data.text]); 
-        
-        // B. 현재 입력창을 깨끗하게 비움 (중요!)
-        // 내가 썼든 남이 썼든, 턴이 끝났으므로 입력창은 무조건 비워야 함.
-        setCurrentText(''); 
-      }
-    };
-
-    socket.on('story_update', handleUpdate);
-    socket.on('story_submitted', handleSubmit);
-
-    return () => {
-      socket.off('story_update', handleUpdate);
-      socket.off('story_submitted', handleSubmit);
-    };
-  }, [team, userToken]); // currentText 의존성 주의 (최적화 필요할 수 있음)
-
-  // 👇 [자동 스크롤] 로그가 추가되거나 타이핑할 때마다 바닥으로
-  useEffect(() => {
-    if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  const handleUpdate = (data: any) => {
+    console.log("📝 실시간 업데이트 수신:", data); // 남이 칠 때 이게 찍혀야 함
+    if (data.team === team && data.writerToken !== userToken) {
+      setCurrentTypingText(data.text);
     }
-  }, [storyLog, currentText]);
-
-
-  // ✍️ 타이핑 핸들러
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const text = e.target.value;
-    setCurrentText(text);
-    socket.emit('story_typing', { roomId, text, team, userToken });
   };
 
-  // 💾 턴 종료 자동 제출 로직
-  const lastActiveUserTokenRef = useRef(activeUser?.userToken);
-  useEffect(() => {
-    // 턴이 바뀌는 순간 (내 턴 끝남)
-    if (lastActiveUserTokenRef.current === userToken && activeUser?.userToken !== userToken) {
-        if (currentText.trim().length > 0) {
-            socket.emit('submit_story', { roomId, text: currentText, team, userToken });
-        }
+  const handleSubmit = (data: any) => {
+    console.log("💾 제출 완료 수신:", data); // 제출 시 이게 전원에게 찍혀야 함
+    if (data.team === team) {
+      addStoryLine(data.team, data.text); 
+      setCurrentTypingText('');
     }
-    lastActiveUserTokenRef.current = activeUser?.userToken;
-  }, [activeUser, currentText, roomId, team, userToken]);
+  };
 
+  socket.on('story_update', handleUpdate);
+  socket.on('story_submitted', handleSubmit);
+
+  return () => {
+    socket.off('story_update', handleUpdate);
+    socket.off('story_submitted', handleSubmit);
+  };
+}, [team, userToken]); // addStoryLine은 뺍니다 (안정성 위해)
+
+  // 자동 스크롤: 새 로그가 쌓이거나 누군가 타이핑할 때
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [storyLog, currentTypingText]);
+
+  // 내 턴일 때 타이핑 핸들러
+ const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const text = e.target.value;
+  setCurrentTypingText(text);
+  console.log("📤 타이핑 전송 시도:", { roomId, text, team }); // 로그 찍기
+  socket.emit('story_typing', { roomId, text, team, userToken });
+};
+
+
+
+  // 💾 턴 종료 시 자동 제출 (Ref 사용으로 클로저 방지)
+  const prevActiveUserRef = useRef(activeUser?.userToken);
+  useEffect(() => {
+    const prevToken = prevActiveUserRef.current;
+    const currentToken = activeUser?.userToken;
+
+    // 내 턴이 끝나는 순간 서버로 최종본 제출
+    if (prevToken === userToken && currentToken !== userToken) {
+      if (textRef.current.trim().length > 0) {
+        // 턴 종료 제출 시에도 동일하게
+        console.log("📤 제출 시도:", textRef.current);
+        socket.emit('submit_story', { 
+          roomId, 
+          text: textRef.current, 
+          team, 
+          userToken 
+        });
+      }
+    }
+    prevActiveUserRef.current = currentToken;
+  }, [activeUser, roomId, team, userToken]);
 
   return (
-    // 📄 종이 한 장 (Container)
-    <div className={`${styles.paper} ${isMyTurn ? styles.active : ''}`} ref={scrollRef}>
-      
-      {/* 🏷️ 누가 쓰고 있는지 표시 (우측 상단 뱃지) */}
-      {activeUser && (
-        <div className={styles.writerBadge}>
-           {isMyTurn ? '✏️ 내 차례!' : `✍️ ${activeUser.nickname} 작성 중...`}
+    <div className={styles.container}>
+    {/* 📜 1. 스토리 히스토리 및 실시간 입력 통합 영역 */}
+    <div className={styles.logSection} ref={scrollRef}>
+        <div className={styles.storyParagraph}>
+            {/* A. 이미 확정된 이전 문장들을 공백과 함께 합침 */}
+            <span className={styles.historyText}>
+            {storyLog.length > 0 ? storyLog.join(' ') : ''}
+            </span>
+
+            {/* B. 현재 누군가 작성 중인 텍스트를 바로 뒤에 이어 붙임 */}
+            {currentTypingText && (
+            <span className={styles.liveLine}>
+                {/* 앞 문장이 있다면 공백을 하나 추가하여 자연스럽게 연결 */}
+                {storyLog.length > 0 ? ' ' : ''}
+                {currentTypingText}
+                {!isMyTurn && <span className={styles.cursorSmall} />}
+            </span>
+            )}
+            
+            {/* C. 아무 내용이 없을 때 보여줄 가이드 (선택 사항) */}
+            {storyLog.length === 0 && !currentTypingText && (
+            <span className={styles.placeholder}>첫 문장을 시작해 보세요...</span>
+            )}
         </div>
-      )}
+    </div>
 
-      {/* 📜 1. 지난 이야기 (회색, 수정 불가) */}
-      <div className={styles.historySection}>
-        {storyLog.map((line, idx) => (
-          <div key={idx} className={styles.committedText}>
-            {line}
-          </div>
-        ))}
-      </div>
-
-      {/* ✍️ 2. 현재 입력 영역 (투명해서 이어지는 것처럼 보임) */}
-      <div className={styles.writingSection}>
+      {/* ⌨️ 3. 입력 창 영역 (내 턴일 때만 활성화) */}
+      <div className={`${styles.inputWrapper} ${isMyTurn ? styles.myTurn : ''}`}>
         {isMyTurn ? (
           <textarea
             className={styles.textarea}
-            value={currentText}
+            value={currentTypingText}
             onChange={handleChange}
-            placeholder={storyLog.length === 0 ? "첫 문장을 시작해주세요!" : "이야기를 이어주세요..."}
+            placeholder="여기에 이야기를 작성하세요 (턴 종료 시 자동 저장)"
             autoFocus
             spellCheck={false}
           />
         ) : (
-          <div className={styles.liveText}>
-            {currentText}
-            {/* 작성 중일 때만 커서 깜빡임 */}
-            {activeUser && <span className={styles.cursor} />}
+          <div className={styles.waitMessage}>
+            {activeUser ? `${activeUser.nickname}님이 작성 중입니다...` : "차례를 기다리는 중"}
           </div>
         )}
       </div>

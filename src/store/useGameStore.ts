@@ -24,6 +24,9 @@ interface GameStoreState {
   visitedRoomId: string | null;
   hasEntered: boolean; // ⭐️ 추가
 
+  teamAStory: string[];
+  teamBStory: string[];
+
   setRoomActions: (title: string, config: RoomConfig) => void;
   setJoinCode: (code: string | null) => void;
   setRoomInfo: (info: RoomInfo | null) => void;
@@ -38,6 +41,9 @@ interface GameStoreState {
   setGamePhase: (phase: GamePhase) => void;
   setRoundData: (data: RoundData | null) => void;
 
+  addStoryLine: (team: 'A' | 'B', text: string) => void;
+
+  resetStory: () => void;
   reset: () => void;
 }
 
@@ -55,6 +61,13 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   roundData: null,
   visitedRoomId: null,
   hasEntered: false, // ⭐️ 정상 입장 여부 체크
+  teamAStory: [],
+  teamBStory: [],
+  addStoryLine: (team, text) => set((state) => ({
+    teamAStory: team === 'A' ? [...state.teamAStory, text] : state.teamAStory,
+    teamBStory: team === 'B' ? [...state.teamBStory, text] : state.teamBStory,
+  })),
+  resetStory: () => set({ teamAStory: [], teamBStory: [] }),
 
   setRoomActions: (title, config) => {
     console.log("💾 [GameStore] setRoomActions:", { title, config });

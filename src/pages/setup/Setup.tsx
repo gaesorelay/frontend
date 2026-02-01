@@ -45,7 +45,7 @@ export default function Setup() {
     maxPlayers: 8,
     storytellerCount: 4,
     rounds: 3,
-    roundTime: 60,
+    roundTime: 10,
     voteTime: 30,
   };
 
