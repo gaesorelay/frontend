@@ -1,0 +1,49 @@
+.logSection {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  /* 소설처럼 보이기 위한 정렬과 줄간격 */
+  line-height: 1.8;
+  word-break: break-word;
+  text-align: justify;
+}
+
+.storyParagraph {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+/* 이미 확정된 글자 스타일 */
+.historyText {
+  color: #222;
+  font-weight: 500;
+}
+
+/* 실시간으로 써지고 있는 글자 스타일 */
+.liveLine {
+  color: #666;
+  font-style: italic;
+  /* 써지는 느낌을 주기 위해 약간 투명하게 하거나 색상을 다르게 함 */
+  background-color: rgba(255, 217, 61, 0.1); 
+  border-radius: 4px;
+}
+
+/* 다른 사람이 쓸 때 깜빡이는 작은 커서 */
+.cursorSmall {
+  display: inline-block;
+  width: 2px;
+  height: 1.1rem;
+  background-color: #FFD93D;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.placeholder {
+  color: #ccc;
+  font-style: italic;
+}
