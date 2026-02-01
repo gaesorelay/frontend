@@ -230,15 +230,13 @@ const GameRoom = () => {
   const [isDevExpanded, setIsDevExpanded] = useState(true); // 개발자 바 펼침 여부
 
   const handleNextPhase = () => {
-    const currentIndex = PHASE_ORDER.indexOf(gamePhase as GamePhase);
-    const nextIndex = (currentIndex + 1) % PHASE_ORDER.length;
-    setGamePhase(PHASE_ORDER[nextIndex]);
+    // 🛠️ Dev: 서버에 단계 건너뛰기 요청
+    socket.emit('skip_phase');
   };
 
   const handlePrevPhase = () => {
-    const currentIndex = PHASE_ORDER.indexOf(gamePhase as GamePhase);
-    const prevIndex = (currentIndex - 1 + PHASE_ORDER.length) % PHASE_ORDER.length;
-    setGamePhase(PHASE_ORDER[prevIndex]);
+    // 🛠️ Dev: 서버에 이전 단계로 되돌리기 요청
+    socket.emit('prev_phase');
   };
 
   // 📺 페이즈 렌더러
