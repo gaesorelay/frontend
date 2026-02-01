@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import type { ChatMessage } from '@/types/game';
 
+// 이미지 로드 로직 유지
 const rawImages = import.meta.glob('@/assets/dog/*.{png,jpg,jpeg}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 const sortedImageUrls = Object.entries(rawImages)
   .sort(([pathA], [pathB]) => {
@@ -21,14 +22,11 @@ const getAvatarUrl = (id?: number) => {
   return sortedImageUrls[id - 1];
 };
 
-// 배경 이미지 임포트
-import chatBgImg from '@/assets/bg/chat_background.png';
-
 const REACTION_EMOJIS = ['🐶', '🔥', '🤣', '👍', '👎', '🍅'];
 
 const ChatArea = () => {
   const { messages, addMessage } = useGameStore();
-  const { nickname, avatarId: myAvatarId } = useUserStore();
+  const { nickname } = useUserStore();
   const [chatInput, setChatInput] = useState("");
   const chatListRef = useRef<HTMLDivElement>(null);
 
@@ -73,18 +71,13 @@ const ChatArea = () => {
   // 3. 메시지 전송 핸들러
   const handleSend = () => {
     if (!chatInput.trim()) return;
-
-    // 서버로 전송 (내 아바타 정보도 같이 보내는 게 좋을 수 있음, 서버가 모른다면)
-    // 일단은 메시지만 보냄 (서버가 senderId로 찾아서 뿌려준다고 가정)
     socket.emit('send_chat', { message: chatInput });
-
     setChatInput("");
   };
 
   // 리액션 발사 로직
   const triggerFloatingReaction = (emoji: string) => {
     const id = Date.now() + Math.random();
-    // 랜덤한 x 위치 (20% ~ 80% 사이)
     const x = Math.floor(Math.random() * 60) + 20;
     setFloatingReactions(prev => [...prev, { id, emoji, x }]);
     setTimeout(() => {
@@ -103,167 +96,66 @@ const ChatArea = () => {
     }
   };
 
-  // --- 스타일 ---
-  const paperBoxStyle: React.CSSProperties = {
-    // backgroundColor: '#fdfcf0',
-    // border: '3px solid #333',
-    boxShadow: '4px 4px 0px rgba(0,0,0,0.15)',
-    borderRadius: '15px',
-  };
-
-  const chatBoxStyle: React.CSSProperties = {
-    ...paperBoxStyle,
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    padding: '15px',
-
-    // 🖼️ 배경 이미지 설정
-    backgroundImage: `url(${chatBgImg})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    borderRadius: '15px',
-  };
-
-  const chatTitleStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '15px',
-    margin: '50px 8px 0',
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: '#333'
-  };
-
-
-  const chatListStyle: React.CSSProperties = {
-    flex: 1,
-    overflowY: 'auto',
-    marginBottom: '10px',
-    paddingRight: '5px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px', // 메시지 간 간격 증가
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: '15px',
-  };
-
-  const senderWrapperStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: '8px',
-    marginLeft: '5px',
-  };
-
-  // 말풍선 스타일
-  const msgBubbleStyle = (isMe: boolean): React.CSSProperties => ({
-    backgroundColor: isMe ? '#e0f2fe' : '#ffffff',
-    border: isMe ? '2px solid #3b82f6' : '2px solid #ccc',
-    borderRadius: '8px',
-    padding: '6px 10px',
-    maxWidth: '100%',
-    fontSize: '0.9rem',
-    wordBreak: 'break-word',
-    position: 'relative',
-  });
-
-  const senderNameStyle: React.CSSProperties = {
-    fontSize: '0.75rem',
-    marginBottom: '2px',
-    fontWeight: 'bold',
-    color: '#555',
-  };
-
-  const avatarStyle: React.CSSProperties = {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    border: '2px solid #333',
-    backgroundColor: 'white',
-    objectFit: 'cover',
-    flexShrink: 0,
-  };
-
-  const myAvatarStyle: React.CSSProperties = {
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    border: '2px solid #333',
-    backgroundColor: 'white',
-    objectFit: 'cover',
-    marginRight: '8px',
-  };
-
-  // 입력창 스타일
-  const inputAreaStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center', // 세로 중앙 정렬
-    gap: '8px',
-    height: '50px', // 높이 약간 증가
-    marginTop: 'auto',
-  };
-
-  const inputStyle: React.CSSProperties = {
-    flex: 1,
-    height: '40px',
-    border: '2px solid #333',
-    borderRadius: '8px',
-    padding: '0 10px',
-    fontSize: '0.9rem',
-    backgroundColor: '#fff',
-    outline: 'none',
-  };
-
-  // const buttonStyle: React.CSSProperties = {
-  //   width: '40px',
-  //   height: '40px',
-  //   borderRadius: '8px',
-  //   border: '2px solid #333',
-  //   display: 'flex',
-  //   alignItems: 'center',
-  //   justifyContent: 'center',
-  //   cursor: 'pointer',
-  //   backgroundColor: '#FFD93D', // 노랑 포인트
-  //   boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
-  // };
-
-  const emojiTriggerStyle: React.CSSProperties = {
-    fontSize: '1.4rem',
-    cursor: 'pointer',
-    padding: '5px',
-  };
-
-  const reactionMenuStyle: React.CSSProperties = {
-    position: 'absolute' as const,
-    bottom: '100%',
-    left: '0',
-    backgroundColor: 'white',
-    border: '2px solid #333',
-    borderRadius: '15px',
-    padding: '8px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '8px',
-    boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
-    zIndex: 100,
-  };
-
-  const reactionItemStyle: React.CSSProperties = {
-    fontSize: '1.5rem',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '2px',
-  };
-
   return (
-    <div style={chatBoxStyle}>
+    <div className="sketch-box-container" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', paddingLeft: '10px' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+
+        /* 🐶 멍멍이 스타일: 쫀득하고 촐싹거리는 애니메이션 */
+        @keyframes elastic-bounce {
+            0% { transform: scale(0) translateY(100px) rotate(-10deg); opacity: 0; } 
+            40% { transform: scale(1.1) translateY(-20px) rotate(5deg); opacity: 1; } 
+            60% { transform: scale(0.9) translateY(10px) rotate(-3deg); } 
+            80% { transform: scale(1.05) translateY(-5px) rotate(2deg); } 
+            100% { transform: scale(1) translateY(0) rotate(0deg); } 
+        }
+
+        @keyframes tail-wag {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(2deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-2deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @keyframes bubble-pop {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .sketch-box-container { 
+            border: 5px solid #111 !important; 
+            border-radius: 10px 30px 10px 30px / 30px 10px 30px 10px !important; 
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.2) !important;
+            background: #fffdf0 !important; 
+            position: relative;
+            transform: rotate(1deg);
+            animation: tail-wag 5s infinite ease-in-out;
+            font-family: 'Nanum Pen Script', cursive;
+        }
+        .sketch-box-container::before {
+            content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 20px;
+            background-image: radial-gradient(circle at 10px 10px, #333 4px, transparent 5px);
+            background-size: 20px 30px; background-repeat: repeat-y;
+            pointer-events: none;
+        }
+
+        .chat-bubble { 
+            padding: 10px 15px; border: 3px solid #111; 
+            border-radius: 20px 5px 25px 10px / 10px 25px 5px 20px; 
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2); margin-bottom: 10px; 
+            font-size: 1.3rem; word-break: break-all; 
+            transition: all 0.3s;
+            font-family: 'Nanum Pen Script', cursive;
+            animation: bubble-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            position: relative;
+        }
+      `}</style>
 
       {/* 솟아오르는 리액션 레이어 */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
         <AnimatePresence>
           {floatingReactions.map(r => (
             <motion.div
@@ -279,66 +171,80 @@ const ChatArea = () => {
         </AnimatePresence>
       </div>
 
-      <div style={chatTitleStyle}>
-        <MessageSquare size={18} fill="#333" className="text-white" />
-        <span>실시간 개소리</span>
+      <div style={{ padding: '15px', background: 'transparent', borderBottom: '4px dashed #111', fontWeight: '900', textAlign: 'center', fontSize: '1.8rem', fontFamily: '"Nanum Pen Script", cursive', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+        <MessageSquare size={24} color="#111" />
+        <span>실시간 개소리판</span>
       </div>
 
-      <div ref={chatListRef} style={chatListStyle}>
+      <div ref={chatListRef} style={{ flex: 1, padding: '15px 15px 15px 30px', overflowY: 'auto', background: 'transparent', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {messages.map((msg) => {
           const isMe = msg.nickname === nickname;
           const isSystem = msg.nickname === 'SYSTEM';
 
-          // 1. 시스템 메시지 (중앙 정렬, 심플)
           if (isSystem) {
             return (
               <div key={msg.id} style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
-                <span style={{ fontSize: '0.85rem', color: '#888', fontWeight: 'bold', backgroundColor: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '12px' }}>
+                <span style={{ fontSize: '1.2rem', color: '#888', fontWeight: 'bold', backgroundColor: 'rgba(0,0,0,0.05)', padding: '5px 15px', borderRadius: '15px', fontFamily: '"Gaegu", cursive' }}>
                   📢 {msg.text}
                 </span>
               </div>
             );
           }
 
-          // 2. 일반 유저 메시지 (무조건 왼쪽 정렬)
-          const avatarUrl = getAvatarUrl(msg.avatarId);
+          // ID 기반 고정 회전값 (-2 ~ 2도)
+          // 숫자가 아닐 수도 있으니 안전하게 처리
+          let rotation = 0;
+          try {
+            const numId = typeof msg.id === 'number' ? msg.id : parseInt(String(msg.id).slice(-2)) || 0;
+            rotation = (numId % 4) - 2;
+          } catch (e) { rotation = 1; }
 
           return (
-            <div key={msg.id} style={senderWrapperStyle}>
-              {!isMe && <span style={senderNameStyle}>{msg.nickname}</span>}
-              <div style={msgBubbleStyle(isMe)}>
-                {msg.text}
-              </div>
+            <div key={msg.id} className="chat-bubble" style={{
+              alignSelf: isMe ? 'flex-end' : 'flex-start',
+              background: isMe ? '#fff' : '#fff',
+              border: isMe ? '3px solid #facc15' : '3px solid #111',
+              textAlign: isMe ? 'right' : 'left',
+              transform: `rotate(${rotation}deg)`,
+              maxWidth: '85%'
+            }}>
+              {!isMe && <strong style={{ color: '#555', fontSize: '1rem', display: 'block', marginBottom: '5px' }}>{msg.nickname}</strong>}
+              <div style={{ fontWeight: 700, fontSize: '1.4rem' }}>{msg.text}</div>
             </div>
           );
         })}
       </div>
 
-      {/* 하단 입력창 영역 */}
-      <div style={inputAreaStyle}>
-        <img src={getAvatarUrl(myAvatarId)} style={myAvatarStyle} alt="my-face" />
+      <div style={{ display: 'flex', padding: '15px', background: 'transparent', borderTop: '4px dashed #111', alignItems: 'center' }}>
 
-        <input
-          style={inputStyle}
-          placeholder="멍멍해봐..."
-          value={chatInput}
-          onChange={(e) => setChatInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-
-        {/* 리액션 버튼 팝업창 (호버 시 등장) */}
+        {/* 리액션 버튼 팝업창 */}
         <div
           onMouseEnter={() => setShowReactions(true)}
           onMouseLeave={() => setShowReactions(false)}
-          style={{ position: 'relative' }}
+          style={{ position: 'relative', marginRight: '10px' }}
         >
           <AnimatePresence>
             {showReactions && (
               <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                animate={{ opacity: 1, y: -5, scale: 1 }}
+                animate={{ opacity: 1, y: -45, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.8 }}
-                style={reactionMenuStyle}
+                style={{
+                  position: 'absolute',
+                  bottom: '100%',
+                  left: '0',
+                  backgroundColor: '#fff',
+                  border: '3px solid #111',
+                  borderRadius: '15px',
+                  padding: '8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '5px',
+                  boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
+                  zIndex: 100,
+                  width: '50px',
+                  alignItems: 'center'
+                }}
               >
                 {REACTION_EMOJIS.map(emoji => (
                   <motion.button
@@ -346,7 +252,7 @@ const ChatArea = () => {
                     whileHover={{ scale: 1.3 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleSendReaction(emoji)}
-                    style={reactionItemStyle}
+                    style={{ fontSize: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', padding: '2px' }}
                   >
                     {emoji}
                   </motion.button>
@@ -356,10 +262,19 @@ const ChatArea = () => {
           </AnimatePresence>
 
           {/* 리액션 트리거 아이콘 */}
-          <div style={emojiTriggerStyle}>
+          <div style={{ fontSize: '1.8rem', cursor: 'pointer', filter: 'grayscale(0.2)', transition: '0.2s' }}>
             😊
           </div>
         </div>
+
+        <input
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          style={{ flex: 1, padding: '12px', border: '3px solid #111', borderRadius: '15px', outline: 'none', marginRight: '10px', fontSize: '1.3rem', fontFamily: '"Nanum Pen Script", cursive', background: '#fffdf0' }}
+          placeholder="멍멍! 짖어봐!"
+        />
+        <button onClick={handleSend} style={{ background: '#111', color: '#fff', border: '3px solid #111', borderRadius: '15px', padding: '0 20px', cursor: 'pointer', fontWeight: 900, fontSize: '1.3rem', fontFamily: '"Nanum Pen Script", cursive', transform: 'rotate(-2deg)', height: '46px' }}>Go!</button>
       </div>
     </div>
   );
