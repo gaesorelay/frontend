@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore'; // 내 닉네임 가져오기용
 import { socket } from '@/lib/socket';
@@ -18,6 +18,14 @@ import logoOut from '@/assets/logo/logo_out.png';
 import logoSetting from '@/assets/logo/logo_setting.png';
 import lobbyLogo from '@/assets/logo/lobby_logo.png';
 import { getAvatarSrc } from '@/lib/avatarMapper';
+
+export type RoomConfig = {
+  maxPlayers: number;
+  storytellerCount: number;
+  rounds: number;
+  roundTime: number;
+  voteTime: number;
+};
 
 // ⭐️ 부모(GameRoom)에게 받을 데이터 타입 정의
 interface LobbyProps {
@@ -48,13 +56,99 @@ const LobbyPhase = ({
   console.log('🔍 유저 데이터 구조 확인:', users);
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
 
-  const { roomConfig, roomTitle } = useGameStore(); // 1. roomTitle을 스토어에서 직접 가져옴
+  const { roomConfig, roomTitle, setRoomConfig, setRoomTitle } = useGameStore();
 
   // 로비 전용 UI 상태 (모달 등)는 여기서 관리해도 OK
   const [targetSlot, setTargetSlot] = useState<{ team: 'A' | 'B'; index: number } | null>(null);
   const [selectedAudience, setSelectedAudience] = useState<any | null>(null);
   const displayTitle = roomTitle || (isHost ? '내가 만든 방 👑' : '남의 방 구경 중 👀');
   const [isAudienceBarOpen, setIsAudienceBarOpen] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [isSettingOpen, setIsSettingOpen] = useState(false);
+
+  // =========================================================
+  // 📡 [추가] 소켓 이벤트 리스너 (설정 동기화의 핵심!)
+  // =========================================================
+  useEffect(() => {
+    // 서버로부터 설정 변경 알림이 오면 실행될 함수
+    const handleConfigUpdate = (data: { config: RoomConfig; title?: string }) => {
+      console.log('📢 방 설정이 업데이트되었습니다:', data);
+
+      // 1. 전역 스토어(Store) 업데이트
+      if (data.config && setRoomConfig) {
+        setRoomConfig(data.config);
+      }
+      if (data.title && setRoomTitle) {
+        setRoomTitle(data.title);
+      }
+    };
+
+    // 이벤트 구독
+    socket.on('room_config_updated', handleConfigUpdate);
+
+    // 클린업 (언마운트 시 구독 해제)
+    return () => {
+      socket.off('room_config_updated', handleConfigUpdate);
+    };
+  }, [setRoomConfig, setRoomTitle]);
+
+  // =========================================================
+  // 🔄 [수정] 모달 열 때 & 스토어 변경 시 로컬 상태 동기화
+  // =========================================================
+
+  useEffect(() => {
+    // 모달이 열려있거나, 방금 소켓으로 인해 roomConfig가 바뀌었다면
+    // 로컬 편집용 state(editConfig)도 최신값으로 덮어씌웁니다.
+    if (roomConfig) {
+      setEditConfig(roomConfig);
+    }
+    if (roomTitle) {
+      setEditTitle(roomTitle);
+    }
+  }, [isSettingOpen, roomConfig, roomTitle]);
+  // 👆 dependency에 roomConfig가 있어야 소켓으로 스토어가 변했을 때 모달 내용도 즉시 바뀝니다.
+
+  // =========================================================
+  // ⚙️ [추가] 설정 변경을 위한 로컬 State 및 핸들러
+  // =========================================================
+
+  // 1. 모달 내부에서 임시로 수정할 설정값 (저장 누르기 전까지 전역 상태를 건드리지 않음)
+  const [editTitle, setEditTitle] = useState(roomTitle);
+  const [editConfig, setEditConfig] = useState<RoomConfig>(
+    roomConfig || {
+      maxPlayers: 10,
+      storytellerCount: 3,
+      rounds: 3,
+      roundTime: 60,
+      voteTime: 30,
+    }
+  );
+
+  // 2. 모달이 열릴 때마다 현재 전역 설정값으로 초기화 (동기화)
+  useEffect(() => {
+    if (isSettingOpen) {
+      setEditTitle(roomTitle);
+      setEditConfig(roomConfig);
+    }
+  }, [isSettingOpen, roomTitle, roomConfig]);
+
+  // 3. 설정 저장 및 소켓 전송 핸들러
+  const handleSaveSettings = () => {
+    if (!isHost) return;
+    if (!editTitle.trim()) return alert('방 제목을 입력해주세요!');
+
+    // 소켓 요청 전송
+    socket.emit('update_room_config', { config: editConfig });
+
+    setIsSettingOpen(false);
+    // (선택) 저장되었다는 토스트 메시지 등을 띄울 수 있음
+  };
+
+  // 4. 설정값 변경 헬퍼 함수 (최소/최대값 제한)
+  const updateConfig = (key: keyof RoomConfig, value: number, min: number, max: number) => {
+    const newValue = Math.max(min, Math.min(max, value));
+    setEditConfig((prev) => ({ ...prev, [key]: newValue }));
+  };
 
   // =========================================================
   // 🎮 액션 핸들러 (users는 props.users를 사용!)
@@ -278,7 +372,6 @@ const LobbyPhase = ({
   };
 
   const audienceList = users.filter((u) => u.role === 'AUDIENCE');
-  const [copied, setCopied] = useState(false);
 
   // 방 코드 복사
   const handleCopyCode = async () => {
@@ -323,8 +416,6 @@ const LobbyPhase = ({
       navigate('/');
     }
   };
-
-  const [isSettingOpen, setIsSettingOpen] = useState(false);
 
   return (
     <Background>
@@ -398,28 +489,140 @@ const LobbyPhase = ({
                 </div>
               </div>
 
-              {/* 🏠 설정 수정 모달 */}
+              {/* 🏠 설정 수정 모달 (구현 완료) */}
               <Modal isOpen={isSettingOpen} onClose={() => setIsSettingOpen(false)}>
                 <div className={styles.settingModalContent}>
                   <h2 className={styles.modalTitle}>방 설정 변경</h2>
 
+                  {/* 1. 방 제목 */}
                   <div className={styles.settingField}>
                     <label>방 제목</label>
-                    <input type="text" defaultValue={roomTitle} className={styles.settingInput} />
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className={styles.settingInput}
+                    />
                   </div>
 
+                  {/* 2. 최대 인원 */}
                   <div className={styles.settingField}>
-                    <label>최대 인원 (팀당)</label>
+                    <label>최대 인원 (전체)</label>
                     <div className={styles.counter}>
-                      <button className={styles.countBtn}>-</button>
-                      <span className={styles.countNum}>{maxStorytellers}명</span>
-                      <button className={styles.countBtn}>+</button>
+                      <button
+                        className={styles.countBtn}
+                        onClick={() => updateConfig('maxPlayers', editConfig.maxPlayers - 1, 2, 20)}
+                      >
+                        -
+                      </button>
+                      <span className={styles.countNum}>{editConfig.maxPlayers}명</span>
+                      <button
+                        className={styles.countBtn}
+                        onClick={() => updateConfig('maxPlayers', editConfig.maxPlayers + 1, 2, 20)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3. 이야기꾼 수 (팀당) */}
+                  <div className={styles.settingField}>
+                    <label>팀당 이야기꾼</label>
+                    <div className={styles.counter}>
+                      <button
+                        className={styles.countBtn}
+                        onClick={() =>
+                          updateConfig('storytellerCount', editConfig.storytellerCount - 1, 1, 6)
+                        }
+                      >
+                        -
+                      </button>
+                      <span className={styles.countNum}>{editConfig.storytellerCount}명</span>
+                      <button
+                        className={styles.countBtn}
+                        onClick={() =>
+                          updateConfig('storytellerCount', editConfig.storytellerCount + 1, 1, 6)
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 4. 라운드 수 */}
+                  <div className={styles.settingField}>
+                    <label>진행 라운드</label>
+                    <div className={styles.counter}>
+                      <button
+                        className={styles.countBtn}
+                        onClick={() => updateConfig('rounds', editConfig.rounds - 1, 1, 10)}
+                      >
+                        -
+                      </button>
+                      <span className={styles.countNum}>{editConfig.rounds}R</span>
+                      <button
+                        className={styles.countBtn}
+                        onClick={() => updateConfig('rounds', editConfig.rounds + 1, 1, 10)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 5. 라운드 시간 / 투표 시간 */}
+                  <div className={styles.settingField}>
+                    <label>시간 설정 (초)</label>
+                    <div className={styles.timeGroup}>
+                      <div className={styles.timeControl}>
+                        <span>작성</span>
+                        <div className={styles.counterSmall}>
+                          <button
+                            className={styles.countBtn}
+                            onClick={() =>
+                              updateConfig('roundTime', editConfig.roundTime - 5, 15, 45)
+                            }
+                          >
+                            -
+                          </button>
+                          <span className={styles.countNum}>{editConfig.roundTime}s</span>
+                          <button
+                            className={styles.countBtn}
+                            onClick={() =>
+                              updateConfig('roundTime', editConfig.roundTime + 5, 15, 45)
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                      <div className={styles.timeControl}>
+                        <span>투표</span>
+                        <div className={styles.counterSmall}>
+                          <button
+                            className={styles.countBtn}
+                            onClick={() =>
+                              updateConfig('voteTime', editConfig.voteTime - 5, 15, 25)
+                            }
+                          >
+                            -
+                          </button>
+                          <span className={styles.countNum}>{editConfig.voteTime}s</span>
+                          <button
+                            className={styles.countBtn}
+                            onClick={() =>
+                              updateConfig('voteTime', editConfig.voteTime + 5, 15, 25)
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   <div className={styles.modalActions}>
-                    <button className={styles.saveButton} onClick={() => setIsSettingOpen(false)}>
-                      변경사항 저장
+                    <button className={styles.saveButton} onClick={handleSaveSettings}>
+                      설정 저장하기
                     </button>
                   </div>
                 </div>
@@ -519,7 +722,7 @@ const LobbyPhase = ({
                 >
                   🟥 B팀 배정
                 </button>
-                {(!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname) && (
+                {!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname && (
                   <button
                     onClick={handleKickUser}
                     className={`${styles.modalButton} ${styles.buttonKick}`}
