@@ -5,13 +5,18 @@ import ChatArea from '../ChatArea';
 import bgImg from '@/assets/background.png';
 import resultLogo from '@/assets/logo/resultlogo.png';
 import finalLogo from '@/assets/logo/finallogo.png';
-import ateam from '@/assets/logo/A.png';
-import bteam from '@/assets/logo/B.png';
+import ateam from '@/assets/dog/shiba.png';
+import bteam from '@/assets/dog/fug1.png';
 import airesult from '@/assets/logo/AIresult.png';
 import Ateam from '@/assets/logo/Ateam.png';
 import Bteam from '@/assets/logo/Bteam.png';
 import teamALogo from '@/assets/logo/Ateamresult.png';
 import teamBLogo from '@/assets/logo/Bteamresult.png';
+import logoA from '@/assets/logo/A.png';
+import logoB from '@/assets/logo/B.png';
+import countImg from '@/assets/logo/Acount.png';
+import countImgB from '@/assets/logo/Bcount.png';
+
 
 // 심사위원 이미지 import
 import judge1 from '@/assets/judge/result/1.png';
@@ -63,6 +68,14 @@ const WIN_MENTS = [
   "${teamName} 승리! 당신들의 논리는 이미 전봇대에 마킹되어 버려짐!"
 ];
 
+const LOSE_MENTS = [
+  "${teamName} 패배! 너무 사람같이 말해서 노잼으로 판명됨. 반성하셈.",
+  "${teamName} 패배! 심사위원이 그냥 여러분 얼굴이 킹받는대요.",
+  "${teamName} 패배! 개소리는 못해도 사람은 착할 수도.. 아, 아님.",
+  "${teamName} 패배! 오늘부터 산책 금지! 사료 대신 반성문 드세요.",
+  "${teamName} 패배! 개껌 씹던 심사위원이 정색하게 만든 노잼 논리!"
+];
+
 const JudgeResultPhase = () => {
   const [selectedJudges] = useState<Judge[]>(() => {
     const savedData = localStorage.getItem('SELECTED_JUDGES_V2');
@@ -74,13 +87,15 @@ const JudgeResultPhase = () => {
 
   const [introPhase, setIntroPhase] = useState(1);
   const [finalMent, setFinalMent] = useState("");
-  const [animScore, setAnimScore] = useState(0);
+  const [animScoreA, setAnimScoreA] = useState(0);
+  const [animScoreB, setAnimScoreB] = useState(0);
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; rot: number }[]>([]);
 
   const [stagePublicA, setStagePublicA] = useState(0);
   const [stagePublicB, setStagePublicB] = useState(0);
   const [stageAIA, setStageAIA] = useState(0);
   const [stageAIB, setStageAIB] = useState(0);
+  const [showScore, setShowScore] = useState(false);
 
   const aiTotalA = MOCK_RESULT.teamA.ai.reduce((a, b) => a + b, 0);
   const aiTotalB = MOCK_RESULT.teamB.ai.reduce((a, b) => a + b, 0);
@@ -89,65 +104,111 @@ const JudgeResultPhase = () => {
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setIntroPhase(2), 2000),   // Start Phase 2 (A Score)
-      setTimeout(() => setIntroPhase(3), 6000),   // Start Phase 3 (B Score) -> 4s (Fast)
-      setTimeout(() => setIntroPhase(4), 10000),  // Start Phase 4 (Main Stage Gauge) -> 7s (Slow & Tensor)
-      setTimeout(() => setIntroPhase(5), 17000),  // Start Phase 5 (A AI)
-      setTimeout(() => setIntroPhase(6), 22000),  // Start Phase 6 (B AI)
-      setTimeout(() => setIntroPhase(7), 27000),  // Start Phase 7 (Total Gauge) -> 7s (Slow & Tensor)
+      setTimeout(() => setIntroPhase(2), 3000),   // Phase 2: A Title
+      setTimeout(() => setIntroPhase(3), 5000),   // Phase 3: A Public Score
+      setTimeout(() => setIntroPhase(4), 9000),   // Phase 4: A AI Analysis
+      setTimeout(() => setIntroPhase(5), 15000),  // Phase 5: B Title
+      setTimeout(() => setIntroPhase(6), 17000),  // Phase 6: B Public Score
+      setTimeout(() => setIntroPhase(7), 21000),  // Phase 7: B AI Analysis
+      setTimeout(() => setIntroPhase(8), 27000),  // Phase 8: Blackout
       setTimeout(() => {
-        setIntroPhase(8); // Start Phase 8 (Game Over)
+        setIntroPhase(9); // Phase 9: Final Result
         const winner = totalA > totalB ? 'A팀' : 'B팀';
         setFinalMent(WIN_MENTS[Math.floor(Math.random() * WIN_MENTS.length)].replace('${teamName}', winner));
-      }, 34000),
+      }, 28000),
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, [totalA, totalB]);
 
+  // Public Score Animation (Phase 3 & 6)
   useEffect(() => {
-    if (introPhase !== 2 && introPhase !== 3) return;
-    let current = 0;
-    const target = introPhase === 2 ? MOCK_RESULT.teamA.public : MOCK_RESULT.teamB.public;
-    setAnimScore(0);
-    const interval = setInterval(() => {
-      if (current < target) {
-        current++;
-        setAnimScore(current);
-        const newParticle = { id: Math.random(), x: Math.random() * 100, y: Math.random() * 100, rot: Math.random() * 360 };
-        setParticles(prev => [...prev.slice(-20), newParticle]);
-      } else {
-        clearInterval(interval);
-      }
-    }, 30);
+    setParticles([]); // Clear previous particles
+    let interval: any;
+
+    if (introPhase === 3) {
+      let cur = 0;
+      const target = MOCK_RESULT.teamA.public;
+      interval = setInterval(() => {
+        let changed = false;
+        if (cur < target) { cur++; setAnimScoreA(cur); changed = true; }
+        else clearInterval(interval);
+
+        if (changed) {
+          // Spawn multiple particles for chaos
+          const count = Math.floor(Math.random() * 3) + 2;
+          const newParticles = Array.from({ length: count }).map(() => ({
+            id: Math.random(),
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            rot: Math.random() * 360
+          }));
+          setParticles(prev => [...prev.slice(-30), ...newParticles]);
+        }
+      }, 30);
+    }
+    if (introPhase === 6) {
+      let cur = 0;
+      const target = MOCK_RESULT.teamB.public;
+      interval = setInterval(() => {
+        let changed = false;
+        if (cur < target) { cur++; setAnimScoreB(cur); changed = true; }
+        else clearInterval(interval);
+
+        if (changed) {
+          // Spawn multiple particles for chaos
+          const count = Math.floor(Math.random() * 3) + 2;
+          const newParticles = Array.from({ length: count }).map(() => ({
+            id: Math.random(),
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            rot: Math.random() * 360
+          }));
+          setParticles(prev => [...prev.slice(-30), ...newParticles]);
+        }
+      }, 30);
+    }
     return () => clearInterval(interval);
   }, [introPhase]);
 
+  // Phase 3: AI Animation or other logic if needed (currently static display is fine)
+  // Phase 9: Final Gauge Animation (Sequentially: Public -> AI)
   useEffect(() => {
-    if (introPhase === 4) {
-      let curA = 0, curB = 0;
+    if (introPhase === 9) {
+      // 1. Reset
+      setStagePublicA(0); setStagePublicB(0);
+      setStageAIA(0); setStageAIB(0);
+
+      const targetPubA = MOCK_RESULT.teamA.public;
+      const targetPubB = MOCK_RESULT.teamB.public;
+      const targetAiA = aiTotalA;
+      const targetAiB = aiTotalB;
+
+      let pA = 0, pB = 0, aA = 0, aB = 0;
+      let phase = 'public'; // 'public' -> 'ai'
+
       const interval = setInterval(() => {
-        let done = true;
-        if (curA < MOCK_RESULT.teamA.public) { curA++; done = false; }
-        if (curB < MOCK_RESULT.teamB.public) { curB++; done = false; }
-        setStagePublicA(curA);
-        setStagePublicB(curB);
-        if (done) clearInterval(interval);
-      }, 40);
+        if (phase === 'public') {
+          let change = false;
+          if (pA < targetPubA) { pA++; setStagePublicA(pA); change = true; }
+          if (pB < targetPubB) { pB++; setStagePublicB(pB); change = true; }
+
+          if (!change) {
+            phase = 'ai'; // Switch to AI animation
+          }
+        } else if (phase === 'ai') {
+          let change = false;
+          if (aA < targetAiA) { aA++; setStageAIA(aA); change = true; }
+          if (aB < targetAiB) { aB++; setStageAIB(aB); change = true; }
+
+          if (!change) {
+            clearInterval(interval);
+          }
+        }
+      }, 30); // Animation speed
+
       return () => clearInterval(interval);
     }
-    if (introPhase === 7) {
-      let aiA = 0, aiB = 0;
-      const interval = setInterval(() => {
-        let done = true;
-        if (aiA < aiTotalA) { aiA++; done = false; }
-        if (aiB < aiTotalB) { aiB++; done = false; }
-        setStageAIA(aiA);
-        setStageAIB(aiB);
-        if (done) clearInterval(interval);
-      }, 40);
-      return () => clearInterval(interval);
-    }
-  }, [introPhase, aiTotalA, aiTotalB]);
+  }, [introPhase]);
 
   return createPortal(
     <div style={{
@@ -165,7 +226,8 @@ const JudgeResultPhase = () => {
 
 
         .particle-full { position: absolute; color: #facc15; font-size: 3rem; font-weight: 900; animation: full-screen-pop 0.4s forwards; text-shadow: 4px 4px 0 #000; z-index: 11000; }
-        .intro-overlay { position: fixed; top: 0; left: 0; width: calc(100% - 380px); height: 100%; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; transition: 0.5s; }
+        .intro-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); backdrop-filter: blur(5px); transition: 0.5s; }
+        .intro-overlay.dark-mode { background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .score-huge { font-size: 11rem; color: #fff; text-shadow: 0 0 30px #ff4444; font-weight: 900; }
         .gauge-container { width: 300px; height: 35px; background: #333; border: 3px solid #111; border-radius: 20px; overflow: hidden; position: relative; }
@@ -173,127 +235,119 @@ const JudgeResultPhase = () => {
         .judge-card-mini { width: 110px; text-align: center; background: #fff; padding: 10px; border-radius: 10px; border: 2px solid #111; font-size: 0.8rem; }
       `}</style>
 
-      {[4, 7].includes(introPhase) && <img src={resultLogo} style={{
+      {[9, 10].includes(introPhase) && <img src={resultLogo} style={{
         position: 'absolute', top: '-100px',
         left: 'calc((100vw - 380px) / 2)', transform: 'translateX(-50%)',
         height: '350px', width: 'auto', zIndex: 20001, filter: 'drop-shadow(4px 4px 0 #000)',
         objectFit: 'contain'
       }} />}
 
-      <div className={`intro-overlay ${[1, 2, 3, 5, 6, 8].includes(introPhase) ? '' : 'hidden'}`}>
+      <div className={`intro-overlay ${[1, 2, 3, 4, 5, 6, 7, 8].includes(introPhase) ? '' : 'hidden'} ${[1, 2, 3, 4, 5, 6, 7, 8].includes(introPhase) ? 'dark-mode' : ''}`}>
         {particles.map(p => (
-          <span key={p.id} className="particle-full" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: `rotate(${p.rot}deg)` }}>+1</span>
+          <img key={p.id} src={introPhase === 6 ? countImgB : countImg} className="particle-full" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: `rotate(${p.rot}deg)`, width: '100px', height: '100px', objectFit: 'contain' }} />
         ))}
 
         {introPhase === 1 && <img src={finalLogo} style={{ width: '50%', objectFit: 'contain', animation: 'elastic-zoomies 0.8s' }} />}
 
-        {(introPhase === 2 || introPhase === 3) && (
-          <div key={`phase-${introPhase}`} style={{ textAlign: 'center', animation: introPhase === 2 ? 'slide-in-left 0.5s both' : 'slide-in-right 0.5s both' }}>
-            <div style={{ marginBottom: '-30px' }}>
-              <img src={introPhase === 2 ? Ateam : Bteam} style={{ width: '650px', objectFit: 'contain', filter: 'drop-shadow(5px 5px 0 #000)' }} />
-            </div>
-            <div className="score-huge">{animScore}</div>
-          </div>
-        )}
-
-        {(introPhase === 5 || introPhase === 6) && (
-          <div key={`judge-${introPhase}`} style={{ textAlign: 'center', width: '100%', animation: 'zoom-in-judge 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '30px', marginBottom: '40px', background: 'rgba(255,255,255,0.1)', padding: '20px 50px', borderRadius: '20px', border: '3px solid #333' }}>
-              <img src={introPhase === 5 ? ateam : bteam} style={{ height: '110px', objectFit: 'contain' }} />
-              <img src={airesult} style={{ height: '220px', objectFit: 'contain' }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '15px', justifyContent: 'center', width: '100%' }}>
-              {selectedJudges.map((j, i) => {
-                const pScore = introPhase === 5 ? MOCK_RESULT.teamA.ai[i] : MOCK_RESULT.teamB.ai[i];
-                return (
-                  <div key={i} style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-                    background: '#fff', padding: '20px', borderRadius: '20px', border: '4px solid #111',
-                    width: '220px',
-                    animation: `slide-in-right 0.4s ${i * 0.15}s both`,
-                    boxShadow: '10px 10px 0 rgba(0,0,0,0.2)', position: 'relative'
-                  }}>
-                    <img src={j.image} style={{ width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #ddd' }} />
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#111', marginBottom: '5px' }}>{j.name}</div>
-                      <div style={{ fontSize: '1.1rem', color: '#555', wordBreak: 'keep-all', lineHeight: '1.2', animation: `pop-comment 0.5s ${0.3 + i * 0.2}s both` }}>
-                        "{introPhase === 5 ? j.commentA : j.commentB}"
-                      </div>
-                    </div>
-                    {/* Individual Score Badge */}
-                    <div style={{
-                      position: 'absolute', top: '-15px', right: '-15px',
-                      background: '#ff0000', color: '#fff', fontSize: '1.5rem', fontWeight: 900,
-                      padding: '5px 15px', borderRadius: '20px', border: '3px solid #fff',
-                      boxShadow: '4px 4px 0 rgba(0,0,0,0.3)', transform: 'rotate(15deg)',
-                      animation: `pop-comment 0.5s ${0.6 + i * 0.2}s both`
-                    }}>
-                      +{pScore}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ fontSize: '2.5rem', color: '#facc15', marginTop: '30px', fontWeight: 900, textShadow: '2px 2px 0 #000', animation: 'elastic-zoomies 0.5s 1.5s both' }}>
-              AI Score: {introPhase === 5 ? aiTotalA : aiTotalB}점
+        {/* Phase 2: A Team Title */}
+        {introPhase === 2 && (
+          <div style={{ textAlign: 'center', width: '100%', zIndex: 12000 }}>
+            <div style={{ animation: 'bounce-in 0.8s both' }}>
+              <img src={Ateam} style={{ width: '700px', objectFit: 'contain', filter: 'drop-shadow(0 0 20px rgba(255,0,0,0.5))' }} />
             </div>
           </div>
         )}
 
-        {introPhase === 8 && (
-          <div style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both', padding: '0 5vw', position: 'relative', marginTop: '15vh' }}>
-            <div style={{ fontSize: '7rem', fontWeight: 900, color: '#facc15', marginBottom: '40px', textShadow: '0 0 30px #ff0000' }}>GAME OVER</div>
-            <div style={{ fontSize: '3.5rem', background: '#fff', padding: '40px 80px', border: '8px solid #111', borderRadius: '40px', lineHeight: '1.4', transform: 'rotate(-2deg)', boxShadow: '20px 20px 0 #000' }}>{finalMent}</div>
-
-            {/* Stamp Effect */}
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-15deg)',
-              border: '10px solid #ff0000', color: '#ff0000', padding: '20px 50px', borderRadius: '20px',
-              fontSize: '5rem', fontWeight: 900, background: 'rgba(255,255,255,0.9)',
-              animation: 'stamp-slam 0.3s 1s both', zIndex: 12000, whiteSpace: 'nowrap',
-              boxShadow: '0 0 50px rgba(255,0,0,0.5)'
-            }}>
-              인간 포기 완료!
-            </div>
-
-            <div style={{ marginTop: '80px', display: 'flex', gap: '30px', justifyContent: 'center', position: 'relative', zIndex: 13000 }}>
-              <button
-                onClick={() => setIntroPhase(7)}
-                style={{
-                  fontFamily: '"Gaegu", cursive', fontSize: '2.5rem', fontWeight: 900,
-                  padding: '15px 40px', borderRadius: '50px', border: '5px solid #fff',
-                  background: '#333', color: '#fff', cursor: 'pointer',
-                  boxShadow: '8px 8px 0 rgba(0,0,0,0.5)', transition: '0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                결과 화면 보기
-              </button>
-              <button
-                onClick={() => window.location.reload()}
-                style={{
-                  fontFamily: '"Gaegu", cursive', fontSize: '2.5rem', fontWeight: 900,
-                  padding: '15px 40px', borderRadius: '50px', border: '5px solid #111',
-                  background: '#facc15', color: '#111', cursor: 'pointer',
-                  boxShadow: '8px 8px 0 rgba(0,0,0,0.5)', transition: '0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                한 판 더 하기
-              </button>
+        {/* Phase 3: A Team Public Score */}
+        {introPhase === 3 && (
+          <div style={{ textAlign: 'center', width: '100%', zIndex: 12000 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
+              <div style={{ background: 'rgba(0,0,0,0.6)', padding: '30px 60px', borderRadius: '30px', border: '5px solid #ff4444', animation: 'elastic-zoomies 0.5s 0.2s both' }}>
+                <div style={{ fontSize: '3rem', color: '#ffb3b3', marginBottom: '20px' }}>관객 투표 점수</div>
+                <img src={ateam} style={{ width: '200px', height: '200px', objectFit: 'contain', borderRadius: '50%', border: '5px solid #fff', marginBottom: '20px' }} />
+                <div style={{ fontSize: '7rem', fontWeight: 900, color: '#ff4444', textShadow: '4px 4px 0 #000' }}>{animScoreA}점</div>
+              </div>
             </div>
           </div>
         )}
+
+        {introPhase === 4 && (
+          <div style={{ textAlign: 'center', width: '100%', zIndex: 12000 }}>
+            <img src={airesult} style={{ width: '400px', objectFit: 'contain', animation: 'bounce-in 0.5s', marginBottom: '30px', filter: 'drop-shadow(0 0 10px #facc15)' }} />
+            <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {selectedJudges.map((j, i) => (
+                <div key={`a-${i}`} style={{ background: '#fff', padding: '20px', borderRadius: '20px', width: '220px', border: '4px solid #ff4444', animation: `pop-comment 0.5s ${i * 0.2}s both`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <img src={j.image} style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', marginBottom: '15px' }} />
+                  <div style={{ fontSize: '1.3rem', fontWeight: 900 }}>{j.name}</div>
+                  <div style={{ fontSize: '1rem', margin: '15px 0', wordBreak: 'keep-all', flex: 1, display: 'flex', alignItems: 'center' }}>"{j.commentA}"</div>
+                  <div style={{ fontWeight: 900, color: '#f00', fontSize: '2rem' }}>+{MOCK_RESULT.teamA.ai[i]}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: '40px', fontSize: '3rem', color: '#fff', fontWeight: 900, animation: 'elastic-zoomies 0.5s 1.5s both', textShadow: '0 0 20px #facc15' }}>
+              AI 총점: <span style={{ color: '#facc15' }}>{aiTotalA}점</span>
+            </div>
+          </div>
+        )}
+
+        {/* Phase 5: B Team Title */}
+        {introPhase === 5 && (
+          <div style={{ textAlign: 'center', width: '100%', zIndex: 12000 }}>
+            <div style={{ animation: 'bounce-in 0.8s both' }}>
+              <img src={Bteam} style={{ width: '700px', objectFit: 'contain', filter: 'drop-shadow(0 0 20px rgba(0,0,255,0.5))' }} />
+            </div>
+          </div>
+        )}
+
+        {/* Phase 6: B Team Public Score */}
+        {introPhase === 6 && (
+          <div style={{ textAlign: 'center', width: '100%', zIndex: 12000 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
+              <div style={{ background: 'rgba(0,0,0,0.6)', padding: '30px 60px', borderRadius: '30px', border: '5px solid #3b82f6', animation: 'elastic-zoomies 0.5s 0.2s both' }}>
+                <div style={{ fontSize: '3rem', color: '#99ccff', marginBottom: '20px' }}>관객 투표 점수</div>
+                <img src={bteam} style={{ width: '200px', height: '200px', objectFit: 'contain', borderRadius: '50%', border: '5px solid #fff', marginBottom: '20px' }} />
+                <div style={{ fontSize: '7rem', fontWeight: 900, color: '#3b82f6', textShadow: '4px 4px 0 #000' }}>{animScoreB}점</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {introPhase === 7 && (
+          <div style={{ textAlign: 'center', width: '100%', zIndex: 12000 }}>
+            <img src={airesult} style={{ width: '400px', objectFit: 'contain', animation: 'bounce-in 0.5s', marginBottom: '30px', filter: 'drop-shadow(0 0 10px #facc15)' }} />
+            <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {selectedJudges.map((j, i) => (
+                <div key={`b-${i}`} style={{ background: '#fff', padding: '20px', borderRadius: '20px', width: '220px', border: '4px solid #3b82f6', animation: `pop-comment 0.5s ${i * 0.2}s both`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <img src={j.image} style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', marginBottom: '15px' }} />
+                  <div style={{ fontSize: '1.3rem', fontWeight: 900 }}>{j.name}</div>
+                  <div style={{ fontSize: '1rem', margin: '15px 0', wordBreak: 'keep-all', flex: 1, display: 'flex', alignItems: 'center' }}>"{j.commentB}"</div>
+                  <div style={{ fontWeight: 900, color: '#00f', fontSize: '2rem' }}>+{MOCK_RESULT.teamB.ai[i]}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: '40px', fontSize: '3rem', color: '#fff', fontWeight: 900, animation: 'elastic-zoomies 0.5s 1.5s both', textShadow: '0 0 20px #facc15' }}>
+              AI 총점: <span style={{ color: '#facc15' }}>{aiTotalB}점</span>
+            </div>
+          </div>
+        )}
+
+
+
+
+
+
       </div>
 
       <div style={{ flex: 1, display: 'flex', padding: '0 0 4vw 4vw', gap: '2vw' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15vh', justifyContent: 'flex-start', opacity: [4, 7].includes(introPhase) ? 1 : 0, transition: '0.5s' }}>
-          <div style={{ display: 'flex', gap: '60px', marginTop: '2vh' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15vh', justifyContent: 'flex-start', opacity: 1, transition: '0.5s' }}>
+
+          {/* Phase 8 Blackout - Just wait */}
+
+          {/* Main Stage Content - Partially Visible in background, Fully visible in Phase 9 */}
+          <div style={{ display: 'flex', gap: '60px', marginTop: '2vh', opacity: [1, 2, 3, 4, 5, 6, 7, 8].includes(introPhase) ? 0 : 1, transition: '0.5s', pointerEvents: [1, 2, 3, 4, 5, 6, 7, 8].includes(introPhase) ? 'none' : 'auto' }}>
             {/* A팀 섹션 */}
             <div style={{ textAlign: 'center' }}>
-              <img src={teamALogo} style={{ width: '420px', objectFit: 'contain' }} />
+              <img src={logoA} style={{ width: '300px', objectFit: 'contain' }} />
 
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
                 <span style={{ color: '#ffb3b3' }}>관객 {stagePublicA}</span>
@@ -306,11 +360,13 @@ const JudgeResultPhase = () => {
               </div>
             </div>
 
-            <div style={{ fontSize: '5rem', fontWeight: 900, alignSelf: 'center' }}>VS</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: '5rem', fontWeight: 900, marginBottom: '20px' }}>VS</div>
+            </div>
 
             {/* B팀 섹션 */}
             <div style={{ textAlign: 'center' }}>
-              <img src={teamBLogo} style={{ width: '420px', objectFit: 'contain' }} />
+              <img src={logoB} style={{ width: '300px', objectFit: 'contain' }} />
 
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
                 <span style={{ color: '#99ccff' }}>관객 {stagePublicB}</span>
@@ -325,25 +381,38 @@ const JudgeResultPhase = () => {
           </div>
 
 
-          {/* AI 심사위원단 Label added here */}
-          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', marginTop: '30px', marginBottom: '10px', background: '#333', padding: '5px 30px', borderRadius: '20px', border: '2px solid #fff', boxShadow: '5px 5px 0 #000' }}>
-            AI 심사위원단
-          </div>
 
-          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-            {selectedJudges.map((j, i) => (
-              <div key={i} className="judge-card-mini" style={{ animation: `elastic-zoomies 0.5s ${i * 0.1}s both` }}>
-                <img src={j.image} style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ddd', marginBottom: '5px' }} />
-                <div style={{ fontWeight: 900 }}>{j.name}</div>
-              </div>
-            ))}
-          </div>
 
 
         </div>
 
+        {/* Final Stamp (Overlay on Main Page - Exclude Chat Area) */}
+        {introPhase === 9 && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: 'calc(100% - 380px)', height: '100%', zIndex: 15000, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: '10vh' }}>
+
+            {/* Funny Ment (Slide Up) */}
+            <div style={{
+              fontSize: '2.5rem', color: '#fff', fontWeight: 900, textShadow: '3px 3px 6px #000',
+              textAlign: 'center', maxWidth: '90%', marginBottom: '40px',
+              animation: 'slide-in-up 0.8s both', wordBreak: 'keep-all', lineHeight: '1.4'
+            }}>
+              {finalMent}
+            </div>
+
+            <div style={{
+              transform: 'rotate(-15deg)',
+              border: '10px solid #ff0000', color: '#ff0000', padding: '20px 50px', borderRadius: '20px',
+              fontSize: '5rem', fontWeight: 900, background: 'rgba(255,255,255,0.95)',
+              animation: 'stamp-slam 0.5s both', whiteSpace: 'nowrap',
+              boxShadow: '0 0 50px rgba(255,0,0,0.5)'
+            }}>
+              {totalA > totalB ? 'A팀 승리!' : 'B팀 승리!'}
+            </div>
+          </div>
+        )}
+
         {/* Floating Play Again Button */}
-        {introPhase === 7 && (
+        {introPhase === 9 && (
           <button
             onClick={() => window.location.reload()}
             style={{
@@ -360,7 +429,7 @@ const JudgeResultPhase = () => {
           </button>
         )}
 
-        <div style={{ width: '380px', height: '100%', display: 'flex', paddingTop: '50px', paddingRight: '15px' }}>
+        <div style={{ width: '380px', height: '100%', display: 'flex', paddingTop: '50px', paddingRight: '15px', opacity: introPhase === 9 ? 1 : 0, transition: '0.5s', pointerEvents: introPhase === 9 ? 'auto' : 'none' }}>
           <ChatArea />
         </div>
       </div>
