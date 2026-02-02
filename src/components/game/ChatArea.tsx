@@ -87,7 +87,7 @@ const ChatArea = () => {
 
   const handleSendReaction = (emoji: string) => {
     socket.emit('send_reaction', { emoji, nickname });
-    triggerFloatingReaction(emoji);
+    // triggerFloatingReaction(emoji);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
