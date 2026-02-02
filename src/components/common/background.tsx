@@ -1,18 +1,18 @@
-import bg from '@/assets/bg/paper.png'
+import bg from '@/assets/background.png'
 import styles from './Background.module.css'
 
 type BackgroundProps = {
   children: React.ReactNode;
-  style?: React.CSSProperties; 
+  style?: React.CSSProperties;
 }
 
 export const Background = ({ children, style }: BackgroundProps) => {
   return (
     <div
       className={styles.background}
-      style={{ 
+      style={{
         backgroundImage: `url(${bg})`,
-        ...style 
+        ...style
       }}
     >
       <div className={styles.inner}> {/* inner가 강아지들의 기준 컨테이너 */}
