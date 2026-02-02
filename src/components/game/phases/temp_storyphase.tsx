@@ -47,7 +47,7 @@ const StoryPhase = () => {
           clearInterval(timer);
         }
       }
-    }, 4000); // 감상 시간 (이미지+텍스트 고려하여 약간 넉넉히)
+    }, 4500); // 감상 시간 (이미지+텍스트 고려하여 약간 넉넉히)
 
     return () => clearInterval(timer);
   }, [currentIndex, currentTeam, stories.length, isFinished]);
@@ -147,127 +147,102 @@ const StoryPhase = () => {
   );
 };
 
-const styles: { [key: string]: React.CSSProperties } = {
-  container: { display: 'flex', width: '100vw', height: '100vh', padding: '20px', boxSizing: 'border-box' },
-  header: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-    zIndex: 10,
-    transform: 'scale(1.2)', // 1. 헤더 전체 크기 키우기
-  },
-  logo: {
-    width: '450px', // 1. 로고 가로폭 확장
-    height: 'auto',
-    filter: 'drop-shadow(3px 3px 0px rgba(0,0,0,0.1))',
-  },
-  statusMent: {
-    fontSize: '1.2rem', // 2. 글자 크기 줄임 (비장미 강조)
-    fontWeight: 900,
-    marginTop: '5px',
-    background: 'rgba(255,255,255,0.9)',
-    padding: '3px 15px',
-    borderRadius: '20px',
-    border: '2px solid #333',
-  },
-  leftSection: {
-    flex: 4, // 👈 기존 3에서 4로 늘려 스토리 영역을 더 확보합니다.
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100%',
-    minWidth: '950px', // 👈 책 프레임(900px)보다 약간 크게 최소 너비를 잡아 밀리지 않게 합니다.
-  },
+  const styles: { [key: string]: React.CSSProperties } = {
+    container: { display: 'flex', width: '100vw', height: '100vh', padding: '20px', boxSizing: 'border-box' },
+    header: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: '1.5rem',
+      zIndex: 10,
+      transform: 'scale(1.2)', // 1. 헤더 전체 크기 키우기
+    },
+    logo: {
+      width: '450px', // 1. 로고 가로폭 확장
+      height: 'auto',
+      filter: 'drop-shadow(3px 3px 0px rgba(0,0,0,0.1))',
+    },
+    statusMent: {
+      fontSize: '1.2rem', // 2. 글자 크기 줄임 (비장미 강조)
+      fontWeight: 900,
+      marginTop: '5px',
+      background: 'rgba(255,255,255,0.9)',
+      padding: '3px 15px',
+      borderRadius: '20px',
+      border: '2px solid #333',
+    },
+    leftSection: {
+      flex: 3,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center', // 3. 중앙 정렬로 책이 다 보이게 함
+      alignItems: 'center',
+      height: '100%',
+    },
+    stepContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' },
   
-  stepContainer: { 
-    display: 'flex', 
-    flexDirection: 'column', 
-    alignItems: 'center', 
-    width: '100%',
-    flex: 1, // 👈 추가: 상하 공간을 꽉 채우도록 합니다.
-    justifyContent: 'center' // 👈 추가: 헤더 아래에서 수직 중앙 정렬
-  },
-
-  /* 3. 책의 높이를 조절하여 화면 이탈 방지 */
-  realBookFrame: {
-    width: '900px', // 👈 고정 너비 확인
-    height: '520px',
-    display: 'flex',
-    backgroundColor: '#fffdf0',
-    position: 'relative',
-    border: '5px solid #333',
-    boxShadow: '15px 15px 0 rgba(0,0,0,0.1)',
-    overflow: 'visible',
-    flexShrink: 0, // 👈 추가: 화면이 좁아져도 책이 구겨지지 않게 합니다.
-  },
-
-  /* 4. 좌우 분리 구조 */
-  leftPage: {
-  flex: 1,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '30px',
-  // borderRight 제거 혹은 아주 연하게 변경
-  borderRight: '1px solid rgba(0,0,0,0.05)', 
-  zIndex: 1,
-  // 배경색을 투명하게 하거나 아예 설정하지 않습니다.
-},
-  rightPageWrapper: {
-    flex: 1,
-    position: 'relative',
-    perspective: '1500px'
-  },
-  rightPage: {
-    position: 'absolute',
-    inset: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '50px 40px',
-    backgroundColor: '#fffef5',
-    backfaceVisibility: 'hidden',
-    zIndex: 2
-  },
-
-  // 2. 이미지 스타일에서 흰색 박스(border)와 회색 배경을 제거합니다.
-  bookIllustration: { 
-  width: '100%', 
-  height: '100%', 
-  objectFit: 'contain', // 비율은 유지
-  // backgroundColor: '#f0f0f0', <- 이 줄을 삭제하거나 아래처럼 변경
-  backgroundColor: 'transparent', 
-  // border: '8px solid #fff', <- 흰색 테두리 삭제
-  // 그림자도 책장 위에 바로 그려진 느낌을 주려면 제거하거나 아주 약하게 조정
-  filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.1))', 
-},
-
-  textPaper: { flex: 1 },
-  bookText: { fontSize: '1.4rem', lineHeight: '1.8', color: '#111', fontWeight: 'bold', whiteSpace: 'pre-wrap', textAlign: 'center' },
-  pageNumber: { textAlign: 'center', fontSize: '0.8rem', color: '#aaa', fontWeight: 800 },
-  endText: { textAlign: 'center', fontSize: '1.8rem', color: '#FF6B6B', fontWeight: 900 },
-
-  bookSpineLine: {
-    position: 'absolute',
-    left: '50%',
-    top: 0,
-    bottom: 0,
-    width: '4px',
-    background: 'rgba(0,0,0,0.2)',
-    zIndex: 10,
-    transform: 'translateX(-50%)'
-  },
-  rightSection: {
-    flex: 1, // 👈 왼쪽이 4이므로 채팅창은 전체의 1/5만 차지하게 됩니다.
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    minWidth: '300px', // 👈 채팅창의 최소 너비 확보
-  },
+    /* 3. 책의 높이를 조절하여 화면 이탈 방지 */
+    realBookFrame: {
+      width: '900px',
+      height: '520px',
+      display: 'flex',
+      backgroundColor: '#fffdf0',
+      position: 'relative',
+      border: '5px solid #333',
+      boxShadow: '15px 15px 0 rgba(0,0,0,0.1)',
+      overflow: 'visible' // 애니메이션 시 회전 반경 허용
+    },
   
-  chatSection: { flex: 1, padding: '10px' }
-};
-
-export default StoryPhase;
+    /* 4. 좌우 분리 구조 */
+    leftPage: {
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '30px',
+      borderRight: '1px solid #ddd',
+      zIndex: 1
+    },
+    rightPageWrapper: {
+      flex: 1,
+      position: 'relative',
+      perspective: '1500px'
+    },
+    rightPage: {
+      position: 'absolute',
+      inset: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '50px 40px',
+      backgroundColor: '#fffef5',
+      backfaceVisibility: 'hidden',
+      zIndex: 2
+    },
+  
+    bookIllustration: { width: '100%', height: '100%', objectFit: 'cover', border: '8px solid #fff', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' },
+    textPaper: { flex: 1 },
+    bookText: { fontSize: '1.4rem', lineHeight: '1.8', color: '#111', fontWeight: 'bold', whiteSpace: 'pre-wrap', textAlign: 'center' },
+    pageNumber: { textAlign: 'center', fontSize: '0.8rem', color: '#aaa', fontWeight: 800 },
+    endText: { textAlign: 'center', fontSize: '1.8rem', color: '#FF6B6B', fontWeight: 900 },
+  
+    bookSpineLine: {
+      position: 'absolute',
+      left: '50%',
+      top: 0,
+      bottom: 0,
+      width: '4px',
+      background: 'rgba(0,0,0,0.2)',
+      zIndex: 10,
+      transform: 'translateX(-50%)'
+    },
+    rightSection: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+    },
+    chatSection: { flex: 1, padding: '10px' }
+  };
+  
+  export default StoryPhase;
