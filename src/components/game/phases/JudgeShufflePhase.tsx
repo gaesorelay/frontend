@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useGameStore } from '@/store/useGameStore'; // ⭐️ Store
-import { getJudgeImage } from '@/lib/judgeMapper';   // ⭐️ Mapper
+import { getJudgeImage } from '@/lib/judgeMapper'; // ⭐️ Mapper
 // 🖼️ [배경 이미지]
 import bgImg from '@/assets/background.png';
 
@@ -25,11 +25,20 @@ const ALL_JUDGES = [
   { id: 11, name: '팩트 폭격기 조' },
   { id: 12, name: '긍정왕 운동현' },
 ];
-const BARK_SOUNDS = ["월!", "멍!", "왈왈!", "Grrr...", "컹!", "깨갱!", "개소리!", "Woof!", "으르렁", "왕!"];
+const BARK_SOUNDS = [
+  '월!',
+  '멍!',
+  '왈왈!',
+  'Grrr...',
+  '컹!',
+  '깨갱!',
+  '개소리!',
+  'Woof!',
+  '으르렁',
+  '왕!',
+];
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const JudgeShufflePhase = () => {
   // 1. ⭐️ Store에서 당첨된 심사위원 데이터 가져오기
@@ -43,19 +52,19 @@ const JudgeShufflePhase = () => {
       return roundData.judgeIds.map((j: any) => ({
         id: j.id,
         name: j.name, // 서버 이름 사용
-        image: getJudgeImage(j.id) // Mapper로 이미지 로딩
+        image: getJudgeImage(j.id), // Mapper로 이미지 로딩
       }));
     }
 
     // Fallback: 랜덤 3명
-    return ALL_JUDGES.slice(0, 3).map(j => ({ ...j, image: getJudgeImage(j.id) }));
+    return ALL_JUDGES.slice(0, 3).map((j) => ({ ...j, image: getJudgeImage(j.id) }));
   }, [roundData]);
 
   // 3. ⭐️ 전체 풀(Pool) 구성 (화면에 보여질 12명)
   const displayPool = useMemo(() => {
-    return ALL_JUDGES.map(j => ({
+    return ALL_JUDGES.map((j) => ({
       ...j,
-      image: getJudgeImage(j.id)
+      image: getJudgeImage(j.id),
     }));
   }, []);
   const [highlightId, setHighlightId] = useState<number | null>(null);
@@ -75,7 +84,7 @@ const JudgeShufflePhase = () => {
       duration: Math.random() * 5 + 5 + 's',
       delay: Math.random() * 5 + 's',
       size: Math.random() * 1.5 + 1 + 'rem',
-      rotation: Math.random() * 40 - 20
+      rotation: Math.random() * 40 - 20,
     }));
     setFloatingTexts(texts);
   }, []);
@@ -87,30 +96,35 @@ const JudgeShufflePhase = () => {
     const runSequence = async () => {
       await wait(800);
 
-      for (let round = 0; round < targetWinners.length; round++) {
-        const winner = targetWinners[round];
-        let speed = 50;
-        const spinCount = 20 + round * 5;
+      let speed = 50;
+      const totalSpins = 35;
 
-        for (let i = 0; i < spinCount; i++) {
-          const pool = displayPool.filter(j => !pickedIds.includes(j.id) && !targetWinners.slice(0, round).map(w => w.id).includes(j.id));
-          if (pool.length > 0) {
-            const randomIdx = Math.floor(Math.random() * pool.length);
-            setHighlightId(pool[randomIdx].id);
-          }
-          if (i > spinCount - 5) speed += 50;
-          else if (i > spinCount - 10) speed += 20;
-          await wait(speed);
+      for (let i = 0; i < totalSpins; i++) {
+        const pool = displayPool.filter((j) => !pickedIds.includes(j.id));
+
+        if (pool.length > 0) {
+          const randomIdx = Math.floor(Math.random() * pool.length);
+          setHighlightId(pool[randomIdx].id);
         }
 
-        setHighlightId(winner.id);
-        setPickedIds(prev => [...prev, winner.id]);
-        await wait(1000);
+        if (i > totalSpins - 10) speed += 15;
+        if (i > totalSpins - 5) speed += 30;
+
+        await wait(speed);
       }
 
+      for (let round = 0; round < targetWinners.length; round++) {
+        const winner = targetWinners[round];
+
+        setHighlightId(winner.id);
+        setPickedIds((prev) => [...prev, winner.id]);
+
+        await wait(1200);
+      }
+
+      // [3단계] 종료 처리
       setHighlightId(null);
       setIsFinished(true);
-
     };
 
     runSequence();
@@ -119,19 +133,28 @@ const JudgeShufflePhase = () => {
   if (!mounted) return null;
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: 0, left: 0, width: '100%', height: '100%',
-      zIndex: 50, // 9999 -> 50 (헤더보다 낮아야 함)
-      backgroundImage: `url(${bgImg})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      fontFamily: '"Gaegu", cursive',
-      margin: 0, padding: 0,
-      overflow: 'hidden'
-    }}>
+    <div
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 50, // 9999 -> 50 (헤더보다 낮아야 함)
+        backgroundImage: `url(${bgImg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: '"Gaegu", cursive',
+        margin: 0,
+        padding: 0,
+        overflow: 'hidden',
+      }}
+    >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Black+Han+Sans&display=swap');
         
@@ -167,25 +190,33 @@ const JudgeShufflePhase = () => {
       `}</style>
 
       {/* 배경 둥둥 텍스트 */}
-      <div style={{
-        position: 'absolute',
-        top: 0, left: 0, width: '100%', height: '100%',
-        pointerEvents: 'none',
-        zIndex: 0,
-        overflow: 'hidden'
-      }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0,
+          overflow: 'hidden',
+        }}
+      >
         {floatingTexts.map((item) => (
-          <div key={item.id} style={{
-            position: 'absolute',
-            left: item.left,
-            fontSize: item.size,
-            color: '#78716c',
-            fontWeight: 'bold',
-            opacity: 0,
-            animation: `float-up ${item.duration} linear infinite`,
-            animationDelay: item.delay,
-            whiteSpace: 'nowrap'
-          }}>
+          <div
+            key={item.id}
+            style={{
+              position: 'absolute',
+              left: item.left,
+              fontSize: item.size,
+              color: '#78716c',
+              fontWeight: 'bold',
+              opacity: 0,
+              animation: `float-up ${item.duration} linear infinite`,
+              animationDelay: item.delay,
+              whiteSpace: 'nowrap',
+            }}
+          >
             {item.text}
           </div>
         ))}
@@ -193,7 +224,16 @@ const JudgeShufflePhase = () => {
 
       {/* 로고 영역 */}
       {/* 로고 & 타이틀 영역 */}
-      <div style={{ marginBottom: '20px', textAlign: 'center', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div
+        style={{
+          marginBottom: '20px',
+          textAlign: 'center',
+          zIndex: 50,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <img
           src={isFinished ? finishLogo : titleLogo}
           alt="Judge Logo"
@@ -203,15 +243,14 @@ const JudgeShufflePhase = () => {
             maxWidth: isFinished ? '80%' : '95%',
             height: 'auto',
 
-
             // ▼ 위쪽 여백 (Top)
             marginTop: isFinished
-              ? '-100px'   // 🟢 로고 2 (완료)일 때: 덜 올라감
+              ? '-100px' // 🟢 로고 2 (완료)일 때: 덜 올라감
               : '-150px', // 🔵 로고 1 (진행)일 때: 많이 올라감
 
             // ▼ 아래쪽 여백 (Bottom)
             marginBottom: isFinished
-              ? '-150px'   // 🟢 로고 2 (완료)일 때: 그리드랑 좀 떨어짐
+              ? '-150px' // 🟢 로고 2 (완료)일 때: 그리드랑 좀 떨어짐
               : '-175px', // 🔵 로고 1 (진행)일 때: 그리드랑 딱 붙음
 
             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))',
@@ -219,19 +258,22 @@ const JudgeShufflePhase = () => {
             // 3. 애니메이션 (기존 동일)
             animation: isFinished
               ? 'slam 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
-              : 'dugu-dugu 0.2s linear infinite'
+              : 'dugu-dugu 0.2s linear infinite',
           }}
         />
       </div>
 
       {/* Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-        gap: '16px',
-        width: '90%', maxWidth: '800px',
-        zIndex: 10
-      }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+          gap: '16px',
+          width: '90%',
+          maxWidth: '800px',
+          zIndex: 10,
+        }}
+      >
         {displayPool.map((judge) => {
           const isPicked = pickedIds.includes(judge.id);
           const isHighlight = highlightId === judge.id;
@@ -249,24 +291,27 @@ const JudgeShufflePhase = () => {
           };
 
           if (isLoser) {
-            cardStyle = { ...cardStyle, opacity: 0.3, filter: 'grayscale(100%)', transform: 'scale(0.95)' };
-          }
-          else if (isPicked) {
+            cardStyle = {
+              ...cardStyle,
+              opacity: 0.3,
+              filter: 'grayscale(100%)',
+              transform: 'scale(0.95)',
+            };
+          } else if (isPicked) {
             cardStyle = {
               ...cardStyle,
               border: '5px solid #ef4444',
               boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)',
               transform: 'scale(1.05)',
-              zIndex: 20
+              zIndex: 20,
             };
-          }
-          else if (isHighlight) {
+          } else if (isHighlight) {
             cardStyle = {
               ...cardStyle,
               border: '5px solid #fbbf24',
               boxShadow: '0 0 10px rgba(251, 191, 36, 0.4)',
               transform: 'scale(1.02)',
-              zIndex: 10
+              zIndex: 10,
             };
           }
 
@@ -279,36 +324,46 @@ const JudgeShufflePhase = () => {
               />
 
               {isPicked && (
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  zIndex: 30,
-                  animation: 'slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
-                }}>
-                  <div style={{
-                    border: '5px solid #dc2626',
-                    color: '#dc2626',
-                    fontFamily: '"Black Han Sans", sans-serif',
-                    fontSize: '1.8rem',
-                    fontWeight: '900',
-                    padding: '5px 15px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    boxShadow: '5px 5px 10px rgba(0,0,0,0.2)',
-                    transform: 'rotate(-12deg)',
-                    whiteSpace: 'nowrap'
-                  }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 30,
+                    animation: 'slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                  }}
+                >
+                  <div
+                    style={{
+                      border: '5px solid #dc2626',
+                      color: '#dc2626',
+                      fontFamily: '"Black Han Sans", sans-serif',
+                      fontSize: '1.8rem',
+                      fontWeight: '900',
+                      padding: '5px 15px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      boxShadow: '5px 5px 10px rgba(0,0,0,0.2)',
+                      transform: 'rotate(-12deg)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     당첨!
                   </div>
                 </div>
               )}
 
               {isHighlight && !isPicked && (
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  backgroundColor: 'rgba(251, 191, 36, 0.2)',
-                  zIndex: 20
-                }}></div>
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                    zIndex: 20,
+                  }}
+                ></div>
               )}
             </div>
           );
