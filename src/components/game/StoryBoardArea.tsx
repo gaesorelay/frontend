@@ -51,7 +51,6 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent }: Stor
     // 서버에서 최종 문장 제출이 확정되었을 때 실행
     const handleSubmit = (data: any) => {
       if (data.team === team) {
-        addStoryLine(data.team, data.text); // 스토어 히스토리에 추가
         setCurrentTypingText('');            // 입력창 초기화
       }
     };
