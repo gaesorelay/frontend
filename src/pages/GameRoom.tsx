@@ -192,6 +192,12 @@ const GameRoom = () => {
       useGameStore.getState().setVoteResult(data);
     });
 
+    // StoryBoardArea가 언마운트되어도(턴8 종료 등) 데이터를 놓치지 않도록 여기서 처리
+    socket.on('story_submitted', (data) => {
+      console.log('📜 [GameRoom] 스토리 제출 수신:', data);
+      useGameStore.getState().addStoryLine(data.team, data.text);
+    });
+
     // ⭐️ 6. [추가] 브라우저 닫기/새로고침 방어
     const handleBeforeUnload = () => {
       socket.emit('leave_room');
@@ -202,7 +208,9 @@ const GameRoom = () => {
       socket.off('lobby_updated');
       socket.off('game_started');
       socket.off('change_phase');
+      socket.off('change_phase');
       socket.off('vote_result');
+      socket.off('story_submitted');
 
       window.removeEventListener('beforeunload', handleBeforeUnload);
 
