@@ -13,6 +13,7 @@ import logoTitle from '@/assets/logo/charactersettinglogo.png';
 import leftArrowImg from '@/assets/logo/leftarrow.png';
 import rightArrowImg from '@/assets/logo/rightarrow.png';
 import SetupDecorations from './components/SetupDecorations';
+import refreshIcon from '@/assets/refresh.svg';
 
 // 🐶 강아지 이미지 로딩
 import { AVATAR_LIST } from '@/lib/avatarMapper';
@@ -71,6 +72,17 @@ export default function Setup() {
   const handleNext = () => {
     if (totalDogs === 0) return;
     setAvatarIdx((prev) => (prev === totalDogs - 1 ? 0 : prev + 1));
+  };
+
+  const handleRandomAvatar = () => {
+    if (totalDogs > 0) {
+      // 현재와 다른 랜덤 인덱스 선택
+      let newIdx = Math.floor(Math.random() * totalDogs);
+      while (newIdx === avatarIdx && totalDogs > 1) {
+        newIdx = Math.floor(Math.random() * totalDogs);
+      }
+      setAvatarIdx(newIdx);
+    }
   };
 
   // ⭐️ 완료 버튼 핸들러
@@ -307,6 +319,28 @@ export default function Setup() {
       objectFit: 'contain' as const,
       filter: 'drop-shadow(2px 2px 0px rgba(0,0,0,0.2))',
     },
+    randomBtn: {
+      position: 'absolute' as const,
+      bottom: '-10px',
+      right: '-10px',
+      background: '#fff',
+      border: '3px solid #333',
+      borderRadius: '50%',
+      width: '50px',
+      height: '50px',
+      cursor: 'pointer',
+      zIndex: 20,
+      boxShadow: '3px 3px 0px rgba(0,0,0,0.15)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'transform 0.1s',
+    },
+    randomIcon: {
+      width: '24px',
+      height: '24px',
+      objectFit: 'contain' as const,
+    },
   };
 
   return (
@@ -333,6 +367,15 @@ export default function Setup() {
             ) : (
               <span style={{ fontSize: '12px', color: 'red' }}>이미지 없음</span>
             )}
+            <button
+              onClick={handleRandomAvatar}
+              style={styles.randomBtn}
+              title="랜덤 변경"
+              onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9) rotate(-15deg)')}
+              onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1) rotate(0deg)')}
+            >
+              <img src={refreshIcon} alt="랜덤" style={styles.randomIcon} />
+            </button>
           </div>
           <label style={styles.label}>닉네임 입력</label>
           <input
