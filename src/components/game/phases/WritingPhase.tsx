@@ -133,6 +133,14 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   const [timeLeft, setTimeLeft] = useState(roundTime);
   const [isUrgent, setIsUrgent] = useState(false);
 
+  // 7. 나의 상태 확인 (관전자 혹은 플레이어)
+  const { userToken } = useUserStore();
+  const myInfo = useMemo(() => players.find(p => p.userToken === userToken), [players, userToken]);
+  const isMyTurn = useMemo(() =>
+    (activeUserA?.userToken === userToken) || (activeUserB?.userToken === userToken),
+    [activeUserA, activeUserB, userToken]
+  );
+
   useEffect(() => {
     // 1. 시작 시점을 변수에 고정 (서버 데이터가 없으면 현재 시간 사용)
     const startTime = roundData?.startedAt ? new Date(roundData.startedAt).getTime() : Date.now();
@@ -197,11 +205,11 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px', display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: '10px 20px', fontFamily: 'SchoolSafeLittleOne, sans-serif',
   };
-  const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 60px', height: '120px', background: 'transparent' };
-  const mainStyle: React.CSSProperties = { flex: 3, padding: '0 20px', gap: '20px', alignItems: 'stretch', minHeight: 0 };
-  const leftColumnStyle: React.CSSProperties = { flex: 0.8, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' };
+  const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 60px', height: '120px', background: 'transparent' };
+  const mainStyle: React.CSSProperties = { flex: 3, padding: '0 20px', alignItems: 'stretch', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px' };
+  const leftColumnStyle: React.CSSProperties = { height: '100%', flex: 0.8, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' };
   const centerColumnStyle: React.CSSProperties = { flex: 1.5, display: 'flex', flexDirection: 'column', gap: '10px' };
-  const teamSectionStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '10px', ...paperBoxStyle, borderRadius: '20px', alignItems: 'stretch', padding: '10px 15px', justifyContent: 'flex-start', height: '265px', overflow: 'hidden' };
+  const teamSectionStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '10px', ...paperBoxStyle, borderRadius: '20px', alignItems: 'stretch', padding: '10px 15px', justifyContent: 'flex-start', flex: 1, overflow: 'hidden' };
   const teamHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem', fontWeight: 'bold' };
   const teamIndicatorStyle = (color: string): React.CSSProperties => ({ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: color, border: '2px solid #333' });
   const storytellersStyle: React.CSSProperties = { display: 'flex', gap: '8px' };
@@ -295,23 +303,25 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   const renderTeamAvatars = (teamPlayers: any[], activeUser: any, color: string) => {
     return Array.from({ length: maxStorytellers }).map((_, i) => {
       const player = teamPlayers.find(p => p.slotIndex === i);
-      const isActive = player && activeUser && player.userToken === activeUser.userToken;
 
       if (!player) {
         return <div key={`empty-${i}`} style={{ width: 40, height: 40, borderRadius: 10, border: '2px dashed #e5e7eb' }} />;
       }
 
+      const isActive = player && activeUser && player.userToken === activeUser.userToken;
+      const isMe = player.userToken === userToken;
+
       return (
         <div key={player.userToken} style={{ position: 'relative' }}>
-          {/* {isActive && (
+          {isMe && (
             <div style={{
-              position: 'absolute', top: '-25px', left: '50%', transform: 'translateX(-50%)',
-              backgroundColor: color, color: '#fff', fontSize: '0.7rem', padding: '2px 6px',
-              borderRadius: '4px', whiteSpace: 'nowrap', zIndex: 20
+              position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)',
+              backgroundColor: '#000', color: '#fff', fontSize: '0.5rem', padding: '1px 4px',
+              borderRadius: '4px', zIndex: 30
             }}>
-              Now!
+              ME
             </div>
-          )} */}
+          )}
           <img
             src={getAvatarImage(player.avatarId)}
             style={getAvatarStyle(!!isActive, color)}
@@ -407,9 +417,10 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
             </div>
 
             {/* 우측 빈 공간 (밸런스용) 혹은 추가 정보 */}
-            <div style={{ ...kitchBoxStyle, backgroundColor: '#7bed9f', transform: 'rotate(2deg)' }}>
-              <span style={{ fontWeight: 'bold' }}>
-                {isUrgent ? '🐶 야! 짖어!!!' : '🐶 집중해라 필승!'}
+            <div style={{ ...kitchBoxStyle, backgroundColor: isMyTurn ? '#ff4757' : '#7bed9f', transform: 'rotate(2deg)' }}>
+              <span style={{ fontWeight: 'bold', color: isMyTurn ? '#fff' : '#000' }}>
+                {myInfo?.role === 'AUDIENCE' ? '👀 관전 중...' :
+                  isMyTurn ? '✍️ 당신의 턴! 짖으세요!' : '💤 동료가 짖는 중...'}
               </span>
             </div>
           </header>
