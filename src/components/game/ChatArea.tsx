@@ -6,6 +6,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import type { ChatMessage } from '@/types/game';
 
+
 // 이미지 로드 로직 유지
 const rawImages = import.meta.glob('@/assets/dog/*.{png,jpg,jpeg}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 const sortedImageUrls = Object.entries(rawImages)
@@ -26,10 +27,10 @@ const REACTION_EMOJIS = ['🐶', '🔥', '🤣', '👍', '👎', '🍅'];
 
 const ChatArea = () => {
   const { messages, addMessage } = useGameStore();
-  const { nickname } = useUserStore();
+  const { nickname, avatarId : myAvatarId } = useUserStore();
   const [chatInput, setChatInput] = useState("");
   const chatListRef = useRef<HTMLDivElement>(null);
-
+  
   // 리액션 관련
   const [showReactions, setShowReactions] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState<{ id: number; emoji: string; x: number }[]>([]);
@@ -191,6 +192,9 @@ const ChatArea = () => {
               </div>
             );
           }
+          // 아바타 URL 가져오기
+          const avatarUrl = getAvatarUrl(msg.avatarId);
+
 
           // ID 기반 고정 회전값 (-2 ~ 2도)
           // 숫자가 아닐 수도 있으니 안전하게 처리
@@ -201,23 +205,74 @@ const ChatArea = () => {
           } catch (e) { rotation = 1; }
 
           return (
-            <div key={msg.id} className="chat-bubble" style={{
-              alignSelf: isMe ? 'flex-end' : 'flex-start',
-              background: isMe ? '#fff' : '#fff',
-              border: isMe ? '3px solid #facc15' : '3px solid #111',
-              textAlign: isMe ? 'right' : 'left',
-              transform: `rotate(${rotation}deg)`,
-              maxWidth: '85%'
-            }}>
-              {!isMe && <strong style={{ color: '#555', fontSize: '1rem', display: 'block', marginBottom: '5px' }}>{msg.nickname}</strong>}
-              <div style={{ fontWeight: 700, fontSize: '1.4rem' }}>{msg.text}</div>
+            <div 
+              key={msg.id} 
+              style={{ 
+                display: 'flex', 
+                flexDirection: isMe ? 'row-reverse' : 'row', 
+                alignItems: 'flex-start', 
+                gap: '8px' 
+              }}
+            >
+              {/* 🐶 강아지 아바타 아이콘 */}
+              <div style={{ flexShrink: 0, marginTop: '5px' }}>
+                <img 
+                  src={avatarUrl} 
+                  alt="avatar" 
+                  style={{ 
+                    width: '45px', 
+                    height: '45px', 
+                    borderRadius: '50%', 
+                    border: '3px solid #111',
+                    backgroundColor: '#fff',
+                    objectFit: 'cover'
+                  }} 
+                />
+              </div>
+
+              {/* 💬 메시지 본체 */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: isMe ? 'flex-end' : 'flex-start',
+                maxWidth: '75%' 
+              }}>
+                {!isMe && (
+                  <span style={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 700, 
+                    marginBottom: '2px', 
+                    marginLeft: '5px',
+                    color: '#333' 
+                  }}>
+                    {msg.nickname}
+                  </span>
+                )}
+                <div className="chat-bubble" style={{
+                  background: isMe ? '#facc15' : '#fff', // 내 메시지는 노란색
+                  border: '3px solid #111',
+                  textAlign: 'left',
+                  transform: `rotate(${rotation}deg)`,
+                  margin: 0, // 기존 margin-bottom 제거
+                }}>
+                  <div style={{ fontWeight: 700, fontSize: '1.4rem' }}>{msg.text}</div>
+                </div>
+              </div>
             </div>
           );
         })}
       </div>
 
+      {/* 입력 영역 */}
       <div style={{ display: 'flex', padding: '15px', background: 'transparent', borderTop: '4px dashed #111', alignItems: 'center' }}>
-
+        {/* 내 현재 아바타 미리보기 */}
+        <div style={{ marginRight: '10px', flexShrink: 0 }}>
+          <img 
+            src={getAvatarUrl(myAvatarId)} 
+            style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid #111' }} 
+            alt="me"
+          />
+        </div>
         {/* 리액션 버튼 팝업창 */}
         <div
           onMouseEnter={() => setShowReactions(true)}
