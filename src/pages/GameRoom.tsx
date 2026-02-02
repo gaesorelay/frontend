@@ -185,6 +185,13 @@ const GameRoom = () => {
       setGamePhase(phase as GamePhase);
     });
 
+    // 5. [수신] 최종 결과 데이터 수신
+    socket.on('vote_result', (data) => {
+      console.log("🏆 [GameRoom] 서버로부터 최종 결과 데이터를 받았습니다:", data);
+      // 스토어 저장
+      useGameStore.getState().setVoteResult(data);
+    });
+
     // ⭐️ 6. [추가] 브라우저 닫기/새로고침 방어
     const handleBeforeUnload = () => {
       socket.emit('leave_room');
@@ -195,6 +202,7 @@ const GameRoom = () => {
       socket.off('lobby_updated');
       socket.off('game_started');
       socket.off('change_phase');
+      socket.off('vote_result');
 
       window.removeEventListener('beforeunload', handleBeforeUnload);
 
