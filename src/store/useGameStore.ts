@@ -32,6 +32,8 @@ interface GameStoreState {
   teamAStory: string[];
   teamBStory: string[];
 
+  setRoomConfig: (newConfig: RoomConfig) => void;
+  setRoomTitle: (newTitle: string) => void;
   setRoomActions: (title: string, config: RoomConfig) => void;
   setJoinCode: (code: string | null) => void;
   setRoomInfo: (info: RoomInfo | null) => void;
@@ -69,10 +71,11 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   hasEntered: false, // ⭐️ 정상 입장 여부 체크
   teamAStory: [],
   teamBStory: [],
-  addStoryLine: (team, text) => set((state) => ({
-    teamAStory: team === 'A' ? [...state.teamAStory, text] : state.teamAStory,
-    teamBStory: team === 'B' ? [...state.teamBStory, text] : state.teamBStory,
-  })),
+  addStoryLine: (team, text) =>
+    set((state) => ({
+      teamAStory: team === 'A' ? [...state.teamAStory, text] : state.teamAStory,
+      teamBStory: team === 'B' ? [...state.teamBStory, text] : state.teamBStory,
+    })),
   resetStory: () => set({ teamAStory: [], teamBStory: [] }),
   kickReason: null, // 초기값 null
 
@@ -80,9 +83,11 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   setDraftText: (text) => set({ draftText: text }),
 
   setRoomActions: (title, config) => {
-    console.log("💾 [GameStore] setRoomActions:", { title, config });
+    console.log('💾 [GameStore] setRoomActions:', { title, config });
     set({ roomTitle: title, roomConfig: config });
   },
+  setRoomConfig: (newConfig) => set({ roomConfig: newConfig }),
+  setRoomTitle: (newTitle) => set({ roomTitle: newTitle }),
   setJoinCode: (code) => set({ joinCode: code }),
   setRoomInfo: (info) => set({ roomInfo: info }),
   setVisitedRoomId: (id) => set({ visitedRoomId: id }),
@@ -99,14 +104,13 @@ export const useGameStore = create<GameStoreState>()((set) => ({
     set((state) => ({
       players: state.players.filter((p) => p.userToken !== userToken),
     })),
-  addMessage: (message) =>
-    set((state) => ({ messages: [...state.messages, message] })),
+  addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
   setGameState: (state) => set({ gameState: state }),
   setVoteResult: (result) => set({ voteResult: result }),
   setGamePhase: (phase) => set({ gamePhase: phase }),
   setRoundData: (newData) =>
     set((state) => ({
-      roundData: state.roundData ? { ...state.roundData, ...newData } : newData
+      roundData: state.roundData ? { ...state.roundData, ...newData } : newData,
     })),
   reset: () =>
     set({
