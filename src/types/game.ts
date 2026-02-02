@@ -52,18 +52,20 @@ export type GameState = {
   turnEndAt: string | null;
 };
 
-export type VoteJudge = {
-  name: string;
-  score: number;
-  comment: string;
+export type AiJudgeResult = {
+  judgeName: string;
+  scoreTeamA: number;
+  scoreTeamB: number;
+  commentA: string;
+  commentB: string;
 };
 
 export type VoteResult = {
   roomUuid: string;
   votesTeamA: number;
   votesTeamB: number;
-  judges: VoteJudge[];
-  averageScore?: number;
+  winner: 'A' | 'B';
+  aiJudges: AiJudgeResult[];
 };
 
 export type ChatMessage = {
