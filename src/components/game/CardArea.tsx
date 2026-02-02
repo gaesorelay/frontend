@@ -71,7 +71,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     flexDirection: 'column',
     alignItems: 'center',
     width: '100%',
-    padding: '15px',
+    padding: '15px 0',
   },
   mainWrapper: {
     position: 'relative',
