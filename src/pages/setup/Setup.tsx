@@ -228,7 +228,7 @@ export default function Setup() {
       flexWrap: 'wrap' as const, // 화면 작으면 줄바꿈
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '40px', // 두 컴포넌트 사이 간격
+      gap: '0px', // 간격 최소화 (요청사항: 캐릭터 설정 오른쪽으로 당기기)
       width: '100%',
       maxWidth: '1200px',
       marginBottom: '20px',
