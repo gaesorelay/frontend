@@ -272,7 +272,7 @@ const GameRoom = () => {
 
       socket.emit('submit_story', {
         roomId,
-        text: draftText,
+        message: draftText,
         team: myPlayer.team,
         userToken,
         turn: turnNumber
