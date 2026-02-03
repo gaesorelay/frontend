@@ -7,7 +7,7 @@ interface StoryBoardProps {
   team: 'A' | 'B';
   activeUser: any;
   roomId: string;
-  turnNumber?: number; // WritingPhase에서 넘겨주는 현재 턴 번호 (1~8)
+  turnNumber?: number; // WritingPhase에서 넘겨주는 현재 턴 번호 (1~6)
   isUrgent?: boolean;  // 10초 미만 긴급 상태 여부
 }
 
