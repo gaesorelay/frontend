@@ -16,6 +16,7 @@ import rightArrowImg from '@/assets/logo/rightarrow.png';
 import SetupDecorations from './components/SetupDecorations';
 import refreshIcon from '@/assets/refresh.svg';
 import clickMp3 from '@/assets/sound/click.mp3';
+import RuleGuide from '@/components/common/RuleGuide';
 
 // 🐶 강아지 이미지 로딩
 import { AVATAR_LIST } from '@/lib/avatarMapper';
@@ -35,7 +36,7 @@ export default function Setup() {
   const playClick = () => {
     const audio = new Audio(clickMp3);
     audio.volume = 0.8;
-    audio.play().catch(() => { });
+    audio.play().catch(() => {});
   };
 
   // 1. GameStore
@@ -222,15 +223,26 @@ export default function Setup() {
       filter: 'drop-shadow(6px 6px 0px rgba(0,0,0,0.1))',
       objectFit: 'contain' as const,
     },
-    centerRow: {
+    // ✨ [변경] 메인 컨텐츠 영역 (룰 설명 + 캐릭터 설정을 감싸는 Flex 박스)
+    mainContentRow: {
+      display: 'flex',
+      flexWrap: 'wrap' as const, // 화면 작으면 줄바꿈
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '40px', // 두 컴포넌트 사이 간격
+      width: '100%',
+      maxWidth: '1200px',
+      marginBottom: '20px',
+      zIndex: 10,
+      padding: '0 20px',
+    },
+    // 기존 캐릭터 설정 Row (이제 mainContentRow 안으로 들어감)
+    characterSetupSection: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '10px',
-      width: '100%',
-      marginBottom: '20px',
       position: 'relative' as const,
-      zIndex: 10,
     },
     cardBox: {
       position: 'relative' as const,
@@ -357,12 +369,21 @@ export default function Setup() {
       <button
         onClick={handleToggleMute}
         style={{
-          position: 'absolute', top: '20px', right: '20px', zIndex: 1000,
-          background: 'rgba(255, 255, 255, 0.8)', border: '2px solid #333',
-          borderRadius: '50%', width: '50px', height: '50px',
-          fontSize: '24px', cursor: 'pointer', display: 'flex',
-          alignItems: 'center', justifyContent: 'center',
-          boxShadow: '2px 2px 5px rgba(0,0,0,0.2)'
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          zIndex: 1000,
+          background: 'rgba(255, 255, 255, 0.8)',
+          border: '2px solid #333',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          fontSize: '24px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '2px 2px 5px rgba(0,0,0,0.2)',
         }}
       >
         {isMuted ? '🔇' : '🔊'}
@@ -370,57 +391,69 @@ export default function Setup() {
 
       <SetupDecorations selectedDogIcon={selectedDog.icon} />
       <img src={logoTitle} alt="방 만들기" style={styles.logo} />
-      <div style={styles.centerRow}>
-        <button
-          onClick={handlePrev}
-          style={styles.arrowBtn}
-          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
-          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <img src={leftArrowImg} alt="이전" style={styles.arrowIcon} />
-        </button>
-        <div style={styles.cardBox}>
-          <div style={styles.imageContainer}>
-            <div style={styles.bubble}>
-              멍멍!
-              <br />나 어때?
+      {/* ✨ [수정] 메인 컨텐츠 영역: 룰 설명과 캐릭터 설정을 나란히 배치 */}
+      <div style={styles.mainContentRow}>
+        {/* 1. 왼쪽: 게임 룰 가이드 */}
+        <RuleGuide />
+
+        {/* 2. 오른쪽: 캐릭터 설정 (기존 코드) */}
+        <div style={styles.characterSetupSection}>
+          <button
+            onClick={handlePrev}
+            style={styles.arrowBtn}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
+            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            <img src={leftArrowImg} alt="이전" style={styles.arrowIcon} />
+          </button>
+
+          <div style={styles.cardBox}>
+            <div style={styles.imageContainer}>
+              <div style={styles.bubble}>
+                멍멍!
+                <br />나 어때?
+              </div>
+              {totalDogs > 0 ? (
+                <img src={selectedDog.icon} alt={selectedDog.name} style={styles.dogImage} />
+              ) : (
+                <span style={{ fontSize: '12px', color: 'red' }}>이미지 없음</span>
+              )}
+              <button
+                onClick={handleRandomAvatar}
+                style={styles.randomBtn}
+                title="랜덤 변경"
+                onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9) rotate(-15deg)')}
+                onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1) rotate(0deg)')}
+              >
+                <img src={refreshIcon} alt="랜덤" style={styles.randomIcon} />
+              </button>
             </div>
-            {totalDogs > 0 ? (
-              <img src={selectedDog.icon} alt={selectedDog.name} style={styles.dogImage} />
-            ) : (
-              <span style={{ fontSize: '12px', color: 'red' }}>이미지 없음</span>
-            )}
-            <button
-              onClick={handleRandomAvatar}
-              style={styles.randomBtn}
-              title="랜덤 변경"
-              onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9) rotate(-15deg)')}
-              onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1) rotate(0deg)')}
-            >
-              <img src={refreshIcon} alt="랜덤" style={styles.randomIcon} />
-            </button>
+            <label style={styles.label}>닉네임 입력</label>
+            <input
+              style={styles.input}
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="닉네임을 적어줘!"
+              maxLength={8}
+            />
           </div>
-          <label style={styles.label}>닉네임 입력</label>
-          <input
-            style={styles.input}
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            placeholder="닉네임을 적어줘!"
-            maxLength={8}
-          />
+
+          <button
+            onClick={handleNext}
+            style={styles.arrowBtn}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
+            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            <img src={rightArrowImg} alt="다음" style={styles.arrowIcon} />
+          </button>
         </div>
-        <button
-          onClick={handleNext}
-          style={styles.arrowBtn}
-          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
-          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <img src={rightArrowImg} alt="다음" style={styles.arrowIcon} />
-        </button>
       </div>
       <div style={styles.buttonGroup}>
         <button
-          onClick={() => { playClick(); navigate(-1); }}
+          onClick={() => {
+            playClick();
+            navigate(-1);
+          }}
           style={{ ...styles.button, background: '#f5f5f5' }}
           onMouseDown={(e) => (e.currentTarget.style.transform = 'translate(2px, 2px)')}
           onMouseUp={(e) => (e.currentTarget.style.transform = 'translate(0, 0)')}
