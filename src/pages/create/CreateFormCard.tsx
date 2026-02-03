@@ -20,7 +20,7 @@ export default function CreateFormCard({ logoSrc, roomName, setRoomName, control
         style={{
           width: '350px', // 크기 적절히 조절
           zIndex: 11,
-          marginBottom: '-15px', // 카드와 살짝 겹치게 (자연스럽게)
+          marginBottom: '-10px', // 카드와 살짝 겹치게 (자연스럽게)
           filter: 'drop-shadow(5px 5px 0px rgba(0,0,0,0.1))',
           animation: 'logoJitter 0.3s linear infinite', // 흔들리는 애니메이션 유지
         }}
@@ -34,8 +34,11 @@ export default function CreateFormCard({ logoSrc, roomName, setRoomName, control
           background: 'white',
           padding: '25px 35px',
           width: '550px',       // 요청하신 대로 가로를 조금 넓게 잡음
+          minHeight: '500px',   // ↕️ 높이 늘리기
           boxSizing: 'border-box',
           boxShadow: '8px 8px 0px rgba(0,0,0,0.08)',
+          display: 'flex',        // ✨ Flex 컨테이너로 변경
+          flexDirection: 'column',// 세로 정렬
           ...sketchBorderStyle, // 스케치북 스타일 테두리
         }}
       >
@@ -59,7 +62,7 @@ export default function CreateFormCard({ logoSrc, roomName, setRoomName, control
           }}
         />
 
-        <div style={{ marginTop: '20px' }}>
+        <div style={{ marginTop: '10px', flex: 1, display: 'flex', flexDirection: 'column' }}>
           <CreateControls items={controls} />
         </div>
       </div>
