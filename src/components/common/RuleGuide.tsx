@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
 import ruleImg1 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 1 (시작)
-import ruleImg2 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 2 (진행)
-import ruleImg3 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 3 (결과)
-import ruleImg4 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 3 (결과)
-import ruleImg5 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 3 (결과)
+import ruleImg2 from '@/assets/rule/rule_step2.png'; // 📌 룰 이미지 2 (진행)
+import ruleImg3 from '@/assets/rule/rule_step3.png'; // 📌 룰 이미지 3 (결과)
+import ruleImg4 from '@/assets/rule/rule_step4.png'; // 📌 룰 이미지 3 (결과)
+import ruleImg5 from '@/assets/rule/rule_step5.png'; // 📌 룰 이미지 3 (결과)
 
 // 📝 룰 데이터 정의
 const RULE_DATA = [
