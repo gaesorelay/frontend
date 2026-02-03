@@ -242,6 +242,16 @@ const GameRoom = () => {
   // ⭐️ [복구] userToken 필요
   const { userToken } = useUserStore(); // << 추가 필요 (Line 31 근처)
 
+  // ⭐️ [추가] 내 정보 동기화 (새로고침/재진입 시 권한 복구)
+  useEffect(() => {
+    if (players.length > 0 && userToken) {
+      const me = players.find(p => p.userToken === userToken);
+      if (me) {
+        useUserStore.getState().setUserStatus(me.role, me.isHost);
+      }
+    }
+  }, [players, userToken]);
+
   const handleNextPhase = () => {
     // 🛠️ Dev: "제출 후 스킵" (draftText가 있으면 제출)
     const { draftText, setDraftText } = useGameStore.getState();
