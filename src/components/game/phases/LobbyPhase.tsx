@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore'; // 내 닉네임 가져오기용
 import { socket } from '@/lib/socket';
+import { useAudioStore } from '@/store/useAudioStore';
 import { TeamSlot } from '@/components/game/TeamSlot';
 import { TeamBoard } from '@/components/game/TeamBoard';
 import { AudienceList } from '@/components/game/AudienceList';
@@ -10,6 +11,8 @@ import { Background } from '@/components/common/background';
 import Modal from '@/components/common/Modal';
 import styles from '@/components/game/phases/LobbyPhase.module.css';
 import { animationStyles } from '@/pages/create/createAnimations';
+import waitingMp3 from '@/assets/sound/waiting.mp3';
+import clickMp3 from '@/assets/sound/click.mp3';
 
 // 나가기 버튼
 import { useNavigate } from 'react-router-dom';
@@ -47,6 +50,52 @@ const LobbyPhase = ({
 }: LobbyProps) => {
   // 🐶 Avatar ID -> Image 변환
   // 이제 전역 Mapper를 사용합니다.
+  const { isMuted, toggleMute, setMuted } = useAudioStore();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playClick = () => {
+    const audio = new Audio(clickMp3);
+    audio.volume = 0.8;
+    audio.play().catch(() => { });
+  };
+
+  const handleToggleMute = () => {
+    toggleMute();
+    playClick();
+  };
+
+  // 🎵 로비 BGM (waiting.mp3)
+  useEffect(() => {
+    // ⭐️ 입장 시 강제로 소리 켜기 (초기 상태 재생 보장)
+    setMuted(false);
+
+    const audio = new Audio(waitingMp3);
+    audio.loop = true;
+    audio.volume = 0.5;
+    audioRef.current = audio;
+
+    // 초기 뮤트 상태 반영 (setMuted(false) 직후라 false일 것임)
+    audio.muted = false;
+
+    // 즉시 재생 시도
+    audio.play().catch(() => { });
+
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  // 뮤트 상태 동기화
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+      if (!isMuted && audioRef.current.paused) {
+        audioRef.current.play().catch(() => { });
+      }
+    }
+  }, [isMuted]);
+
   const users = rawUsers.map((user) => ({
     ...user,
     avatar: getAvatarSrc(user.avatarId) || user.avatar,
@@ -418,6 +467,21 @@ const LobbyPhase = ({
   return (
     <Background>
       <div className={styles.container}>
+        {/* 🔇 뮤트 버튼 */}
+        <button
+          onClick={handleToggleMute}
+          style={{
+            position: 'absolute', top: '20px', right: '20px', zIndex: 9999,
+            background: 'rgba(255, 255, 255, 0.8)', border: '2px solid #333',
+            borderRadius: '50%', width: '50px', height: '50px',
+            fontSize: '24px', cursor: 'pointer', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            boxShadow: '2px 2px 5px rgba(0,0,0,0.2)'
+          }}
+        >
+          {isMuted ? '🔇' : '🔊'}
+        </button>
+
         {/* 메인 콘텐츠 */}
         <div className={styles.contentWrapper}>
           <aside
@@ -432,7 +496,7 @@ const LobbyPhase = ({
           </aside>
 
           <button
-            onClick={() => setIsAudienceBarOpen(!isAudienceBarOpen)}
+            onClick={() => { playClick(); setIsAudienceBarOpen(!isAudienceBarOpen); }}
             className={styles.sidebarToggle}
             title={isAudienceBarOpen ? '닫기' : '관전자 목록'}
           >
@@ -462,7 +526,7 @@ const LobbyPhase = ({
                   {isHost && (
                     <motion.button
                       className={styles.exitButton}
-                      onClick={() => setIsSettingOpen(true)}
+                      onClick={() => { playClick(); setIsSettingOpen(true); }}
                       whileHover={{ scale: 1.1, rotate: 5 }}
                     >
                       <img src={logoSetting} alt="Exit" className={styles.exitImg} />
@@ -471,7 +535,7 @@ const LobbyPhase = ({
                   )}
                   <motion.button
                     className={styles.exitButton}
-                    onClick={handleExit}
+                    onClick={() => { playClick(); handleExit(); }}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
                     <img src={logoOut} alt="Exit" className={styles.exitImg} />
@@ -599,7 +663,7 @@ const LobbyPhase = ({
                   </div>
 
                   <div className={styles.modalActions}>
-                    <button className={styles.saveButton} onClick={handleSaveSettings}>
+                    <button className={styles.saveButton} onClick={() => { playClick(); handleSaveSettings(); }}>
                       설정 저장하기
                     </button>
                   </div>
@@ -656,11 +720,11 @@ const LobbyPhase = ({
             {isHost && (
               <footer className={styles.footerArea}>
                 <div className={styles.buttonGroup}>
-                  <button onClick={handleRandomAssign} className={styles.randomButton}>
+                  <button onClick={() => { playClick(); handleRandomAssign(); }} className={styles.randomButton}>
                     랜덤 팀 배정
                   </button>
                   <button
-                    onClick={handleStartGame}
+                    onClick={() => { playClick(); handleStartGame(); }}
                     className={`${styles.randomButton} ${styles.startButton}`}
                   >
                     게임 시작!
@@ -689,20 +753,20 @@ const LobbyPhase = ({
               </h2>
               <div className={styles.modalButtonGrid}>
                 <button
-                  onClick={() => moveUserToTeam('A')}
+                  onClick={() => { playClick(); moveUserToTeam('A'); }}
                   className={`${styles.modalButton} ${styles.buttonTeamA}`}
                 >
                   🟦 A팀 배정
                 </button>
                 <button
-                  onClick={() => moveUserToTeam('B')}
+                  onClick={() => { playClick(); moveUserToTeam('B'); }}
                   className={`${styles.modalButton} ${styles.buttonTeamB}`}
                 >
                   🟥 B팀 배정
                 </button>
                 {!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname && (
                   <button
-                    onClick={handleKickUser}
+                    onClick={() => { playClick(); handleKickUser(); }}
                     className={`${styles.modalButton} ${styles.buttonKick}`}
                   >
                     🚪 강퇴하기
@@ -728,7 +792,7 @@ const LobbyPhase = ({
                   .map((user) => (
                     <button
                       key={user.userToken}
-                      onClick={() => handleSelectPlayer(user)}
+                      onClick={() => { playClick(); handleSelectPlayer(user); }}
                       className={styles.playerButton}
                     >
                       <img src={user.avatar} alt={user.nickname} className={styles.playerAvatar} />
