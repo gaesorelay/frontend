@@ -213,7 +213,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   const teamHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem', fontWeight: 'bold' };
   const teamIndicatorStyle = (color: string): React.CSSProperties => ({ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: color, border: '2px solid #333' });
   const storytellersStyle: React.CSSProperties = { display: 'flex', gap: '8px' };
-  const rightColumnStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px 30px 0 10px' };
+  const rightColumnStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px' };
 
   // 아바타 스타일
   const getAvatarStyle = (isActive: boolean, color: string): React.CSSProperties => ({
