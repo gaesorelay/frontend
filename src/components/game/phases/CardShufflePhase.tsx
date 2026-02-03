@@ -21,7 +21,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { getCardImage } from '@/lib/cardMapper';
 
 const TOTAL_CARDS = 40;
-const TARGET_COUNT = 8;
+const TARGET_COUNT = 6;
 
 const CardShufflePhase = () => {
   const [isShuffling, setIsShuffling] = useState(true);
@@ -49,10 +49,7 @@ const CardShufflePhase = () => {
   }, []);
 
   const cardsData = useMemo(() => {
-    const targetCardIds =
-      roundData?.cardIds && roundData.cardIds.length >= TARGET_COUNT
-        ? roundData.cardIds
-        : [1, 2, 3, 4, 5, 6, 7, 8];
+    const targetCardIds = roundData?.cardIds || [];
 
     const totalAvatars = getTotalAvatars();
     const maxAvatarIndex = totalAvatars > 0 ? totalAvatars : 1;
@@ -300,10 +297,10 @@ const CardShufflePhase = () => {
       >
         {cardsData.map((card, index) => {
           const shufflePos = getShufflePos(index);
-          const col = index % 4;
-          const row = Math.floor(index / 4);
-          const gridX = (col - 1.5) * 240;
-          const gridY = (row - 0.5) * 180;
+          const col = index % 3;
+          const row = Math.floor(index / 3);
+          const gridX = (col - 1) * 240;
+          const gridY = (row - 0.5) * 200;
 
           let x = 0,
             y = 0,
