@@ -182,7 +182,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
         const myTeam = isMyTurnA ? 'A' : 'B';
         socket.emit('submit_story', {
           roomId: players[0]?.roomUuid || '',
-          text: draftText,
+          message: draftText,
           team: myTeam,
           userToken,
           turn: turnNumber // ⭐️ 추가된 요구사항
@@ -479,6 +479,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
                     activeUser={activeUserB}
                     roomId={players[0]?.roomUuid || ''}
                     turnNumber={turnNumber} // ⭐️ 추가
+                    isUrgent={isUrgent}
                   />
                 </div>
               </div>
