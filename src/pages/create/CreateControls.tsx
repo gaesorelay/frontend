@@ -7,7 +7,7 @@ interface Props {
 
 export default function CreateControls({ items }: Props) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginTop: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-evenly' }}>
       {items.map((item, i) => (
         <div
           key={i}
