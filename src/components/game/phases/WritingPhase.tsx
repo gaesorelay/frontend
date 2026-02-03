@@ -1,4 +1,4 @@
-import { Background } from '@/components/common/background';
+﻿import { Background } from '@/components/common/background';
 import { Timer } from 'lucide-react';
 import ChatArea from '@/components/game/ChatArea';
 import StoryBoardArea from '../StoryBoardArea';
@@ -8,7 +8,7 @@ import CardArea from '@/components/game/CardArea';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { getCardImage } from '@/lib/cardMapper';
 import { getAvatarSrc } from '@/lib/avatarMapper';
 // import { getJudgeImage } from '@/lib/judgeMapper';
@@ -27,6 +27,13 @@ import logoStart from '@/assets/logo/logo_start.png';
 
 import { TURN_COUNT } from '@/constants/game';
 
+const usePrevious = <T,>(value: T) => {
+  const ref = useRef<T | undefined>(undefined);
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+  return ref.current;
+};
 
 
 // 아바타 ID를 이미지로 변환하는 헬퍼 -> avatarMapper로 대체됨
@@ -63,7 +70,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   };
 
   // 1. ⭐️ [수정] store에서 users가 아니라 'players'를 가져옵니다!
-  const { players, roomConfig, roundData } = useGameStore();
+  const { players, roomConfig, roundData, draftText, setDraftText } = useGameStore();
 
   console.log(players)
 
@@ -131,6 +138,24 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     (activeUserA?.userToken === userToken) || (activeUserB?.userToken === userToken),
     [activeUserA, activeUserB, userToken]
   );
+  const myTeam = useMemo(() => {
+    if (activeUserA?.userToken === userToken) return 'A';
+    if (activeUserB?.userToken === userToken) return 'B';
+    return null;
+  }, [activeUserA, activeUserB, userToken]);
+
+  const mountTimeRef = useRef(Date.now());
+  const latestTurnRef = useRef(0);
+  const latestDraftRef = useRef('');
+  const latestTeamRef = useRef<'A' | 'B' | null>(null);
+  const latestRoomIdRef = useRef('');
+  const latestUserTokenRef = useRef<string | null>(null);
+
+  latestTurnRef.current = turnNumber;
+  latestDraftRef.current = draftText;
+  latestTeamRef.current = myTeam;
+  latestRoomIdRef.current = players[0]?.roomUuid || '';
+  latestUserTokenRef.current = userToken;
 
   useEffect(() => {
     // 1. 시작 시점을 변수에 고정 (서버 데이터가 없으면 현재 시간 사용)
@@ -155,33 +180,50 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   }, [roundData?.startedAt, roundDuration, currentRound]); // 👈 여기에 currentRound를 추가하세요!
 
   // ⭐️ 턴 변경(또는 언마운트) 시 자동 제출 로직
-  // 1. turnNumber가 바뀌기 직전(cleanup)에 제출하거나
-  // 2. 턴이 바뀌어서 writingPhase가 unmount될 때 제출
+  // 1. 턴이 바뀌는 순간 직전 턴 내용을 자동 제출
+  // 2. WritingPhase 언마운트 시 마지막 턴 내용 제출 (TURN6 등)
+  const prevTurnNumber = usePrevious(turnNumber);
+  const prevTeam = usePrevious(myTeam);
+  const prevDraftText = usePrevious(draftText);
+
+  useEffect(() => {
+    if (prevTurnNumber === undefined) return;
+    if (turnNumber === prevTurnNumber) return;
+    if (!prevTeam || !latestUserTokenRef.current) return;
+
+    console.log(`💾 [WritingPhase] 턴 종료로 인한 자동 제출: ${prevDraftText ?? ''}, Turn: ${prevTurnNumber}`);
+    socket.emit('submit_story', {
+      roomId: latestRoomIdRef.current || '',
+      message: prevDraftText ?? '',
+      team: prevTeam,
+      userToken: latestUserTokenRef.current,
+      turn: prevTurnNumber
+    });
+    setDraftText('');
+  }, [turnNumber, prevTurnNumber, prevTeam, prevDraftText, setDraftText]);
 
   useEffect(() => {
     return () => {
-      const { draftText, setDraftText } = useGameStore.getState();
-      const { userToken } = useUserStore.getState();
+      const duration = Date.now() - mountTimeRef.current;
+      // 언마운트 된 시간이 100ms 이하이면 submit_story 이벤트 발송안 함 
+      // 로컬 환경 방지
+      if (import.meta.env.DEV && duration < 100) return;
 
-      // 내 턴이었는지 확인
-      const isMyTurnA = activeUserA && activeUserA.userToken === userToken;
-      const isMyTurnB = activeUserB && activeUserB.userToken === userToken;
+      const team = latestTeamRef.current;
+      const token = latestUserTokenRef.current;
+      if (!team || !token) return;
 
-      if ((isMyTurnA || isMyTurnB)) {
-        console.log(`💾 [WritingPhase] 턴 종료(또는 스킵)로 인한 자동 제출: ${draftText}, Turn: ${turnNumber}`);
-        const myTeam = isMyTurnA ? 'A' : 'B';
-        socket.emit('submit_story', {
-          roomId: players[0]?.roomUuid || '',
-          message: draftText,
-          team: myTeam,
-          userToken,
-          turn: turnNumber // ⭐️ 추가된 요구사항
-        });
-        // 제출 후 draft 비우기 (중복 제출 방지)
-        setDraftText('');
-      }
+      console.log(`💾 [WritingPhase] 언마운트로 인한 자동 제출: ${latestDraftRef.current}, Turn: ${latestTurnRef.current}`);
+      socket.emit('submit_story', {
+        roomId: latestRoomIdRef.current || '',
+        message: latestDraftRef.current,
+        team,
+        userToken: token,
+        turn: latestTurnRef.current
+      });
+      useGameStore.getState().setDraftText('');
     };
-  }, [activeUserA, activeUserB, turnNumber, players]);
+  }, []);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');

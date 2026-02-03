@@ -21,7 +21,7 @@ const StoryPhase = () => {
     // roundData.cardIds [ID1, ID2, ... ID8] 와 매칭
     return (roundData?.cardIds || []).map((cardId, index) => ({
       cardImg: getCardImage(cardId),
-      content: currentTeamStory[index + 1] || "이야기가 작성되지 않았습니다. 😢",
+      content: currentTeamStory[index] || "이야기가 작성되지 않았습니다. 😢",
     }));
   }, [currentTeam, teamAStory, teamBStory, roundData]);
 
