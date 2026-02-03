@@ -61,7 +61,7 @@ const LobbyPhase = ({
   const playClick = () => {
     const audio = new Audio(clickMp3);
     audio.volume = 0.8;
-    audio.play().catch(() => { });
+    audio.play().catch(() => {});
   };
 
   const handleToggleMute = () => {
@@ -460,7 +460,6 @@ const LobbyPhase = ({
       <div className={styles.container}>
         {/* 🔇 뮤트 버튼 */}
 
-
         {/* 메인 콘텐츠 */}
         <div className={styles.contentWrapper}>
           <aside
@@ -475,7 +474,10 @@ const LobbyPhase = ({
           </aside>
 
           <button
-            onClick={() => { playClick(); setIsAudienceBarOpen(!isAudienceBarOpen); }}
+            onClick={() => {
+              playClick();
+              setIsAudienceBarOpen(!isAudienceBarOpen);
+            }}
             className={styles.sidebarToggle}
             title={isAudienceBarOpen ? '닫기' : '관전자 목록'}
           >
@@ -492,7 +494,13 @@ const LobbyPhase = ({
                   <img src={lobbyLogo} alt="Logo" className={styles.headerLogo} />
 
                   {/* 1. 방 코드 */}
-                  <div className={styles.codeContainer} onClick={() => { playClick(); handleCopyCode(); }}>
+                  <div
+                    className={styles.codeContainer}
+                    onClick={() => {
+                      playClick();
+                      handleCopyCode();
+                    }}
+                  >
                     <div className={styles.tape}></div>
                     <div className={styles.codeBox}>
                       <span className={styles.codeLabel}>ROOM CODE</span>
@@ -511,15 +519,24 @@ const LobbyPhase = ({
                 <div className={styles.topRight}>
                   {/* 🔇 뮤트 버튼 (설정 버튼 왼쪽) */}
                   <button
-                    onClick={() => { playClick(); handleToggleMute(); }}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.8)', border: 'none',
-                      borderRadius: '50%', width: '50px', height: '50px',
-                      fontSize: '30px', cursor: 'pointer', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center',
-                      marginRight: '15px' // 설정 버튼과의 간격
+                    onClick={() => {
+                      playClick();
+                      handleToggleMute();
                     }}
-                    title={isMuted ? "소리 켜기" : "소리 끄기"}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.8)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '50px',
+                      height: '50px',
+                      fontSize: '30px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: '15px', // 설정 버튼과의 간격
+                    }}
+                    title={isMuted ? '소리 켜기' : '소리 끄기'}
                   >
                     {isMuted ? '🔇' : '🔊'}
                   </button>
@@ -527,7 +544,10 @@ const LobbyPhase = ({
                   {isHost && (
                     <motion.button
                       className={styles.exitButton}
-                      onClick={() => { playClick(); setIsSettingOpen(true); }}
+                      onClick={() => {
+                        playClick();
+                        setIsSettingOpen(true);
+                      }}
                       whileHover={{ scale: 1.1, rotate: 5 }}
                     >
                       <img src={logoSetting} alt="Setting" className={styles.exitImg} />
@@ -536,7 +556,10 @@ const LobbyPhase = ({
                   )}
                   <motion.button
                     className={styles.exitButton}
-                    onClick={() => { playClick(); handleExit(); }}
+                    onClick={() => {
+                      playClick();
+                      handleExit();
+                    }}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
                     <img src={logoOut} alt="Exit" className={styles.exitImg} />
@@ -583,30 +606,6 @@ const LobbyPhase = ({
                     </div>
                   </div>
 
-                  {/* 3. 이야기꾼 수 (팀당) */}
-                  <div className={styles.settingField}>
-                    <label>팀당 이야기꾼</label>
-                    <div className={styles.counter}>
-                      <button
-                        className={styles.countBtn}
-                        onClick={() =>
-                          updateConfig('storytellerCount', editConfig.storytellerCount - 1, 1, 6)
-                        }
-                      >
-                        -
-                      </button>
-                      <span className={styles.countNum}>{editConfig.storytellerCount}명</span>
-                      <button
-                        className={styles.countBtn}
-                        onClick={() =>
-                          updateConfig('storytellerCount', editConfig.storytellerCount + 1, 1, 6)
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
                   {/* 5. 라운드 시간 / 투표 시간 */}
                   <div className={styles.settingField}>
                     <label>시간 설정 (초)</label>
@@ -638,18 +637,14 @@ const LobbyPhase = ({
                         <div className={styles.counterSmall}>
                           <button
                             className={styles.countBtn}
-                          onClick={() =>
-                              updateConfig('voteTime', editConfig.voteTime - 5, 5, 15)
-                            }
+                            onClick={() => updateConfig('voteTime', editConfig.voteTime - 5, 5, 15)}
                           >
                             -
                           </button>
                           <span className={styles.countNum}>{editConfig.voteTime}s</span>
                           <button
                             className={styles.countBtn}
-                          onClick={() =>
-                              updateConfig('voteTime', editConfig.voteTime + 5, 5, 15)
-                            }
+                            onClick={() => updateConfig('voteTime', editConfig.voteTime + 5, 5, 15)}
                           >
                             +
                           </button>
@@ -659,7 +654,13 @@ const LobbyPhase = ({
                   </div>
 
                   <div className={styles.modalActions}>
-                    <button className={styles.saveButton} onClick={() => { playClick(); handleSaveSettings(); }}>
+                    <button
+                      className={styles.saveButton}
+                      onClick={() => {
+                        playClick();
+                        handleSaveSettings();
+                      }}
+                    >
                       설정 저장하기
                     </button>
                   </div>
@@ -668,8 +669,10 @@ const LobbyPhase = ({
             </header>
 
             {/* 🆕 통합 보드 영역 */}
-            <div className={`${styles.unifiedBoard} ${styles['board' + maxStorytellers]}`} style={{ backgroundImage: `url(${boardImg})` }}>
-
+            <div
+              className={`${styles.unifiedBoard} ${styles['board' + maxStorytellers]}`}
+              style={{ backgroundImage: `url(${boardImg})` }}
+            >
               {/* 왼쪽: A팀 */}
               <div className={styles.teamSection}>
                 <img src={logoA} alt="Team A" className={styles.teamLogo} />
@@ -709,16 +712,24 @@ const LobbyPhase = ({
                   })}
                 </div>
               </div>
-
             </div>
             {isHost && (
               <footer className={`${styles.footerArea} ${styles['footer' + maxStorytellers]}`}>
                 <div className={styles.buttonGroup}>
-                  <button onClick={() => { playClick(); handleRandomAssign(); }} className={styles.randomButton}>
+                  <button
+                    onClick={() => {
+                      playClick();
+                      handleRandomAssign();
+                    }}
+                    className={styles.randomButton}
+                  >
                     랜덤 팀 배정
                   </button>
                   <button
-                    onClick={() => { playClick(); handleStartGame(); }}
+                    onClick={() => {
+                      playClick();
+                      handleStartGame();
+                    }}
                     className={`${styles.randomButton} ${styles.startButton}`}
                   >
                     게임 시작!
@@ -747,20 +758,29 @@ const LobbyPhase = ({
               </h2>
               <div className={styles.modalButtonGrid}>
                 <button
-                  onClick={() => { playClick(); moveUserToTeam('A'); }}
+                  onClick={() => {
+                    playClick();
+                    moveUserToTeam('A');
+                  }}
                   className={`${styles.modalButton} ${styles.buttonTeamA}`}
                 >
                   A팀 배정
                 </button>
                 <button
-                  onClick={() => { playClick(); moveUserToTeam('B'); }}
+                  onClick={() => {
+                    playClick();
+                    moveUserToTeam('B');
+                  }}
                   className={`${styles.modalButton} ${styles.buttonTeamB}`}
                 >
                   B팀 배정
                 </button>
                 {!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname && (
                   <button
-                    onClick={() => { playClick(); handleKickUser(); }}
+                    onClick={() => {
+                      playClick();
+                      handleKickUser();
+                    }}
                     className={`${styles.modalButton} ${styles.buttonKick}`}
                   >
                     🚪 강퇴하기
@@ -786,7 +806,10 @@ const LobbyPhase = ({
                   .map((user) => (
                     <button
                       key={user.userToken}
-                      onClick={() => { playClick(); handleSelectPlayer(user); }}
+                      onClick={() => {
+                        playClick();
+                        handleSelectPlayer(user);
+                      }}
                       className={styles.playerButton}
                     >
                       <img src={user.avatar} alt={user.nickname} className={styles.playerAvatar} />
@@ -800,9 +823,8 @@ const LobbyPhase = ({
             </div>
           </Modal>
         </>
-
       )}
-    </Background >
+    </Background>
   );
 };
 export default LobbyPhase;
