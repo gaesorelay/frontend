@@ -131,6 +131,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
   // 6. ⭐️ 타이머 로직
   const roundTime = roomConfig?.roundTime || 60;
+  const roundDuration = roundTime + (turnNumber === 1 ? 3 : 0);
   const [timeLeft, setTimeLeft] = useState(roundTime);
   const [isUrgent, setIsUrgent] = useState(false);
 
@@ -145,7 +146,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   useEffect(() => {
     // 1. 시작 시점을 변수에 고정 (서버 데이터가 없으면 현재 시간 사용)
     const startTime = roundData?.startedAt ? new Date(roundData.startedAt).getTime() : Date.now();
-    const endTime = startTime + (roundTime * 1000);
+    const endTime = startTime + (roundDuration * 1000);
 
     // 2. 인터벌 설정
     const interval = setInterval(() => {
@@ -162,7 +163,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
     // 3. 클린업 (중요: currentRound가 바뀔 때 이전 인터벌을 확실히 죽임)
     return () => clearInterval(interval);
-  }, [roundData?.startedAt, roundTime, currentRound]); // 👈 여기에 currentRound를 추가하세요!
+  }, [roundData?.startedAt, roundDuration, currentRound]); // 👈 여기에 currentRound를 추가하세요!
 
   // ⭐️ 턴 변경(또는 언마운트) 시 자동 제출 로직
   // 1. turnNumber가 바뀌기 직전(cleanup)에 제출하거나
