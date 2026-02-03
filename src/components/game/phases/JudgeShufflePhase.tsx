@@ -54,7 +54,7 @@ const ALL_JUDGES = [
   {
     id: 9,
     name: '암행어사 조나단',
-    persona: '제 K-소울을 제대로 건드려서, 제 이가 하얗게 보일 정도로 활짝 웃게 만들면 합격입니다!',
+    persona: '제 K-소울을 제대로 건드려서, 제 하얀 이가 보일 정도로 활짝 웃게 만들면 합격입니다!',
   },
   { id: 10, name: '퍼포먼스 카니', persona: '아주 매끈매끈한 글을 쓰시면 만점 드릴게요!' },
   {
@@ -213,15 +213,12 @@ const JudgeShufflePhase = () => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: '"Gaegu", cursive',
         margin: 0,
         padding: 0,
         overflow: 'hidden',
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Black+Han+Sans&display=swap');
-        
         /* 결과 로고 쾅! 효과 */
         @keyframes slam {
           0% { transform: scale(3) rotate(-20deg); opacity: 0; }
@@ -315,7 +312,7 @@ const JudgeShufflePhase = () => {
 
             // ▼ 아래쪽 여백 (Bottom)
             marginBottom: isFinished
-              ? '-150px' // 🟢 로고 2 (완료)일 때: 그리드랑 좀 떨어짐
+              ? '-200px' // 🟢 로고 2 (완료)일 때: 그리드랑 좀 떨어짐
               : '-175px', // 🔵 로고 1 (진행)일 때: 그리드랑 딱 붙음
 
             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))',
@@ -334,7 +331,7 @@ const JudgeShufflePhase = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-            gap: '16px',
+            gap: '20px',
             width: '90%',
             maxWidth: '800px',
             zIndex: 10,
@@ -444,16 +441,11 @@ const JudgeShufflePhase = () => {
           <div
             style={{
               position: 'absolute',
-              top: '15%',
-              left: 0,
+              top: '5%', // 카드 셔플 로고 위치와 통일
               width: '100%',
+              height: '300px', // 여유 공간 확보
               display: 'flex',
-              // ✨ 수정됨: 세로(column) -> 가로(row) 정렬
-              flexDirection: 'row',
-              alignItems: 'center',
               justifyContent: 'center',
-              // ✨ 수정됨: 심사위원들 간격과 비슷하게 갭 설정
-              gap: '50px',
               zIndex: 40,
               pointerEvents: 'none',
               // ✨ 수정됨: 등장 애니메이션 추가
@@ -473,24 +465,42 @@ const JudgeShufflePhase = () => {
                 src={cardLogo1}
                 alt="1"
                 style={{
-                  width: '350px', // 크기 적절히 조절
+                  position: 'absolute',
+                  left: '10%', // 심사위원 1번 위치 근처
+                  top: '20px',
+                  width: '450px',
                   filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))',
+                  transition: 'all 0.5s',
+                  opacity: introStep >= 0 ? 1 : 0,
+                  transform: introStep >= 0 ? 'scale(1)' : 'scale(0.8)',
                 }}
               />
               <img
                 src={cardLogo2}
                 alt="2"
                 style={{
-                  width: '350px',
+                  position: 'absolute',
+                  left: '28%', // 심사위원 2번 위치 근처
+                  top: '85px',
+                  width: '450px',
                   filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))',
+                  transition: 'all 0.5s',
+                  opacity: introStep >= 1 ? 1 : 0,
+                  transform: introStep >= 1 ? 'scale(1)' : 'scale(0.8)',
                 }}
               />
               <img
                 src={cardLogo3}
                 alt="3"
                 style={{
-                  width: '400px', // 3번은 좀 더 크게
+                  position: 'absolute',
+                  left: '53%', // 심사위원 3번 위치 근처
+                  top: '160px',
+                  width: '500px',
                   filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.2))',
+                  transition: 'all 0.5s',
+                  opacity: introStep >= 2 ? 1 : 0,
+                  transform: introStep >= 2 ? 'scale(1.1)' : 'scale(0.8)',
                 }}
               />
             </div>
@@ -500,12 +510,12 @@ const JudgeShufflePhase = () => {
           <div
             style={{
               display: 'flex',
-              gap: '30px',
+              gap: '60px',
               justifyContent: 'center',
               alignItems: 'center',
               width: '100%',
               zIndex: 100,
-              marginTop: '100px', // 텍스트 로고와 겹치지 않게 살짝 내림
+              marginTop: '180px', // 텍스트 로고와 겹치지 않게 살짝 내림
             }}
           >
             {targetWinners.map((judge, index) => {
@@ -518,7 +528,7 @@ const JudgeShufflePhase = () => {
                   key={judge.id}
                   style={{
                     position: 'relative',
-                    width: '220px',
+                    width: '240px',
                     transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
                     transform: isFocused ? 'scale(1.3) translateY(-20px)' : 'scale(1)',
                     opacity: isDimmed ? 0.4 : 1,
