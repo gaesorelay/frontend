@@ -6,6 +6,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { createRoomApi } from '@/api/roomApi';
 import { socket } from '@/lib/socket';
+import { useAudioStore } from '@/store/useAudioStore';
 
 // 🎨 배경 및 로고 이미지
 import paperBg from '@/assets/background.png';
@@ -14,6 +15,7 @@ import leftArrowImg from '@/assets/logo/leftarrow.png';
 import rightArrowImg from '@/assets/logo/rightarrow.png';
 import SetupDecorations from './components/SetupDecorations';
 import refreshIcon from '@/assets/refresh.svg';
+import clickMp3 from '@/assets/sound/click.mp3';
 
 // 🐶 강아지 이미지 로딩
 import { AVATAR_LIST } from '@/lib/avatarMapper';
@@ -22,8 +24,22 @@ export default function Setup() {
   const navigate = useNavigate();
   const { roomId: paramRoomId } = useParams(); // URL의 방 번호 (Guest일 때 존재)
 
+  // 오디오 상태 (전역 Store 사용)
+  const { isMuted, toggleMute } = useAudioStore();
+
+  const handleToggleMute = () => {
+    toggleMute();
+    playClick();
+  };
+
+  const playClick = () => {
+    const audio = new Audio(clickMp3);
+    audio.volume = 0.8;
+    audio.play().catch(() => { });
+  };
+
   // 1. GameStore
-  const { roomConfig, roomTitle, setRoomInfo, setHasEntered, reset } = useGameStore(); // 👈 reset 추가
+  const { roomConfig, roomTitle, setRoomInfo, setHasEntered, reset } = useGameStore();
 
   // 2. UserStore
   const {
@@ -51,12 +67,9 @@ export default function Setup() {
   };
 
   // ⭐️ [수정 1] 방장 판별 로직 강화
-  // "설정값이 있고(AND) URL에 방번호가 없어야" 진짜 방장입니다.
-  // URL에 방번호가 있으면 스토어에 뭐가 있든 무조건 게스트입니다.
   const isHost = !paramRoomId && !!roomConfig;
 
   // ⭐️ [수정 2] 게스트 입장 시: 좀비 데이터 정리용
-  // 방 유효성 검사는 RouteGuard가 처리합니다.
   useEffect(() => {
     if (paramRoomId && roomConfig) {
       console.log('🧹 게스트 입장: 이전 방장 데이터 초기화');
@@ -66,15 +79,18 @@ export default function Setup() {
 
   const handlePrev = () => {
     if (totalDogs === 0) return;
+    playClick();
     setAvatarIdx((prev) => (prev === 0 ? totalDogs - 1 : prev - 1));
   };
 
   const handleNext = () => {
     if (totalDogs === 0) return;
+    playClick();
     setAvatarIdx((prev) => (prev === totalDogs - 1 ? 0 : prev + 1));
   };
 
   const handleRandomAvatar = () => {
+    playClick();
     if (totalDogs > 0) {
       // 현재와 다른 랜덤 인덱스 선택
       let newIdx = Math.floor(Math.random() * totalDogs);
@@ -87,6 +103,7 @@ export default function Setup() {
 
   // ⭐️ 완료 버튼 핸들러
   const handleComplete = async () => {
+    playClick();
     if (!nickname.trim()) return alert('닉네임을 입력해주세요!');
 
     setIsLoading(true);
@@ -99,7 +116,6 @@ export default function Setup() {
       // ----------------------------------------------------
       // 1. [방장] 방 생성 API 호출 (HTTP)
       // ----------------------------------------------------
-      // ⭐️ isHost가 false면 이 블록은 절대 실행되지 않음!
       if (isHost) {
         if (!roomConfig) return;
 
@@ -112,7 +128,6 @@ export default function Setup() {
         });
 
         currentRoomId = res.roomId;
-        // myToken = res.token;
         console.log('✅ 방 생성 완료:', currentRoomId);
       } else {
         console.log(`📡 [Guest] 기존 방(${currentRoomId}) 입장 시도...`);
@@ -170,11 +185,6 @@ export default function Setup() {
               });
             }
 
-            // if (!isHost && user.userToken) {
-            //   console.log("🔑 게스트 토큰 저장:", user.userToken);
-            //   socket.auth = { token: user.userToken };
-            // }
-
             console.log('🚀 게임방으로 이동!');
             navigate(`/gameroom/${currentRoomId}`);
           } else {
@@ -191,7 +201,6 @@ export default function Setup() {
   };
 
   const styles = {
-    // ... (스타일 기존 유지)
     container: {
       position: 'fixed' as const,
       inset: 0,
@@ -345,6 +354,20 @@ export default function Setup() {
 
   return (
     <div style={styles.container}>
+      <button
+        onClick={handleToggleMute}
+        style={{
+          position: 'absolute', top: '20px', right: '20px', zIndex: 1000,
+          background: 'rgba(255, 255, 255, 0.8)', border: '2px solid #333',
+          borderRadius: '50%', width: '50px', height: '50px',
+          fontSize: '24px', cursor: 'pointer', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          boxShadow: '2px 2px 5px rgba(0,0,0,0.2)'
+        }}
+      >
+        {isMuted ? '🔇' : '🔊'}
+      </button>
+
       <SetupDecorations selectedDogIcon={selectedDog.icon} />
       <img src={logoTitle} alt="방 만들기" style={styles.logo} />
       <div style={styles.centerRow}>
@@ -397,7 +420,7 @@ export default function Setup() {
       </div>
       <div style={styles.buttonGroup}>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => { playClick(); navigate(-1); }}
           style={{ ...styles.button, background: '#f5f5f5' }}
           onMouseDown={(e) => (e.currentTarget.style.transform = 'translate(2px, 2px)')}
           onMouseUp={(e) => (e.currentTarget.style.transform = 'translate(0, 0)')}
