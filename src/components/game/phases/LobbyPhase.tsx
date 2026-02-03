@@ -578,8 +578,8 @@ const LobbyPhase = ({
                         <div className={styles.counterSmall}>
                           <button
                             className={styles.countBtn}
-                            onClick={() =>
-                              updateConfig('voteTime', editConfig.voteTime - 5, 15, 25)
+                          onClick={() =>
+                              updateConfig('voteTime', editConfig.voteTime - 5, 5, 15)
                             }
                           >
                             -
@@ -587,8 +587,8 @@ const LobbyPhase = ({
                           <span className={styles.countNum}>{editConfig.voteTime}s</span>
                           <button
                             className={styles.countBtn}
-                            onClick={() =>
-                              updateConfig('voteTime', editConfig.voteTime + 5, 15, 25)
+                          onClick={() =>
+                              updateConfig('voteTime', editConfig.voteTime + 5, 5, 15)
                             }
                           >
                             +
