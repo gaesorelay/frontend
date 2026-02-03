@@ -52,6 +52,7 @@ interface GameStoreState {
   addStoryLine: (team: 'A' | 'B', text: string) => void;
 
   resetStory: () => void;
+  resetMessages: () => void;
   reset: () => void;
 }
 
@@ -77,7 +78,8 @@ export const useGameStore = create<GameStoreState>()((set) => ({
       teamBStory: team === 'B' ? [...state.teamBStory, text] : state.teamBStory,
     })),
   resetStory: () => set({ teamAStory: [], teamBStory: [] }),
-  kickReason: null, // 초기값 null
+  resetMessages: () => set({ messages: [] }),
+  kickReason: null,
 
   draftText: '',
   setDraftText: (text) => set({ draftText: text }),
