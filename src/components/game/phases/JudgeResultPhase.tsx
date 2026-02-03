@@ -1,7 +1,10 @@
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import ChatArea from '../ChatArea';
 import { useGameStore } from '@/store/useGameStore';
+import { useUserStore } from '@/store/useUserStore';
+import { socket } from '@/lib/socket';
 import { getResultJudgeImage } from '@/lib/judgeMapper'; // 이미지 매퍼
 
 // 배경 및 로고 이미지
@@ -27,7 +30,9 @@ const WIN_MENTS = [
 const JudgeResultPhase = () => {
   // 1. Store에서 투표 결과(voteResult)와 게임 정보(roundData) 둘 다 가져옴
   const { voteResult, roundData } = useGameStore();
+  const { isHost } = useUserStore();
 
+  const navigator = useNavigate();
   const [introPhase, setIntroPhase] = useState(1);
   const [finalMent, setFinalMent] = useState("");
   const [animScore, setAnimScore] = useState(0);
@@ -66,13 +71,13 @@ const JudgeResultPhase = () => {
   // 3. 점수 계산
   const publicA = voteResult?.votesTeamA || 0;
   const publicB = voteResult?.votesTeamB || 0;
-  
+
   const aiTotalA = realJudges.reduce((acc, cur) => acc + cur.scoreA, 0);
   const aiTotalB = realJudges.reduce((acc, cur) => acc + cur.scoreB, 0);
-  
+
   const totalA = publicA + aiTotalA;
   const totalB = publicB + aiTotalB;
-  
+
   const winnerName = (voteResult?.winner === 'A' ? 'A팀' : voteResult?.winner === 'B' ? 'B팀' : (totalA > totalB ? 'A팀' : 'B팀'));
 
   // 4. 페이즈 타이머
@@ -86,28 +91,35 @@ const JudgeResultPhase = () => {
       setTimeout(() => setIntroPhase(5), 17000),  // A팀 AI 심사
       setTimeout(() => setIntroPhase(6), 22000),  // B팀 AI 심사
       setTimeout(() => setIntroPhase(7), 27000),  // 최종 합산
-      setTimeout(() => {
-        setIntroPhase(8); // 최종 결과
-        setFinalMent(WIN_MENTS[Math.floor(Math.random() * WIN_MENTS.length)].replace('${teamName}', winnerName));
-      }, 34000),
+      // 8단계(Game Over)로 가지 않음!
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, [voteResult, winnerName]);
 
+  // ⭐️ 100초 후 자동 exit (별도 Effect로 분리)
+  useEffect(() => {
+    if (introPhase === 7) {
+      const timer = setTimeout(() => {
+        navigator('/');
+      }, 100000);
+      return () => clearTimeout(timer);
+    }
+  }, [introPhase, navigator]);
+
   // 5. 점수 카운팅 애니메이션
   useEffect(() => {
     if (introPhase !== 2 && introPhase !== 3) return;
-    
+
     let current = 0;
     const target = introPhase === 2 ? publicA : publicB;
-    
+
     setAnimScore(0);
     const interval = setInterval(() => {
       if (current < target) {
         const step = Math.ceil(target / 50) || 1;
         current = Math.min(current + step, target);
         setAnimScore(current);
-        
+
         const newParticle = { id: Math.random(), x: Math.random() * 100, y: Math.random() * 100, rot: Math.random() * 360 };
         setParticles(prev => [...prev.slice(-20), newParticle]);
       } else {
@@ -123,8 +135,8 @@ const JudgeResultPhase = () => {
       let curA = 0, curB = 0;
       const interval = setInterval(() => {
         let done = true;
-        if (curA < publicA) { curA += Math.ceil(publicA / 50) || 1; if(curA > publicA) curA = publicA; done = false; }
-        if (curB < publicB) { curB += Math.ceil(publicB / 50) || 1; if(curB > publicB) curB = publicB; done = false; }
+        if (curA < publicA) { curA += Math.ceil(publicA / 50) || 1; if (curA > publicA) curA = publicA; done = false; }
+        if (curB < publicB) { curB += Math.ceil(publicB / 50) || 1; if (curB > publicB) curB = publicB; done = false; }
         setStagePublicA(curA);
         setStagePublicB(curB);
         if (done) clearInterval(interval);
@@ -135,8 +147,8 @@ const JudgeResultPhase = () => {
       let curAiA = 0, curAiB = 0;
       const interval = setInterval(() => {
         let done = true;
-        if (curAiA < aiTotalA) { curAiA += Math.ceil(aiTotalA / 50) || 1; if(curAiA > aiTotalA) curAiA = aiTotalA; done = false; }
-        if (curAiB < aiTotalB) { curAiB += Math.ceil(aiTotalB / 50) || 1; if(curAiB > aiTotalB) curAiB = aiTotalB; done = false; }
+        if (curAiA < aiTotalA) { curAiA += Math.ceil(aiTotalA / 50) || 1; if (curAiA > aiTotalA) curAiA = aiTotalA; done = false; }
+        if (curAiB < aiTotalB) { curAiB += Math.ceil(aiTotalB / 50) || 1; if (curAiB > aiTotalB) curAiB = aiTotalB; done = false; }
         setStageAIA(curAiA);
         setStageAIB(curAiB);
         if (done) clearInterval(interval);
@@ -240,7 +252,7 @@ const JudgeResultPhase = () => {
           <div style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both', padding: '0 5vw', position: 'relative', marginTop: '15vh' }}>
             <div style={{ fontSize: '7rem', fontWeight: 900, color: '#facc15', marginBottom: '40px', textShadow: '0 0 30px #ff0000' }}>GAME OVER</div>
             <div style={{ fontSize: '3.5rem', background: '#fff', padding: '40px 80px', border: '8px solid #111', borderRadius: '40px', lineHeight: '1.4', transform: 'rotate(-2deg)', boxShadow: '20px 20px 0 #000' }}>{finalMent}</div>
-            
+
             <div style={{
               position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-15deg)',
               border: '10px solid #ff0000', color: '#ff0000', padding: '20px 50px', borderRadius: '20px',
@@ -286,7 +298,7 @@ const JudgeResultPhase = () => {
       <div style={{ flex: 1, display: 'flex', padding: '0 0 4vw 4vw', gap: '2vw' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15vh', justifyContent: 'flex-start', opacity: [4, 7].includes(introPhase) ? 1 : 0, transition: '0.5s' }}>
           <div style={{ display: 'flex', gap: '60px', marginTop: '2vh' }}>
-            
+
             <div style={{ textAlign: 'center' }}>
               <img src={teamALogo} style={{ width: '420px', objectFit: 'contain' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
@@ -329,20 +341,39 @@ const JudgeResultPhase = () => {
         </div>
 
         {introPhase === 7 && (
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              position: 'fixed', bottom: '30px', right: '400px', zIndex: 11000,
-              fontFamily: '"Gaegu", cursive', fontSize: '1.5rem', fontWeight: 900,
-              padding: '10px 30px', borderRadius: '30px', border: '3px solid #fff',
-              background: '#333', color: '#fff', cursor: 'pointer',
-              boxShadow: '5px 5px 0 rgba(0,0,0,0.5)', transition: '0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            한 판 더 하기
-          </button>
+          <div style={{
+            position: 'fixed', bottom: '30px', right: '400px', zIndex: 11000,
+            display: 'flex', gap: '20px'
+          }}>
+            <button
+              onClick={() => navigator('/')}
+              style={{
+                fontFamily: '"Gaegu", cursive', fontSize: '1.5rem', fontWeight: 900,
+                padding: '10px 30px', borderRadius: '30px', border: '3px solid #fff',
+                background: '#ff4444', color: '#fff', cursor: 'pointer',
+                boxShadow: '5px 5px 0 rgba(0,0,0,0.5)', transition: '0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              나가기
+            </button>
+            {isHost && (
+              <button
+                onClick={() => socket.emit('restart_game')}
+                style={{
+                  fontFamily: '"Gaegu", cursive', fontSize: '1.5rem', fontWeight: 900,
+                  padding: '10px 30px', borderRadius: '30px', border: '3px solid #fff',
+                  background: '#333', color: '#fff', cursor: 'pointer',
+                  boxShadow: '5px 5px 0 rgba(0,0,0,0.5)', transition: '0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                한 판 더 하기
+              </button>
+            )}
+          </div>
         )}
 
         <div style={{ width: '380px', height: '100%', display: 'flex', paddingTop: '50px', paddingRight: '15px' }}>
