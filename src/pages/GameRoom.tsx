@@ -4,6 +4,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import type { GamePhase } from '@/types/game';
+import { TURN_PHASES } from '@/constants/game';
 
 // 페이즈 컴포넌트들 Import
 import LobbyPhase from '@/components/game/phases/LobbyPhase';
@@ -227,14 +228,7 @@ const GameRoom = () => {
     'LOBBY',
     'CARD_SHUFFLE',
     'JUDGE_SHUFFLE',
-    'TURN1',
-    'TURN2',
-    'TURN3',
-    'TURN4',
-    'TURN5',
-    'TURN6',
-    'TURN7',
-    'TURN8',
+    ...(TURN_PHASES as GamePhase[]),
     'STORY',
     'VOTING',
     'JUDGE_RESULT',
@@ -308,7 +302,7 @@ const GameRoom = () => {
     };
 
     // ⭐️ 1. 턴(글쓰기) 페이즈 처리
-    // TURN1 ~ TURN8은 모두 WritingPhase를 사용하되, prop으로 몇 턴인지 넘겨줌
+    // TURN1 ~ TURN6은 모두 WritingPhase를 사용하되, prop으로 몇 턴인지 넘겨줌 (TURN_COUNT 기준)
     if (gamePhase.startsWith('TURN')) {
       return <WritingPhase currentRound={gamePhase} />;
     }

@@ -32,6 +32,7 @@ import logo2 from '@/assets/logo/logo_2.png';
 import logo1 from '@/assets/logo/logo_1.png';
 import logoStart from '@/assets/logo/logo_start.png';
 
+import { TURN_COUNT } from '@/constants/game';
 
 
 
@@ -43,7 +44,7 @@ const getAvatarImage = (avatarId: number) => {
 };
 
 interface WritingPhaseProps {
-  currentRound: string; // "TURN1" ~ "TURN8"
+  currentRound: string; // "TURN1" ~ "TURN6" (TURN_COUNT 기준)
 }
 
 const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
@@ -412,7 +413,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
               <img src={logoPlay} alt="개소릴레이 로고" style={logoImgStyle} className={isUrgent ? 'panic-logo' : 'pulse-logo'} />
 
               <div style={roundBadgeStyle}>
-                제 <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>{turnNumber}</span>회차 짖기 / 8
+                제 <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>{turnNumber}</span>회차 짖기 / {TURN_COUNT}
               </div>
             </div>
 

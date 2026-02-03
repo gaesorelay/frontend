@@ -88,8 +88,6 @@ export type GamePhase =
   | 'TURN4'
   | 'TURN5'
   | 'TURN6'
-  | 'TURN7'
-  | 'TURN8'
   | 'STORY'
   | 'VOTING'
   | 'JUDGE_RESULT'
