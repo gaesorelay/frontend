@@ -10,18 +10,11 @@ import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import { useState, useMemo, useEffect } from 'react';
 import { getCardImage } from '@/lib/cardMapper';
+import { getAvatarSrc } from '@/lib/avatarMapper';
 // import { getJudgeImage } from '@/lib/judgeMapper';
 
 // --- Assets (이미지) ---
-import dog1 from '@/assets/dog/dog1.png';
-import dog2 from '@/assets/dog/dog2.png';
-import dog3 from '@/assets/dog/dog3.png';
-// Players (아바타 ID 매핑용)
-import dog4 from '@/assets/dog/dog4.png';
-import dog5 from '@/assets/dog/dog5.png';
-import dog6 from '@/assets/dog/dog6.png';
-import dog7 from '@/assets/dog/dog7.png';
-import dog8 from '@/assets/dog/dog8.png';
+// const dog1... imports removed
 
 // 헤더 로고
 import logoPlay from '@/assets/logo/logo_play.png';
@@ -36,12 +29,8 @@ import { TURN_COUNT } from '@/constants/game';
 
 
 
-// 아바타 ID를 이미지로 변환하는 헬퍼
-const getAvatarImage = (avatarId: number) => {
-  const images = [dog1, dog2, dog3, dog4, dog5, dog6, dog7, dog8];
-  // avatarId가 1부터 시작한다고 가정하고 배열 인덱스(0부터)에 맞춤
-  return images[(avatarId - 1) % images.length] || dog1;
-};
+// 아바타 ID를 이미지로 변환하는 헬퍼 -> avatarMapper로 대체됨
+// const getAvatarImage = ... removed
 
 interface WritingPhaseProps {
   currentRound: string; // "TURN1" ~ "TURN6" (TURN_COUNT 기준)
@@ -325,7 +314,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
             </div>
           )}
           <img
-            src={getAvatarImage(player.avatarId)}
+            src={getAvatarSrc(player.avatarId)}
             style={getAvatarStyle(!!isActive, color)}
             alt={player.nickname}
           />
