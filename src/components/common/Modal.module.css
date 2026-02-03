@@ -1,12 +1,15 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000; /* 다른 요소들보다 확실히 위에 오도록 상향 조정 */
+  z-index: 1000;
+  /* 다른 요소들보다 확실히 위에 오도록 상향 조정 */
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.6); /* 조금 더 어둡게 */
-  backdrop-filter: blur(5px); /* 블러 효과 강화 */
+  background-color: rgba(0, 0, 0, 0.6);
+  /* 조금 더 어둡게 */
+  backdrop-filter: blur(5px);
+  /* 블러 효과 강화 */
 
   /* 등장 애니메이션 */
   animation: fadeIn 0.2s ease-out forwards;
@@ -17,10 +20,13 @@
   background-color: #fff;
 
   /* ⭐ 핵심 수정: 고정 높이 제거 & 최대 높이 설정 */
-  width: 20%;
-  max-width: 400px; /* 가로폭을 넓혀서(320->450) 시간 설정 등이 한 줄에 나오게 */
-  height: auto; /* 내용물만큼 늘어나도록 */
-  max-height: 85vh; /* 화면이 작을 때 뚫고 나가지 않게 제한 */
+  width: 90%;
+  max-width: 600px;
+  /* 가로폭을 넓혀서(320->450) 시간 설정 등이 한 줄에 나오게 */
+  height: auto;
+  /* 내용물만큼 늘어나도록 */
+  max-height: 85vh;
+  /* 화면이 작을 때 뚫고 나가지 않게 제한 */
 
   /* 내부 스크롤 처리 (내용이 85vh를 넘어가면 스크롤 생김) */
   overflow-y: auto;
@@ -44,13 +50,16 @@
 .content::-webkit-scrollbar {
   width: 8px;
 }
+
 .content::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .content::-webkit-scrollbar-thumb {
   background-color: #d1d5db;
   border-radius: 4px;
 }
+
 .content::-webkit-scrollbar-thumb:hover {
   background-color: #9ca3af;
 }
@@ -67,7 +76,9 @@
   cursor: pointer;
   color: #999;
   transition: color 0.2s;
+  /* X 버튼 숨김 */
 }
+
 .closeButton:hover {
   color: #333;
 }
@@ -77,6 +88,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -87,6 +99,7 @@
     transform: scale(0.8) translateY(20px);
     opacity: 0;
   }
+
   100% {
     transform: scale(1) translateY(0);
     opacity: 1;

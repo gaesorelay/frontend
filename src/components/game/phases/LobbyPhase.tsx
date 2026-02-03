@@ -11,7 +11,7 @@ import { Background } from '@/components/common/background';
 import Modal from '@/components/common/Modal';
 import styles from '@/components/game/phases/LobbyPhase.module.css';
 import { animationStyles } from '@/pages/create/createAnimations';
-import waitingMp3 from '@/assets/sound/waiting.mp3';
+// import waitingMp3 from '@/assets/sound/waiting.mp3'; // Remove local BGM
 import clickMp3 from '@/assets/sound/click.mp3';
 
 // 나가기 버튼
@@ -70,36 +70,22 @@ const LobbyPhase = ({
   };
 
   // 🎵 로비 BGM (waiting.mp3)
+  // 🎵 로비 BGM (waiting.mp3) -> App.tsx 전역 관리로 이동됨
   useEffect(() => {
     // ⭐️ 입장 시 강제로 소리 켜기 (초기 상태 재생 보장)
     setMuted(false);
-
-    const audio = new Audio(waitingMp3);
-    audio.loop = true;
-    audio.volume = 0.5;
-    audioRef.current = audio;
-
-    // 초기 뮤트 상태 반영 (setMuted(false) 직후라 false일 것임)
-    audio.muted = false;
-
-    // 즉시 재생 시도
-    audio.play().catch(() => { });
-
-    return () => {
-      audio.pause();
-      audioRef.current = null;
-    };
   }, []);
 
   // 뮤트 상태 동기화
+  // 뮤트 상태 동기화는 App.tsx에서 전역 처리하므로 여기선 제거
+  /*
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.muted = isMuted;
-      if (!isMuted && audioRef.current.paused) {
-        audioRef.current.play().catch(() => { });
-      }
+      // ...
     }
   }, [isMuted]);
+  */
 
   const users = rawUsers.map((user) => ({
     ...user,
@@ -473,19 +459,7 @@ const LobbyPhase = ({
     <Background>
       <div className={styles.container}>
         {/* 🔇 뮤트 버튼 */}
-        <button
-          onClick={handleToggleMute}
-          style={{
-            position: 'absolute', top: '20px', right: '20px', zIndex: 9999,
-            background: 'rgba(255, 255, 255, 0.8)', border: '2px solid #333',
-            borderRadius: '50%', width: '50px', height: '50px',
-            fontSize: '24px', cursor: 'pointer', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            boxShadow: '2px 2px 5px rgba(0,0,0,0.2)'
-          }}
-        >
-          {isMuted ? '🔇' : '🔊'}
-        </button>
+
 
         {/* 메인 콘텐츠 */}
         <div className={styles.contentWrapper}>
@@ -535,13 +509,28 @@ const LobbyPhase = ({
                 </div>
 
                 <div className={styles.topRight}>
+                  {/* 🔇 뮤트 버튼 (설정 버튼 왼쪽) */}
+                  <button
+                    onClick={() => { playClick(); handleToggleMute(); }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.8)', border: 'none',
+                      borderRadius: '50%', width: '50px', height: '50px',
+                      fontSize: '30px', cursor: 'pointer', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
+                      marginRight: '15px' // 설정 버튼과의 간격
+                    }}
+                    title={isMuted ? "소리 켜기" : "소리 끄기"}
+                  >
+                    {isMuted ? '🔇' : '🔊'}
+                  </button>
+                  {/* 내 정보 버튼 제거됨 */}
                   {isHost && (
                     <motion.button
                       className={styles.exitButton}
                       onClick={() => { playClick(); setIsSettingOpen(true); }}
                       whileHover={{ scale: 1.1, rotate: 5 }}
                     >
-                      <img src={logoSetting} alt="Exit" className={styles.exitImg} />
+                      <img src={logoSetting} alt="Setting" className={styles.exitImg} />
                       <span className={styles.exitText}>설정</span>
                     </motion.button>
                   )}
@@ -679,12 +668,12 @@ const LobbyPhase = ({
             </header>
 
             {/* 🆕 통합 보드 영역 */}
-            <div className={styles.unifiedBoard} style={{ backgroundImage: `url(${boardImg})` }}>
+            <div className={`${styles.unifiedBoard} ${styles['board' + maxStorytellers]}`} style={{ backgroundImage: `url(${boardImg})` }}>
 
               {/* 왼쪽: A팀 */}
               <div className={styles.teamSection}>
                 <img src={logoA} alt="Team A" className={styles.teamLogo} />
-                <div className={styles.slotsGrid}>
+                <div className={`${styles.slotsGrid} ${styles['slots' + maxStorytellers]}`}>
                   {Array.from({ length: maxStorytellers }).map((_, i) => {
                     const user = users.find(
                       (u) => u.role === 'PLAYER' && u.team === 'A' && u.slotIndex === i
@@ -704,7 +693,7 @@ const LobbyPhase = ({
               {/* 오른쪽: B팀 */}
               <div className={styles.teamSection}>
                 <img src={logoB} alt="Team B" className={styles.teamLogo} />
-                <div className={styles.slotsGrid}>
+                <div className={`${styles.slotsGrid} ${styles['slots' + maxStorytellers]}`}>
                   {Array.from({ length: maxStorytellers }).map((_, i) => {
                     const user = users.find(
                       (u) => u.role === 'PLAYER' && u.team === 'B' && u.slotIndex === i
@@ -723,7 +712,7 @@ const LobbyPhase = ({
 
             </div>
             {isHost && (
-              <footer className={styles.footerArea}>
+              <footer className={`${styles.footerArea} ${styles['footer' + maxStorytellers]}`}>
                 <div className={styles.buttonGroup}>
                   <button onClick={() => { playClick(); handleRandomAssign(); }} className={styles.randomButton}>
                     랜덤 팀 배정
@@ -761,13 +750,13 @@ const LobbyPhase = ({
                   onClick={() => { playClick(); moveUserToTeam('A'); }}
                   className={`${styles.modalButton} ${styles.buttonTeamA}`}
                 >
-                  🟦 A팀 배정
+                  A팀 배정
                 </button>
                 <button
                   onClick={() => { playClick(); moveUserToTeam('B'); }}
                   className={`${styles.modalButton} ${styles.buttonTeamB}`}
                 >
-                  🟥 B팀 배정
+                  B팀 배정
                 </button>
                 {!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname && (
                   <button
@@ -811,8 +800,9 @@ const LobbyPhase = ({
             </div>
           </Modal>
         </>
+
       )}
-    </Background>
+    </Background >
   );
 };
 export default LobbyPhase;

@@ -1,17 +1,28 @@
 .slotBase {
   position: relative;
-  /* width: 120px;  이미지 비율에 맞춰 조정 */
+  /* width: 95px; 제거 (이미지 비율 사용) */
   height: 85px;
   /* 120px -> 95px 축소 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: none;
-  border: none;
+
+  /* 버튼 스타일 완전 초기화 */
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
   cursor: pointer;
   padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  margin-bottom: 30px;
+  /* 이름표공간 확보 */
 }
+
+/* 집 이미지 다시 표시 (filled 규칙 제거됨) */
 
 .houseBg {
   width: 100%;
@@ -25,12 +36,12 @@
 /* 유저 아바타가 집 입구에 보이도록 배치 */
 .avatarWrapper {
   position: absolute;
-  top: 58%;
+  top: 52%;
   /* 집 입구 높이에 맞춰 세밀하게 조정하세요 */
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 60px;
-  height: 60px;
+  width: 75px;
+  height: 75px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -38,7 +49,7 @@
 }
 
 .dogAvatar {
-  width: 80%;
+  width: 90%;
   height: 100%;
   object-fit: contain;
   /* 캐릭터가 튀어나와 보이지 않게 하려면 집 입구 모양에 맞춰 mask-image 사용도 가능 */
@@ -47,7 +58,7 @@
 /* 닉네임은 집 아래쪽 명패처럼 보이게 */
 .nameTag {
   position: absolute;
-  bottom: 3px;
+  bottom: -25px;
   /* 집 아래 바닥 부분에 걸치도록 조정 */
   left: 1px;
   width: 95%;
