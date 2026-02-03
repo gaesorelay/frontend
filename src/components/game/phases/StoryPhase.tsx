@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Background } from '@/components/common/background';
 import { useGameStore } from '@/store/useGameStore'; // 스토어 임포트
 import { getCardImage } from '@/lib/cardMapper'; // 카드 이미지 매퍼
+import { getStoryteller } from '@/lib/gameLogic'; // ⭐️ 작성자 찾기 로직
 import storyLogoImg from '@/assets/logo/logo_story.png';
 import ChatArea from '../ChatArea';
 
@@ -111,6 +112,10 @@ const StoryPhase = () => {
                   <div style={styles.rightPageWrapper}>
                     <div style={styles.rightPage}>
                       <div style={styles.textPaper}>
+                        {/* ⭐️ 작성자 표시 추가 */}
+                        <div style={styles.writerBadge} className="gungsuh-font">
+                          ✍️ {getStoryteller(useGameStore.getState().players, currentTeam, currentIndex + 1)?.nickname || '알 수 없는 작가'}
+                        </div>
                         <p className="gungsuh-font" style={styles.bookText}>
                           {stories[currentIndex].content}
                         </p>
@@ -246,6 +251,19 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   textPaper: { flex: 1 },
   bookText: { fontSize: '1.4rem', lineHeight: '1.8', color: '#111', fontWeight: 'bold', whiteSpace: 'pre-wrap', textAlign: 'center' },
+  // ⭐️ 작성자 배지 스타일
+  writerBadge: {
+    textAlign: 'center',
+    fontSize: '0.9rem',
+    color: '#666',
+    marginBottom: '10px',
+    backgroundColor: '#fff',
+    border: '1px solid #ddd',
+    borderRadius: '15px',
+    padding: '2px 10px',
+    display: 'inline-block',
+    alignSelf: 'center', // flex item 중앙 정렬
+  },
   pageNumber: { textAlign: 'center', fontSize: '0.8rem', color: '#aaa', fontWeight: 800 },
   endText: { textAlign: 'center', fontSize: '1.8rem', color: '#FF6B6B', fontWeight: 900 },
 
