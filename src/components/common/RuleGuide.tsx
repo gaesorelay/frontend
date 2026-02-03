@@ -116,7 +116,8 @@ export default function GameRuleGuide() {
     // 도트 네비게이션 컨테이너
     dotsContainer: {
       display: 'flex',
-      gap: '8px',
+      gap: '0px',
+      marginTop: '15px',
     },
   };
 
@@ -145,19 +146,29 @@ export default function GameRuleGuide() {
             key={idx}
             onClick={() => setCurrentIdx(idx)}
             style={{
-              width: '18px',  // 크기 확대 (12 -> 18)
-              height: '18px',
-              borderRadius: '50%',
-              border: '3px solid #333', // 테두리도 조금 두껍게
-              background: currentIdx === idx ? '#333' : 'white', // 활성: 검정, 비활성: 흰색
+              background: 'transparent',
+              border: 'none',
               cursor: 'pointer',
-              padding: 0,
+              padding: '12px', // 히트 영역 대폭 확대 (터치/클릭 용이)
               outline: 'none',
-              transform: currentIdx === idx ? 'scale(1.2)' : 'scale(1)',
-              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
             title={`${idx + 1}단계`}
-          />
+          >
+            <div
+              style={{
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                border: '3px solid #333',
+                background: currentIdx === idx ? '#333' : 'white',
+                transform: currentIdx === idx ? 'scale(1.2)' : 'scale(1)',
+                transition: 'all 0.2s',
+              }}
+            />
+          </button>
         ))}
       </div>
     </div>
