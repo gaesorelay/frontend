@@ -39,7 +39,7 @@ export default function CreatePage() {
   const [maxPlayers, setMaxPlayers] = useState(20);  // 초기값 20명
   const [storytellers, setStorytellers] = useState(4); // 초기값 4명
   const [roundTime, setRoundTime] = useState(30);    // 초기값 30초
-  const [voteTime, setVoteTime] = useState(20);      // 초기값 20초
+  const [voteTime, setVoteTime] = useState(10);      // 초기값 10초
 
   // 2. ⚙️ 컨트롤러 설정 (여기에 Min/Max 제한 적용!)
   // HandControl 컴포넌트가 이 min/max 값을 받아 버튼/입력을 제어합니다.
@@ -77,8 +77,8 @@ export default function CreatePage() {
       setValue: setVoteTime,
       unit: '초',
       step: 5,
-      min: 15,   // ✅ 최소 15초
-      max: 25   // ✅ 최대 25초
+      min: 5,   // ✅ 최소 5초
+      max: 15   // ✅ 최대 15초
     },
   ];
 
