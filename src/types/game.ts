@@ -27,6 +27,7 @@ export type RoomInfo = {
 export type Player = {
   userToken: string;
   socketId?: string;
+  currentSocketId?: string;
   roomUuid: string;
   nickname: string;
   role: UserRole;

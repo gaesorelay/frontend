@@ -162,7 +162,7 @@ const JudgeResultPhase = () => {
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, backgroundImage: `url(${bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center',
-      fontFamily: '"Gaegu", cursive', overflow: 'hidden', zIndex: 9999, display: 'flex', flexDirection: 'column'
+      overflow: 'hidden', zIndex: 9999, display: 'flex', flexDirection: 'column'
     }}>
       <style>{`
         @keyframes full-screen-pop { 0% { transform: scale(0); opacity: 0; } 50% { opacity: 1; transform: scale(1.5); } 100% { transform: scale(1) translateY(-50px); opacity: 0; } }
@@ -174,7 +174,7 @@ const JudgeResultPhase = () => {
         @keyframes pop-comment { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
         .particle-full { position: absolute; color: #facc15; font-size: 3rem; font-weight: 900; animation: full-screen-pop 0.4s forwards; text-shadow: 4px 4px 0 #000; z-index: 11000; }
-        .intro-overlay { position: fixed; top: 0; left: 0; width: calc(100% - 380px); height: 100%; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; transition: 0.5s; }
+        .intro-overlay { position: absolute; width: 100%; top: 0; left: 0; height: 100%; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; transition: 0.5s; }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .score-huge { font-size: 11rem; color: #fff; text-shadow: 0 0 30px #ff4444; font-weight: 900; }
         .gauge-container { width: 300px; height: 35px; background: #333; border: 3px solid #111; border-radius: 20px; overflow: hidden; position: relative; }
@@ -267,7 +267,7 @@ const JudgeResultPhase = () => {
               <button
                 onClick={() => setIntroPhase(7)}
                 style={{
-                  fontFamily: '"Gaegu", cursive', fontSize: '2.5rem', fontWeight: 900,
+                  fontSize: '2.5rem', fontWeight: 900,
                   padding: '15px 40px', borderRadius: '50px', border: '5px solid #fff',
                   background: '#333', color: '#fff', cursor: 'pointer',
                   boxShadow: '8px 8px 0 rgba(0,0,0,0.5)', transition: '0.2s'
@@ -280,7 +280,7 @@ const JudgeResultPhase = () => {
               <button
                 onClick={() => window.location.reload()}
                 style={{
-                  fontFamily: '"Gaegu", cursive', fontSize: '2.5rem', fontWeight: 900,
+                  fontSize: '2.5rem', fontWeight: 900,
                   padding: '15px 40px', borderRadius: '50px', border: '5px solid #111',
                   background: '#facc15', color: '#111', cursor: 'pointer',
                   boxShadow: '8px 8px 0 rgba(0,0,0,0.5)', transition: '0.2s'
@@ -295,12 +295,13 @@ const JudgeResultPhase = () => {
         )}
       </div>
 
-      <div style={{ flex: 1, display: 'flex', padding: '0 0 4vw 4vw', gap: '2vw' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15vh', justifyContent: 'flex-start', opacity: [4, 7].includes(introPhase) ? 1 : 0, transition: '0.5s' }}>
-          <div style={{ display: 'flex', gap: '60px', marginTop: '2vh' }}>
-
+      <div style={{ flex: 1, display: 'flex' }}>
+        <div style={{ flex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15vh', justifyContent: 'flex-start', opacity: [4, 7].includes(introPhase) ? 1 : 0, transition: '0.5s' }}>
+          <div style={{ display: 'flex', gap: '60px', padding: '2vh 0 0 20px' }}>
+            {/* A팀 섹션 */}
             <div style={{ textAlign: 'center' }}>
-              <img src={teamALogo} style={{ width: '420px', objectFit: 'contain' }} />
+              <img src={teamALogo} style={{ width: '380px', objectFit: 'contain' }} />
+
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
                 <span style={{ color: '#ffb3b3' }}>관객 {stagePublicA}</span>
                 <span style={{ color: '#ff3333' }}>AI {stageAIA}</span>
@@ -314,7 +315,8 @@ const JudgeResultPhase = () => {
             <div style={{ fontSize: '5rem', fontWeight: 900, alignSelf: 'center' }}>VS</div>
 
             <div style={{ textAlign: 'center' }}>
-              <img src={teamBLogo} style={{ width: '420px', objectFit: 'contain' }} />
+              <img src={teamBLogo} style={{ width: '380px', objectFit: 'contain' }} />
+
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
                 <span style={{ color: '#99ccff' }}>관객 {stagePublicB}</span>
                 <span style={{ color: '#3385ff' }}>AI {stageAIB}</span>
@@ -342,13 +344,13 @@ const JudgeResultPhase = () => {
 
         {introPhase === 7 && (
           <div style={{
-            position: 'fixed', bottom: '30px', right: '400px', zIndex: 11000,
+            position: 'fixed', bottom: '30px', right: '480px', zIndex: 11000,
             display: 'flex', gap: '20px'
           }}>
             <button
               onClick={() => navigator('/')}
               style={{
-                fontFamily: '"Gaegu", cursive', fontSize: '1.5rem', fontWeight: 900,
+                fontSize: '1.5rem', fontWeight: 900,
                 padding: '10px 30px', borderRadius: '30px', border: '3px solid #fff',
                 background: '#ff4444', color: '#fff', cursor: 'pointer',
                 boxShadow: '5px 5px 0 rgba(0,0,0,0.5)', transition: '0.2s'
@@ -362,7 +364,7 @@ const JudgeResultPhase = () => {
               <button
                 onClick={() => socket.emit('restart_game')}
                 style={{
-                  fontFamily: '"Gaegu", cursive', fontSize: '1.5rem', fontWeight: 900,
+                  fontSize: '1.5rem', fontWeight: 900,
                   padding: '10px 30px', borderRadius: '30px', border: '3px solid #fff',
                   background: '#333', color: '#fff', cursor: 'pointer',
                   boxShadow: '5px 5px 0 rgba(0,0,0,0.5)', transition: '0.2s'
@@ -376,7 +378,7 @@ const JudgeResultPhase = () => {
           </div>
         )}
 
-        <div style={{ width: '380px', height: '100%', display: 'flex', paddingTop: '50px', paddingRight: '15px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', }}>
           <ChatArea />
         </div>
       </div>
