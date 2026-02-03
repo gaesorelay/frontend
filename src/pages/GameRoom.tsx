@@ -205,7 +205,12 @@ const GameRoom = () => {
     // StoryBoardArea가 언마운트되어도(턴8 종료 등) 데이터를 놓치지 않도록 여기서 처리
     socket.on('story_submitted', (data) => {
       console.log('📜 [GameRoom] 스토리 제출 수신:', data);
-      useGameStore.getState().addStoryLine(data.team, data.text);
+      const rawText = typeof data.text === 'string' ? data.text : '';
+      const text = rawText.trim().length === 0 ? '' : rawText;
+      const turn = typeof data.turn === 'number' ? data.turn : undefined;
+      if (data.team === 'A' || data.team === 'B') {
+        useGameStore.getState().addStoryLine(data.team, text, turn);
+      }
     });
 
     // ⭐️ 6. [추가] 브라우저 닫기/새로고침 방어
@@ -273,7 +278,7 @@ const GameRoom = () => {
       ? parseInt(gamePhase.replace('TURN', ''))
       : 0;
 
-    if (draftText && draftText.trim().length > 0 && myPlayer && myPlayer.team && turnNumber > 0) {
+    if (myPlayer && myPlayer.team && turnNumber > 0) {
       console.log(`🛠️ Dev: 스킵 전 강제 제출 시도: ${draftText}, Turn: ${turnNumber}`);
 
       // ⭐️ 중복 제출 방지: emit 전에 먼저 비우기
