@@ -1,10 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import paperBg from '@/assets/bg/paper.png';
+import paperBg from '@/assets/background.png';
 import titleLogo from '@/assets/logo/carddistribute.png';
 import dotImage from '@/assets/logo/dot.png';
-import cardLogo1 from '@/assets/logo/cardlogo1.png';
-import cardLogo2 from '@/assets/logo/cardlogo2.png';
-import cardLogo3 from '@/assets/logo/cardlogo3.png';
 
 import { getAvatarSrc, getTotalAvatars } from '@/lib/avatarMapper';
 
@@ -141,8 +138,6 @@ const CardShufflePhase = () => {
 
     // 텍스트 등장 지연
     const outroTimer1 = setTimeout(() => setOutroStep(1), 8500);
-    const outroTimer2 = setTimeout(() => setOutroStep(2), 10000);
-    const outroTimer3 = setTimeout(() => setOutroStep(3), 11500);
 
     return () => {
       clearInterval(dotInterval);
@@ -151,8 +146,6 @@ const CardShufflePhase = () => {
       clearTimeout(dealTimer);
       clearTimeout(revealStartTimer);
       clearTimeout(outroTimer1);
-      clearTimeout(outroTimer2);
-      clearTimeout(outroTimer3);
     };
   }, []);
 
@@ -286,24 +279,6 @@ const CardShufflePhase = () => {
                 justifyContent: 'center',
               }}
             >
-              <img
-                src={cardLogo1}
-                alt="1"
-                className={`absolute drop-shadow-lg transition-all duration-500 ${outroStep >= 1 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`}
-                style={{ width: '450px', zIndex: 30 }}
-              />
-              <img
-                src={cardLogo2}
-                alt="2"
-                className={`absolute drop-shadow-lg transition-all duration-500 ${outroStep >= 2 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`}
-                style={{ width: '450px', top: '60px', zIndex: 31 }}
-              />
-              <img
-                src={cardLogo3}
-                alt="3"
-                className={`absolute drop-shadow-xl transition-all duration-500 ${outroStep >= 3 ? 'opacity-100 scale-125 translate-y-0' : 'opacity-0 scale-50 translate-y-10'}`}
-                style={{ width: '500px', top: '140px', zIndex: 32 }}
-              />
             </div>
           </div>
         )}
