@@ -235,7 +235,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     border: '4px solid #000',
     boxShadow: '6px 6px 0px #000',
     transform: 'rotate(-1deg)',
-    padding: '8px 20px',
+    padding: '20px',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
@@ -257,7 +257,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     backgroundColor: '#000',
     color: '#fff',
     fontSize: '0.7rem',
-    padding: '2px 6px',
+    padding: '2px 10px',
     transform: 'rotate(15deg)',
     fontWeight: 'bold',
   };
@@ -304,15 +304,24 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
       return (
         <div key={player.userToken} style={{ position: 'relative' }}>
-          {isMe && (
-            <div style={{
-              position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)',
-              backgroundColor: '#000', color: '#fff', fontSize: '0.5rem', padding: '1px 4px',
-              borderRadius: '4px', zIndex: 30
-            }}>
-              ME
-            </div>
-          )}
+          {/* 상단 라벨 (ME 또는 닉네임) */}
+          <div style={{
+            position: 'absolute',
+            top: '-15px', // 닉네임 길이를 고려해 살짝 더 올렸습니다
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: isMe ? '#000' : '#fff', // 나면 검정, 남이면 흰색
+            color: isMe ? '#fff' : '#000',           // 나면 흰색, 남이면 검정
+            fontSize: '0.65rem',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            zIndex: 30,
+            border: isMe ? 'none' : '1px solid #e5e7eb', // 남일 때는 테두리를 주어 흰 배경과 구분
+            whiteSpace: 'nowrap' // 닉네임이 길어도 줄바꿈 방지
+          }}>
+            {isMe ? 'ME' : player.nickname}
+          </div>
+
           <img
             src={getAvatarSrc(player.avatarId)}
             style={getAvatarStyle(!!isActive, color)}
@@ -365,6 +374,21 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
             }
             .pulse-logo { animation: pulse-soft 0.5s infinite ease-in-out; }
 
+            /* 평상시 은은한 박동 애니메이션 */
+            @keyframes calm-pulse {
+              0% { transform: scale(1); box-shadow: 4px 4px 0px #000; }
+              50% { transform: scale(1.02); box-shadow: 6px 6px 12px rgba(0,0,0,0.1); }
+              100% { transform: scale(1); box-shadow: 4px 4px 0px #000; }
+            }
+            .normal-timer { 
+              animation: calm-pulse 2s infinite ease-in-out; 
+            }
+
+            @keyframes spin-slow {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+
             /* 10초 남았을 때 타이머 발광 (강렬하게) */
             @keyframes timer-glow {
               0%, 100% { box-shadow: 6px 6px 0px #000; background-color: #ff4757; }
@@ -386,9 +410,9 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
           <header style={headerStyle}>
 
             {/* 타이머 구역 */}
-            <div style={crazyTimerStyle} className={isUrgent ? 'panic-timer' : ''}>
+            <div style={crazyTimerStyle} className={isUrgent ? 'panic-timer' : 'normal-timer'}>
               <div style={badgeStyle}>{timeLeft <= 10 ? '빨리빨리!!' : '기다리는중..'}</div>
-              <Timer size={28} strokeWidth={3} />
+              <Timer size={28} strokeWidth={3} style={{ animation: isUrgent ? 'none' : 'spin-slow 4s linear infinite' }} />
               <span style={{
                 fontFamily: 'monospace',
                 fontSize: '1.8rem',
