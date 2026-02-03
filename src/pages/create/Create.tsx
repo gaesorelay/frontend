@@ -63,7 +63,7 @@ export default function CreatePage() {
       max: 8    // ✅ 최대 8명
     },
     {
-      label: '라운드 시간',
+      label: '글 작성 시간',
       value: roundTime,
       setValue: setRoundTime,
       unit: '초',
