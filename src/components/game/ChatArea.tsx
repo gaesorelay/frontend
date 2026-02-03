@@ -9,6 +9,22 @@ import type { ChatMessage } from '@/types/game';
 
 // 이미지 로드 로직 유지
 const rawImages = import.meta.glob('@/assets/dog/*.{png,jpg,jpeg}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+
+// 1. 파일 경로(키)를 기반으로 ID와 URL을 매핑합니다.
+// 빌드 후에는 URL(값)이 해시처리되어 파일명이 바뀔 수 있으므로(예: dog1-abc.png),
+// 변하지 않는 키(예: ./assets/dog/dog1.png)에서 ID를 추출해야 안전합니다.
+const avatarMap = new Map<number, string>();
+
+Object.entries(rawImages).forEach(([path, url]) => {
+  // 경로에서 숫자 추출 (예: .../dog1.png -> 1)
+  const match = path.match(/dog(\d+)/);
+  if (match) {
+    const id = parseInt(match[1], 10);
+    avatarMap.set(id, url);
+  }
+});
+
+// 기존 fallback 로직 유지를 위한 정렬된 배열 (ID가 없거나 매핑되지 않은 경우 사용)
 const sortedImageUrls = Object.entries(rawImages)
   .sort(([pathA], [pathB]) => {
     const numA = parseInt(pathA.match(/dog(\d+)/)?.[1] || '0', 10);
@@ -19,11 +35,13 @@ const sortedImageUrls = Object.entries(rawImages)
 
 // avatarId (1-based) -> Image URL
 const getAvatarUrl = (id?: number) => {
-  // 전체 dog 이미지 경로들 중에서 파일명이 "dog + 숫자"로 끝나는 걸 찾음
-  const found = sortedImageUrls.find(url => url.includes(`dog${id}.`));
+  // 1. 맵에서 ID로 직접 찾기 (O(1))
+  if (typeof id === 'number' && avatarMap.has(id)) {
+    return avatarMap.get(id)!;
+  }
 
-  // 찾으면 그 URL을 주고, 없으면 그냥 첫 번째 사진 보여주기
-  return found || sortedImageUrls[0];
+  // 2. 없으면 기존대로 첫 번째 사진 보여주기 (Fallback)
+  return sortedImageUrls[0];
 };
 
 const REACTION_EMOJIS = ['🐶', '🔥', '🤣', '👍', '👎', '🍅'];
