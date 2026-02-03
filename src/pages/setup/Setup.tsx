@@ -63,7 +63,7 @@ export default function Setup() {
     maxPlayers: 8,
     storytellerCount: 4,
     roundTime: 10,
-    voteTime: 30,
+    voteTime: 10,
   };
 
   // ⭐️ [수정 1] 방장 판별 로직 강화
