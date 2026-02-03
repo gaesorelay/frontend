@@ -4,36 +4,38 @@
 
 const rawImages = import.meta.glob('@/assets/dog/*.{png,jpg,jpeg}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 
-// 이미지 정렬 로직 (Setup.tsx와 동일)
-// 파일명에 숫자가 있으면 그 숫자로 정렬하고, 없으면(0) 맨 앞으로 오게 됩니다.
-const sortedImageUrls = Object.entries(rawImages)
-    .filter(([path]) => {
-        // "dog" 뒤에 숫자가 붙은 파일만 허용 (예: dog1.png)
-        // shiba.png 등은 제외됨
-        return /dog\D?\d+\.(png|jpg|jpeg)$/i.test(path);
-    })
-    .sort(([pathA], [pathB]) => {
-        const numA = parseInt(pathA.match(/dog\D?(\d+)/)?.[1] || '0', 10);
-        const numB = parseInt(pathB.match(/dog\D?(\d+)/)?.[1] || '0', 10);
+// 1. ID -> URL 매핑 생성 (파일명의 숫자 기반)
+const avatarMap = new Map<number, string>();
+const avatarList: { id: number; icon: string; name: string; desc: string }[] = [];
 
-        // 숫자가 같으면(둘 다 0이거나 같은 번호) 문자열 정렬로 순서 보장 (Determinism)
-        if (numA === numB) {
-            return pathA.localeCompare(pathB);
-        }
-        return numA - numB;
-    })
-    .map(([_, url]) => url);
+Object.entries(rawImages).forEach(([path, url]) => {
+    // dog1.png, dog10.png 등에서 숫자 추출
+    const match = path.match(/dog(\d+)\.(png|jpg|jpeg)$/i);
+    if (match) {
+        const id = parseInt(match[1], 10);
+        avatarMap.set(id, url);
 
-export const AVATAR_LIST = sortedImageUrls.map((imgSrc, index) => ({
-    id: index + 1,
-    name: `멍멍이 ${index + 1}`,
-    desc: '준비 완료!',
-    icon: imgSrc,
-}));
+        avatarList.push({
+            id,
+            icon: url,
+            name: `멍멍이 ${id}`,
+            desc: '준비 완료!',
+        });
+    }
+});
 
-export const getAvatarSrc = (avatarId: number): string => {
-    const avatar = AVATAR_LIST.find(a => a.id === avatarId);
-    return avatar ? avatar.icon : '';
+// ID 순으로 리스트 정렬
+avatarList.sort((a, b) => a.id - b.id);
+
+export const AVATAR_LIST = avatarList;
+
+export const getAvatarSrc = (avatarId?: number): string => {
+    if (typeof avatarId === 'number' && avatarMap.has(avatarId)) {
+        return avatarMap.get(avatarId)!;
+    }
+    // Fallback: 1번 강아지 or 리스트의 첫 번째
+    if (avatarMap.has(1)) return avatarMap.get(1)!;
+    return AVATAR_LIST[0]?.icon || '';
 };
 
 export const getTotalAvatars = () => AVATAR_LIST.length;
