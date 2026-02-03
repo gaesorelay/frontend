@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/useGameStore';
+import { useAudioStore } from '@/store/useAudioStore';
 import type { RoomConfig } from '@/types/game';
 
 // 이미지 에셋
 import background from '@/assets/background.png';
 import logo from '@/assets/logo.png';
+// import bgmMp3 from '@/assets/sound/BGM1.mp3'; // 삭제
+import clickMp3 from '@/assets/sound/click.mp3';
 
 // 컴포넌트
 import { animationStyles } from '../../components/common/createAnimations';
@@ -15,6 +18,20 @@ import CreateDecorations from '@/components/common/CreateDecorations';
 
 export default function CreatePage() {
   const navigate = useNavigate();
+
+  // 3. 오디오 상태 관리 (전역 Store 사용)
+  const { isMuted, toggleMute } = useAudioStore();
+
+  const handleToggleMute = () => {
+    toggleMute();
+    playClick();
+  };
+
+  const playClick = () => {
+    const audio = new Audio(clickMp3);
+    audio.volume = 0.8;
+    audio.play().catch(() => { });
+  };
 
   // 1. 상태값들 (State)
   // 초기값은 범위 내 안전한 값으로 설정해두는 것이 좋습니다.
@@ -104,9 +121,9 @@ export default function CreatePage() {
 
     // [Debug] 저장 확인 및 이동
     setTimeout(() => {
-      
-        navigate('/setup');
-      
+
+      navigate('/setup');
+
     }, 100);
   };
 
@@ -138,9 +155,23 @@ export default function CreatePage() {
         controls={[...controls]}
       />
 
+      <button
+        onClick={handleToggleMute}
+        style={{
+          position: 'absolute', top: '20px', right: '20px', zIndex: 1000,
+          background: 'rgba(255, 255, 255, 0.8)', border: '2px solid #333',
+          borderRadius: '50%', width: '50px', height: '50px',
+          fontSize: '24px', cursor: 'pointer', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          boxShadow: '2px 2px 5px rgba(0,0,0,0.2)'
+        }}
+      >
+        {isMuted ? '🔇' : '🔊'}
+      </button>
+
       <CreateButtons
-        onBack={() => navigate(-1)}
-        onCreate={handleCreateRoom}
+        onBack={() => { playClick(); navigate(-1); }}
+        onCreate={() => { playClick(); handleCreateRoom(); }}
       />
     </div>
   );

@@ -1,5 +1,4 @@
-import { useMemo } from 'react';
-import clickSound from '@/assets/sound/2.wav'; // wav 파일 경로 확인
+import clickMp3 from '@/assets/sound/click.mp3';
 
 interface HandControlProps {
   value: number;
@@ -19,24 +18,11 @@ export default function HandControl({
   max = 9999,
 }: HandControlProps) {
 
-  // --- 🔊 소리 로직 (가장 빠른 반응 속도) ---
-  const baseAudio = useMemo(() => {
-    const sound = new Audio(clickSound);
-    sound.volume = 0.6;
-    sound.preload = 'auto';
-    return sound;
-  }, []);
-
   const playSound = () => {
-    try {
-      const clone = baseAudio.cloneNode() as HTMLAudioElement;
-      clone.volume = 0.6;
-      clone.play().catch(e => console.error(e));
-    } catch (e) {
-      console.error(e);
-    }
+    const audio = new Audio(clickMp3);
+    audio.volume = 0.8;
+    audio.play().catch(() => { });
   };
-  // ----------------------------------------
 
   // ✅ [입력 핸들러] 숫자만 입력 가능하게
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
