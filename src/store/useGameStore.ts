@@ -49,7 +49,7 @@ interface GameStoreState {
   setGamePhase: (phase: GamePhase) => void;
   setRoundData: (data: RoundData | null) => void;
 
-  addStoryLine: (team: 'A' | 'B', text: string) => void;
+  addStoryLine: (team: 'A' | 'B', text: string, turn?: number) => void;
 
   resetStory: () => void;
   resetMessages: () => void;
@@ -72,11 +72,28 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   hasEntered: false, // ⭐️ 정상 입장 여부 체크
   teamAStory: [],
   teamBStory: [],
-  addStoryLine: (team, text) =>
-    set((state) => ({
-      teamAStory: team === 'A' ? [...state.teamAStory, text] : state.teamAStory,
-      teamBStory: team === 'B' ? [...state.teamBStory, text] : state.teamBStory,
-    })),
+  addStoryLine: (team, text, turn) =>
+    set((state) => {
+      const normalizedText = text ?? '';
+      const updateStory = (story: string[]) => {
+        if (!turn || turn <= 0) {
+          return [...story, normalizedText];
+        }
+
+        const index = turn - 1;
+        const next = story.slice();
+        if (next.length <= index) {
+          next.push(...Array(index - next.length + 1).fill(''));
+        }
+        next[index] = normalizedText;
+        return next;
+      };
+
+      return {
+        teamAStory: team === 'A' ? updateStory(state.teamAStory) : state.teamAStory,
+        teamBStory: team === 'B' ? updateStory(state.teamBStory) : state.teamBStory,
+      };
+    }),
   resetStory: () => set({ teamAStory: [], teamBStory: [] }),
   resetMessages: () => set({ messages: [] }),
   kickReason: null,

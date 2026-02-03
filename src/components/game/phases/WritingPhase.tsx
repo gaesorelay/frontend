@@ -167,7 +167,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
       const isMyTurnA = activeUserA && activeUserA.userToken === userToken;
       const isMyTurnB = activeUserB && activeUserB.userToken === userToken;
 
-      if ((isMyTurnA || isMyTurnB) && draftText && draftText.trim().length > 0) {
+      if ((isMyTurnA || isMyTurnB)) {
         console.log(`💾 [WritingPhase] 턴 종료(또는 스킵)로 인한 자동 제출: ${draftText}, Turn: ${turnNumber}`);
         const myTeam = isMyTurnA ? 'A' : 'B';
         socket.emit('submit_story', {
