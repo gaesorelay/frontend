@@ -11,31 +11,31 @@ const RULE_DATA = [
   {
     step: 1,
     title: '팀 선정',
-    desc: '관객들중에서 무대에 오를 개를 뽑아 두 팀을 구성하고 게임을 시작하세요!',
+    desc: '관객들 중에서 무대에 오를 개를 뽑아\n두 팀을 구성하고 게임을 시작하세요!',
     image: ruleImg1,
   },
   {
     step: 2,
     title: '스토리 작성',
-    desc: '순서에 따라 이미지를 보고 개소리같은 이야기를 작성하세요!',
+    desc: '순서에 따라 이미지를 보고\n개소리같은 이야기를 작성하세요!',
     image: ruleImg2,
   },
   {
     step: 3,
     title: '릴레이 스토리',
-    desc: '팀원들의 이야기를 이어서 개소리 릴레이를 완성하세요!',
+    desc: '팀원들의 이야기를 이어서\n개소리 릴레이를 완성하세요!',
     image: ruleImg3,
   },
   {
     step: 4,
     title: '투표',
-    desc: '관객들은 각 팀의 완성된 스토리 중 더 재미있는 이야기에 투표하세요!',
+    desc: '관객들은 각 팀의 완성된 스토리 중\n더 재미있는 이야기에 투표하세요!',
     image: ruleImg4,
   },
   {
     step: 5,
     title: 'AI 심사',
-    desc: 'AI 심사위원들의 평가가 투표에 더해져 최종 승패가 결정됩니다!',
+    desc: 'AI 심사위원들의 평가가 투표에 더해져\n최종 승패가 결정됩니다!',
     image: ruleImg5,
   },
 ];
@@ -61,7 +61,7 @@ export default function GameRuleGuide() {
       alignItems: 'center',
       justifyContent: 'center',
       width: '100%',
-      maxWidth: '350px', // 크기 적절히 조절
+      maxWidth: '450px', // 크기 확대 (350 -> 450)
       position: 'relative' as const,
     },
     // 카드 박스 스타일 제거 (투명하게)
@@ -71,25 +71,25 @@ export default function GameRuleGuide() {
       flexDirection: 'column' as const,
       alignItems: 'center',
       textAlign: 'center' as const,
-      marginBottom: '15px',
+      marginBottom: '20px',
     },
     titleBadge: {
       // 뱃지 스타일은 유지하되 배경에 어울리게 조정
       background: 'rgba(255, 255, 255, 0.5)', // 반투명 흰색
-      border: '2.5px solid #333',
-      borderRadius: '20px',
-      padding: '5px 15px',
-      fontSize: '18px',
+      border: '3px solid #333',
+      borderRadius: '25px',
+      padding: '8px 20px',
+      fontSize: '22px', // 폰트 확대 (18 -> 22)
       fontWeight: 'bold',
-      marginBottom: '20px',
+      marginBottom: '25px',
       color: '#333',
     },
     imageArea: {
-      width: '140px',
-      height: '140px',
-      marginBottom: '20px',
+      width: '200px', // 이미지 확대 (140 -> 200)
+      height: '200px',
+      marginBottom: '25px',
       // 이미지 테두리도 조금 더 자연스럽게? 혹은 유지
-      border: '3px solid #333',
+      border: '4px solid #333',
       borderRadius: '50%', // 원형으로 변경해볼까요? (선택사항, 일단 유지하되 둥글게)
       overflow: 'hidden',
       display: 'flex',
@@ -104,19 +104,19 @@ export default function GameRuleGuide() {
       objectFit: 'cover' as const,
     },
     desc: {
-      fontSize: '17px',
+      fontSize: '20px', // 글자 확대 (17 -> 20)
       lineHeight: '1.6',
       color: '#333', // 배경이 밝으므로 진한 글씨
       whiteSpace: 'pre-line' as const,
+      wordBreak: 'keep-all' as const, // 단어 단위 줄바꿈 유지
       fontWeight: 'bold',
       textShadow: '1px 1px 0px rgba(255,255,255,0.5)', // 가독성 확보
-      minHeight: '80px', // 텍스트 흔들림 방지
+      minHeight: '80px',
     },
     // 도트 네비게이션 컨테이너
     dotsContainer: {
       display: 'flex',
       gap: '8px',
-      marginTop: '10px',
     },
   };
 
@@ -145,10 +145,10 @@ export default function GameRuleGuide() {
             key={idx}
             onClick={() => setCurrentIdx(idx)}
             style={{
-              width: '12px',
-              height: '12px',
+              width: '18px',  // 크기 확대 (12 -> 18)
+              height: '18px',
               borderRadius: '50%',
-              border: '2px solid #333',
+              border: '3px solid #333', // 테두리도 조금 두껍게
               background: currentIdx === idx ? '#333' : 'white', // 활성: 검정, 비활성: 흰색
               cursor: 'pointer',
               padding: 0,
