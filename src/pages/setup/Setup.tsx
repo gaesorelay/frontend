@@ -7,6 +7,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { createRoomApi } from '@/api/roomApi';
 import { socket } from '@/lib/socket';
 import { useAudioStore } from '@/store/useAudioStore';
+import { useAudioStore } from '@/store/useAudioStore';
 
 // 🎨 배경 및 로고 이미지
 import paperBg from '@/assets/background.png';
@@ -16,7 +17,6 @@ import rightArrowImg from '@/assets/logo/rightarrow.png';
 import SetupDecorations from './components/SetupDecorations';
 import refreshIcon from '@/assets/refresh.svg';
 import clickMp3 from '@/assets/sound/click.mp3';
-import RuleGuide from '@/components/common/RuleGuide';
 
 // 🐶 강아지 이미지 로딩
 import { AVATAR_LIST } from '@/lib/avatarMapper';
@@ -36,7 +36,7 @@ export default function Setup() {
   const playClick = () => {
     const audio = new Audio(clickMp3);
     audio.volume = 0.8;
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
   };
 
   // 1. GameStore
@@ -368,21 +368,12 @@ export default function Setup() {
       <button
         onClick={handleToggleMute}
         style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 1000,
-          background: 'rgba(255, 255, 255, 0.8)',
-          border: '2px solid #333',
-          borderRadius: '50%',
-          width: '50px',
-          height: '50px',
-          fontSize: '24px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '2px 2px 5px rgba(0,0,0,0.2)',
+          position: 'absolute', top: '20px', right: '20px', zIndex: 1000,
+          background: 'rgba(255, 255, 255, 0.8)', border: '2px solid #333',
+          borderRadius: '50%', width: '50px', height: '50px',
+          fontSize: '24px', cursor: 'pointer', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          boxShadow: '2px 2px 5px rgba(0,0,0,0.2)'
         }}
       >
         {isMuted ? '🔇' : '🔊'}
@@ -449,10 +440,7 @@ export default function Setup() {
       </div>
       <div style={styles.buttonGroup}>
         <button
-          onClick={() => {
-            playClick();
-            navigate(-1);
-          }}
+          onClick={() => { playClick(); navigate(-1); }}
           style={{ ...styles.button, background: '#f5f5f5' }}
           onMouseDown={(e) => (e.currentTarget.style.transform = 'translate(2px, 2px)')}
           onMouseUp={(e) => (e.currentTarget.style.transform = 'translate(0, 0)')}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -21,7 +21,6 @@ import { mainDecorations } from '@/pages/create/decorations';
 import DecoItem from '@/pages/create/DecoItem';
 import { animationStyles } from './create/createAnimations';
 
-import bgmMp3 from '@/assets/sound/BGM1.mp3';
 import barkWav from '@/assets/sound/bark.wav';
 import clickMp3 from '@/assets/sound/click.mp3';
 
@@ -32,19 +31,19 @@ export const Intro = () => {
   const navigate = useNavigate();
   const setRoomId = useUserStore((state) => state.setRoomId);
 
+  // 오디오 상태 (전역 사용)
+  const { isMuted, toggleMute } = useAudioStore();
+
   // --------------------------------------------------------
   // 상태 관리
   // --------------------------------------------------------
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [inputCode, setInputCode] = useState("");
-  const [isMuted, setIsMuted] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // 1. 화면 리사이즈 핸들러
   useEffect(() => {
@@ -55,52 +54,12 @@ export const Intro = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 2. BGM 초기 설정 및 싱글톤 관리
-  useEffect(() => {
-    // 중복 생성 방지: 이미 있으면 새로 만들지 않음
-    if (!audioRef.current) {
-      const audio = new Audio(bgmMp3);
-      audio.loop = true;
-      audio.volume = 0.5;
-      audioRef.current = audio;
-    }
-
-    const audio = audioRef.current;
-
-    const attemptPlay = () => {
-      audio.play().catch(() => {
-        console.log("Autoplay blocked. Waiting for user interaction.");
-      });
-    };
-
-    // 브라우저 정책 대응 (상호작용 시 재생)
-    document.addEventListener('click', attemptPlay, { once: true });
-    attemptPlay();
-
-    return () => {
-      // 컴포넌트 언마운트 시에만 정지
-      audio.pause();
-      document.removeEventListener('click', attemptPlay);
-    };
-  }, []);
-
-  // 3. 뮤트 상태 변화 감지 및 적용
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.muted = isMuted;
-      // 뮤트 해제 시 재생되고 있지 않다면 재생 시도
-      if (!isMuted && audioRef.current.paused) {
-        audioRef.current.play().catch(() => { });
-      }
-    }
-  }, [isMuted]);
-
   // --------------------------------------------------------
   // 핸들러 함수
   // --------------------------------------------------------
-  const toggleMute = () => {
-    setIsMuted((prev) => !prev);
-    playClick(); // 클릭음도 뮤트 상태를 따름
+  const handleToggleMute = () => {
+    toggleMute();
+    playClick();
   };
 
   const playBark = () => {
@@ -111,7 +70,7 @@ export const Intro = () => {
   };
 
   const playClick = () => {
-    if (isMuted) return;
+    // 무음 모드여도 클릭음은 재생 (요청사항 반영)
     const audio = new Audio(clickMp3);
     audio.volume = 0.8;
     audio.play().catch(() => { });
@@ -148,7 +107,7 @@ export const Intro = () => {
 
         {/* Mute Button */}
         <button
-          onClick={toggleMute}
+          onClick={handleToggleMute}
           style={{
             position: 'absolute', top: '20px', right: '20px', zIndex: 1000,
             background: 'rgba(255, 255, 255, 0.8)', border: '2px solid #333',
@@ -205,7 +164,7 @@ export const Intro = () => {
           }}>
             <button
               onClick={() => { playClick(); handleCreateRoom(); }}
-              className="cartoon-btn" // 공통 스타일이 있다면 클래스 활용 권장
+              className="cartoon-btn"
               style={{
                 width: '100%', padding: '14px 18px', fontSize: '24px',
                 border: '3.5px solid #222', borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
