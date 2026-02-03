@@ -1,9 +1,5 @@
 import { useState } from 'react';
 
-// 🖼️ 이미지 에셋 (실제 경로에 맞게 수정해주세요)
-// 없으면 임시로 로고나 다른 이미지를 import 하셔도 됩니다.
-import leftArrowImg from '@/assets/logo/leftarrow.png';
-import rightArrowImg from '@/assets/logo/rightarrow.png';
 import ruleImg1 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 1 (시작)
 import ruleImg2 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 2 (진행)
 import ruleImg3 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 3 (결과)
@@ -57,53 +53,50 @@ export default function GameRuleGuide() {
     setCurrentIdx((prev) => (prev === totalRules - 1 ? 0 : prev + 1));
   };
 
-  // 🎨 스타일 (Setup.tsx와 톤앤매너 통일)
+  // 🎨 스타일 (투명 배경 + 도트 네비게이션)
   const styles = {
     container: {
       display: 'flex',
+      flexDirection: 'column' as const, // 세로 배치 (컨텐츠 + 도트)
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '10px',
-      // Setup 페이지 레이아웃에 맞춰 크기 조정
       width: '100%',
-      maxWidth: '400px',
+      maxWidth: '350px', // 크기 적절히 조절
+      position: 'relative' as const,
     },
-    cardBox: {
-      flex: 1,
-      background: 'white',
-      padding: '20px',
-      boxSizing: 'border-box' as const,
-      boxShadow: '6px 6px 0px rgba(0,0,0,0.08)',
-      border: '3px solid #333',
-      // 약간 다른 둥근 모서리로 차별화
-      borderRadius: '15px 15px 15px 15px',
+    // 카드 박스 스타일 제거 (투명하게)
+    contentBox: {
+      width: '100%',
       display: 'flex',
       flexDirection: 'column' as const,
       alignItems: 'center',
       textAlign: 'center' as const,
-      minHeight: '300px', // 높이 고정 (내용 바뀔 때 흔들림 방지)
+      marginBottom: '15px',
     },
     titleBadge: {
-      background: '#FFD700', // 노란색 포인트
-      border: '2px solid #333',
+      // 뱃지 스타일은 유지하되 배경에 어울리게 조정
+      background: 'rgba(255, 255, 255, 0.5)', // 반투명 흰색
+      border: '2.5px solid #333',
       borderRadius: '20px',
       padding: '5px 15px',
-      fontSize: '16px',
+      fontSize: '18px',
       fontWeight: 'bold',
-      marginBottom: '15px',
-      boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
+      marginBottom: '20px',
+      color: '#333',
     },
     imageArea: {
-      width: '120px',
-      height: '120px',
-      marginBottom: '15px',
-      border: '2px solid #333',
-      borderRadius: '10px',
+      width: '140px',
+      height: '140px',
+      marginBottom: '20px',
+      // 이미지 테두리도 조금 더 자연스럽게? 혹은 유지
+      border: '3px solid #333',
+      borderRadius: '50%', // 원형으로 변경해볼까요? (선택사항, 일단 유지하되 둥글게)
       overflow: 'hidden',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#f9f9f9',
+      backgroundColor: 'white', // 이미지는 잘 보여야 하니 흰 배경 유지
+      boxShadow: '4px 4px 0px rgba(0,0,0,0.1)',
     },
     ruleImage: {
       width: '100%',
@@ -111,48 +104,25 @@ export default function GameRuleGuide() {
       objectFit: 'cover' as const,
     },
     desc: {
-      fontSize: '16px',
-      lineHeight: '1.5',
-      color: '#555',
-      whiteSpace: 'pre-line' as const, // \n 줄바꿈 적용
-      fontWeight: 500,
-    },
-    arrowBtn: {
-      background: 'none',
-      border: 'none',
-      outline: 'none',
-      cursor: 'pointer',
-      padding: '0',
-      transition: 'transform 0.1s',
-    },
-    arrowIcon: {
-      width: '50px', // 메인보다 조금 작게
-      height: '50px',
-      objectFit: 'contain' as const,
-      filter: 'drop-shadow(2px 2px 0px rgba(0,0,0,0.2))',
-    },
-    pageIndicator: {
-      marginTop: '10px',
-      fontSize: '12px',
-      color: '#999',
+      fontSize: '17px',
+      lineHeight: '1.6',
+      color: '#333', // 배경이 밝으므로 진한 글씨
+      whiteSpace: 'pre-line' as const,
       fontWeight: 'bold',
+      textShadow: '1px 1px 0px rgba(255,255,255,0.5)', // 가독성 확보
+      minHeight: '80px', // 텍스트 흔들림 방지
+    },
+    // 도트 네비게이션 컨테이너
+    dotsContainer: {
+      display: 'flex',
+      gap: '8px',
+      marginTop: '10px',
     },
   };
 
   return (
     <div style={styles.container}>
-      {/* 왼쪽 화살표 */}
-      <button
-        onClick={handlePrev}
-        style={styles.arrowBtn}
-        onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
-        onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-      >
-        <img src={leftArrowImg} alt="이전" style={styles.arrowIcon} />
-      </button>
-
-      {/* 가운데 카드 */}
-      <div style={styles.cardBox}>
+      <div style={styles.contentBox}>
         <div style={styles.titleBadge}>
           Step {currentRule.step}. {currentRule.title}
         </div>
@@ -166,21 +136,30 @@ export default function GameRuleGuide() {
         </div>
 
         <div style={styles.desc}>{currentRule.desc}</div>
-
-        <div style={styles.pageIndicator}>
-          {currentIdx + 1} / {totalRules}
-        </div>
       </div>
 
-      {/* 오른쪽 화살표 */}
-      <button
-        onClick={handleNext}
-        style={styles.arrowBtn}
-        onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
-        onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-      >
-        <img src={rightArrowImg} alt="다음" style={styles.arrowIcon} />
-      </button>
+      {/* 도트 네비게이션 */}
+      <div style={styles.dotsContainer}>
+        {RULE_DATA.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrentIdx(idx)}
+            style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              border: '2px solid #333',
+              background: currentIdx === idx ? '#333' : 'white', // 활성: 검정, 비활성: 흰색
+              cursor: 'pointer',
+              padding: 0,
+              outline: 'none',
+              transform: currentIdx === idx ? 'scale(1.2)' : 'scale(1)',
+              transition: 'all 0.2s',
+            }}
+            title={`${idx + 1}단계`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

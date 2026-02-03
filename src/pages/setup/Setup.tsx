@@ -392,10 +392,7 @@ export default function Setup() {
       <img src={logoTitle} alt="방 만들기" style={styles.logo} />
       {/* ✨ [수정] 메인 컨텐츠 영역: 룰 설명과 캐릭터 설정을 나란히 배치 */}
       <div style={styles.mainContentRow}>
-        {/* 1. 왼쪽: 게임 룰 가이드 */}
-        <RuleGuide />
-
-        {/* 2. 오른쪽: 캐릭터 설정 (기존 코드) */}
+        {/* 1. 왼쪽: 캐릭터 설정 (기존 코드) */}
         <div style={styles.characterSetupSection}>
           <button
             onClick={handlePrev}
@@ -446,6 +443,9 @@ export default function Setup() {
             <img src={rightArrowImg} alt="다음" style={styles.arrowIcon} />
           </button>
         </div>
+
+        {/* 2. 오른쪽: 게임 룰 가이드 */}
+        <RuleGuide />
       </div>
       <div style={styles.buttonGroup}>
         <button
