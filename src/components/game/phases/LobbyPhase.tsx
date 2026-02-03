@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/store/useGameStore';
-import { useUserStore } from '@/store/useUserStore'; // 내 닉네임 가져오기용
+import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import { useAudioStore } from '@/store/useAudioStore';
 import { TeamSlot } from '@/components/game/TeamSlot';
-import { TeamBoard } from '@/components/game/TeamBoard';
+// import { TeamBoard } from '@/components/game/TeamBoard'; // 사용 안 함
 import { AudienceList } from '@/components/game/AudienceList';
 import { Background } from '@/components/common/background';
 
@@ -21,6 +21,11 @@ import logoOut from '@/assets/logo/logo_out.png';
 import logoSetting from '@/assets/logo/logo_setting.png';
 import lobbyLogo from '@/assets/logo/lobby_logo.png';
 import { getAvatarSrc } from '@/lib/avatarMapper';
+
+// 🆕 통합 보드 및 로고
+import boardImg from '@/assets/board.png';
+import logoA from '@/assets/logo/A.png';
+import logoB from '@/assets/logo/B.png';
 
 export type RoomConfig = {
   maxPlayers: number;
@@ -512,13 +517,20 @@ const LobbyPhase = ({
                 <div className={styles.topLeft}>
                   <img src={lobbyLogo} alt="Logo" className={styles.headerLogo} />
 
-                  <div className={styles.codeContainer} onClick={handleCopyCode}>
+                  {/* 1. 방 코드 */}
+                  <div className={styles.codeContainer} onClick={() => { playClick(); handleCopyCode(); }}>
                     <div className={styles.tape}></div>
                     <div className={styles.codeBox}>
                       <span className={styles.codeLabel}>ROOM CODE</span>
                       <span className={styles.codeNumber}>{roomId}</span>
                       {copied && <div className={styles.copyTooltip}>복사 완료! ✨</div>}
                     </div>
+                  </div>
+
+                  {/* 2. 방 제목 (가장 큼) */}
+                  <div className={styles.titleContainer}>
+                    <span className={styles.titleLabel}>방 이름 :</span>
+                    <h1 className={styles.roomTitle}>{displayTitle}</h1>
                   </div>
                 </div>
 
@@ -544,12 +556,7 @@ const LobbyPhase = ({
                 </div>
               </div>
 
-              {/* 2층: 방 제목 라인 (중앙 정렬) */}
-              <div className={styles.bottomRow}>
-                <div className={styles.titleWrapper}>
-                  <h1 className={styles.roomTitle}>{roomTitle}</h1>
-                </div>
-              </div>
+              {/* 2층: 방 제목 라인 삭제 (위로 통합) */}
 
               {/* 🏠 설정 수정 모달 (구현 완료) */}
               <Modal isOpen={isSettingOpen} onClose={() => setIsSettingOpen(false)}>
@@ -671,51 +678,49 @@ const LobbyPhase = ({
               </Modal>
             </header>
 
-            <div className={styles.gameArea}>
-              <TeamBoard
-                teamName="A"
-                maxStorytellers={maxStorytellers}
-                renderSlots={(team) =>
-                  Array.from({ length: maxStorytellers }).map((_, i) => {
+            {/* 🆕 통합 보드 영역 */}
+            <div className={styles.unifiedBoard} style={{ backgroundImage: `url(${boardImg})` }}>
+
+              {/* 왼쪽: A팀 */}
+              <div className={styles.teamSection}>
+                <img src={logoA} alt="Team A" className={styles.teamLogo} />
+                <div className={styles.slotsGrid}>
+                  {Array.from({ length: maxStorytellers }).map((_, i) => {
                     const user = users.find(
-                      (u) => u.role === 'PLAYER' && u.team === team && u.slotIndex === i
+                      (u) => u.role === 'PLAYER' && u.team === 'A' && u.slotIndex === i
                     );
                     return (
                       <TeamSlot
-                        key={i}
+                        key={`A-${i}`}
                         status={user ? 'FILLED' : 'EMPTY'}
                         user={user}
-                        onClick={() => handleSlotClick(team, i)}
+                        onClick={() => handleSlotClick('A', i)}
                       />
                     );
-                  })
-                }
-              />
-
-              <div className={styles.vsContainer}>
-                <div className={styles.vsCircle}></div> {/* 뒤에 깔리는 노란 광광 효과 */}
-                <div className={styles.vsText}>VS</div>
+                  })}
+                </div>
               </div>
 
-              <TeamBoard
-                teamName="B"
-                maxStorytellers={maxStorytellers}
-                renderSlots={(team) =>
-                  Array.from({ length: maxStorytellers }).map((_, i) => {
+              {/* 오른쪽: B팀 */}
+              <div className={styles.teamSection}>
+                <img src={logoB} alt="Team B" className={styles.teamLogo} />
+                <div className={styles.slotsGrid}>
+                  {Array.from({ length: maxStorytellers }).map((_, i) => {
                     const user = users.find(
-                      (u) => u.role === 'PLAYER' && u.team === team && u.slotIndex === i
+                      (u) => u.role === 'PLAYER' && u.team === 'B' && u.slotIndex === i
                     );
                     return (
                       <TeamSlot
-                        key={i}
+                        key={`B-${i}`}
                         status={user ? 'FILLED' : 'EMPTY'}
                         user={user}
-                        onClick={() => handleSlotClick(team, i)}
+                        onClick={() => handleSlotClick('B', i)}
                       />
                     );
-                  })
-                }
-              />
+                  })}
+                </div>
+              </div>
+
             </div>
             {isHost && (
               <footer className={styles.footerArea}>

@@ -1,7 +1,7 @@
 /* TeamBoard.module.css */
 
 .boardContainer {
-  background-image: url('/src/assets/bg/board_paper.png');
+  background-image: url('/src/assets/board.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
