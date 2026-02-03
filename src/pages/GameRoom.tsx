@@ -177,6 +177,7 @@ const GameRoom = () => {
       store.setVoteResult(null); // 투표 결과 초기화
       store.setGameState(null);  // 이전 게임 진행 상태(턴 정보 등) 초기화
       store.setRoundData(null);  // 이전 라운드 데이터(카드 등) 삭제
+      store.resetMessages();     // 채팅 내역 초기화
 
       // imageIds, judges 등을 스토어에 저장
       setRoundData({
