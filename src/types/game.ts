@@ -10,7 +10,6 @@ export type UserTeam = 'A' | 'B' | null;
 export type RoomConfig = {
   maxPlayers: number; // (teamSize 제거 -> maxPlayers 사용)
   storytellerCount: number; // 이야기꾼 수
-  rounds: number; // (roundCount -> rounds)
   roundTime: number; // (roundTimeSeconds -> roundTime)
   voteTime: number; // (votingTimeSeconds -> voteTime)
 };

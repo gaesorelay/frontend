@@ -22,7 +22,6 @@ import { getAvatarSrc } from '@/lib/avatarMapper';
 export type RoomConfig = {
   maxPlayers: number;
   storytellerCount: number;
-  rounds: number;
   roundTime: number;
   voteTime: number;
 };
@@ -118,7 +117,6 @@ const LobbyPhase = ({
     roomConfig || {
       maxPlayers: 10,
       storytellerCount: 3,
-      rounds: 3,
       roundTime: 60,
       voteTime: 30,
     }
@@ -543,26 +541,6 @@ const LobbyPhase = ({
                         onClick={() =>
                           updateConfig('storytellerCount', editConfig.storytellerCount + 1, 1, 6)
                         }
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 4. 라운드 수 */}
-                  <div className={styles.settingField}>
-                    <label>진행 라운드</label>
-                    <div className={styles.counter}>
-                      <button
-                        className={styles.countBtn}
-                        onClick={() => updateConfig('rounds', editConfig.rounds - 1, 1, 10)}
-                      >
-                        -
-                      </button>
-                      <span className={styles.countNum}>{editConfig.rounds}R</span>
-                      <button
-                        className={styles.countBtn}
-                        onClick={() => updateConfig('rounds', editConfig.rounds + 1, 1, 10)}
                       >
                         +
                       </button>
