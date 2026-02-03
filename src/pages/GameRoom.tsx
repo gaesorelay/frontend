@@ -170,6 +170,14 @@ const GameRoom = () => {
     // 3.  게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
     socket.on('game_started', (data) => {
       console.log('🎮 게임 데이터 도착:', data);
+
+      // ♻️ [수정] 새 게임 시작 시 이전 상태값들 확실하게 초기화
+      const store = useGameStore.getState();
+      store.resetStory();       // 스토리 텍스트 초기화
+      store.setVoteResult(null); // 투표 결과 초기화
+      store.setGameState(null);  // 이전 게임 진행 상태(턴 정보 등) 초기화
+      store.setRoundData(null);  // 이전 라운드 데이터(카드 등) 삭제
+
       // imageIds, judges 등을 스토어에 저장
       setRoundData({
         cardIds: data.imageIds,
@@ -272,7 +280,7 @@ const GameRoom = () => {
 
       socket.emit('submit_story', {
         roomId,
-        text: draftText,
+        message: draftText,
         team: myPlayer.team,
         userToken,
         turn: turnNumber
