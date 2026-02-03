@@ -38,7 +38,6 @@ export default function CreatePage() {
   const [roomName, setRoomName] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(20);  // 초기값 20명
   const [storytellers, setStorytellers] = useState(4); // 초기값 4명
-  const [rounds, setRounds] = useState(3);           // 초기값 3라운드
   const [roundTime, setRoundTime] = useState(30);    // 초기값 30초
   const [voteTime, setVoteTime] = useState(20);      // 초기값 20초
 
@@ -62,15 +61,6 @@ export default function CreatePage() {
       step: 1,
       min: 3,   // ✅ 최소 3명
       max: 8    // ✅ 최대 8명
-    },
-    {
-      label: '라운드 수',
-      value: rounds,
-      setValue: setRounds,
-      unit: 'R',
-      step: 1,
-      min: 1,   // ✅ 최소 1라운드
-      max: 3    // ✅ 최대 3라운드
     },
     {
       label: '라운드 시간',
@@ -111,7 +101,6 @@ export default function CreatePage() {
     const configData: RoomConfig = {
       maxPlayers: maxPlayers,        // 총 정원
       storytellerCount: storytellers,// 이야기꾼 수
-      rounds: rounds,                // 라운드 수
       roundTime: roundTime,          // 라운드 시간 (초)
       voteTime: voteTime,            // 투표 시간 (초)
     };
