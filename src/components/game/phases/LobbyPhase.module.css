@@ -5,8 +5,8 @@
   display: flex;
   flex-direction: column;
   /* 세로로 헤더 / 컨텐츠 나눔 */
-  overflow: hidden;
-  /* 전체 페이지 스크롤 방지 */
+  overflow-y: auto;
+  /* 내용이 길어지면 스크롤 */
 }
 
 /* 헤더 설정 */
@@ -56,13 +56,44 @@
   gap: 15px;
 }
 
-.roomTitle {
+.titleContainer {
+  display: flex;
+  flex-direction: row;
+  /* 가로 배치 */
+  align-items: center;
+  /* 수직 중앙 정렬 */
+  margin-left: 30px;
+  gap: 15px;
+}
+
+.titleLabel {
   font-size: 2.5rem;
-  /* 제목을 더 큼직하게 */
+  /* 라벨도 아주 크게 */
+  font-weight: 900;
+  color: #555;
+  margin: 0;
+  white-space: nowrap;
+  /* 줄바꿈 방지 */
+  text-shadow: 2px 2px 0px white;
+}
+
+.roomTitle {
+  font-size: 3.5rem;
+  /* 제목은 더 크게 */
   font-weight: 900;
   color: #333;
-  text-shadow: 3px 3px 0px white;
-  letter-spacing: -1px;
+  text-shadow: 4px 4px 0px white;
+  letter-spacing: -2px;
+  line-height: 1.1;
+  margin: 0;
+  background: linear-gradient(to bottom, #333 0%, #000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* 그라데이션 글자 */
+  /* text-shadow와 fill-color 충돌 시 shadow 트릭 필요하지만 일단 심플하게 가거나 shadow 유지하려면 fill-color 뺌 */
+  /* 여기선 shadow 유지 위해 fill-color 제거 */
+  background: none;
+  -webkit-text-fill-color: initial;
 }
 
 /* 방 코드 복사 박스 (쪽지 컨셉) */
@@ -155,7 +186,7 @@
 }
 
 .exitImg {
-  width: 60px;
+  width: 90px;
   height: auto;
 }
 
@@ -165,11 +196,11 @@
 }
 
 .exitText {
-  font-size: 0.65rem;
+  font-size: 1rem;
   font-weight: 900;
   color: #666;
   /* 텍스트는 너무 튀지 않게 */
-  margin-top: 2px;
+  margin-top: 5px;
 }
 
 /* 컨텐츠 설정 */
@@ -209,32 +240,40 @@
 }
 
 .sidebarToggle {
-  position: fixed;
+  position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 25px;
-  height: 50vh;
-  background-color: white;
-  border-radius: 0 30px 30px 0;
-  border: none;
-  color: rgba(251, 191, 36, 1);
-  font-weight: bold;
+  width: 40px;
+  height: 80px;
+  /* 작고 귀여운 손잡이 형태로 변경 */
+  background-color: #ffd700;
+  /* 쨍한 노란색 */
+  border: 4px solid #333;
+  /* 만화 테두리 */
+  border-left: none;
+  /* 왼쪽은 사이드바에 붙은 느낌 */
+  border-radius: 0 20px 20px 0;
+  color: #333;
+  font-weight: 900;
   cursor: pointer;
   transition: all 0.2s ease;
-  z-index: 99;
-  font-size: 0.9rem;
+  z-index: 20;
+  /* 모달보다는 아래, 컨텐츠보다는 위 */
+  font-size: 1.2rem;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: auto !important;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+  /* 입체감 */
 }
 
 .sidebarToggle:hover {
-  background-color: rgba(251, 190, 36, 0.202);
-  border: none;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+  background-color: #ffed4a;
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50%) translateX(5px);
+  /* 호버 시 살짝 튀어나옴 */
 }
 
 .mainBoard {
@@ -255,6 +294,7 @@
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
@@ -265,6 +305,111 @@
   }
 }
 
+/* 🆕 통합 보드 스타일 */
+.unifiedBoard {
+  width: 95%;
+  max-width: 1200px;
+  /* 원복 */
+  min-height: 450px;
+  /* 높이도 살짝 줄임 */
+  /* 원복 */
+  /* aspect-ratio: 16/9; */
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  display: flex;
+  justify-content: center;
+  /* space-around -> center로 변경하여 중앙으로 모음 */
+  gap: 80px;
+  /* 두 팀 사이 간격 조절 */
+  align-items: flex-start;
+  /* 상단 정렬 후 margin으로 내리기 */
+  padding: 70px 30px 20px 30px;
+  /* 패딩 늘림 (40 -> 70) */
+  /* 원복 */
+  margin: 5px auto;
+  /* 마진도 줄임 */
+  box-sizing: border-box;
+}
+
+/* 5명, 6명일 때 보드 높이 확장 */
+.board5,
+.board6 {
+  min-height: 520px;
+  /* 580px -> 520px 줄임 */
+  padding-top: 50px;
+  /* 상단 여백 줄임 */
+  padding-bottom: 50px;
+  /* 하단 여백 줄임 */
+}
+
+.teamSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40%;
+  /* 너비 약간 줄임 */
+  height: 100%;
+  justify-content: flex-start;
+}
+
+.teamLogo {
+  width: 220px;
+  height: auto;
+  margin-bottom: 10px;
+  /* 20px -> 10px */
+  filter: drop-shadow(2px 4px 0px rgba(0, 0, 0, 0.2));
+  transition: transform 0.2s;
+}
+
+.teamLogo:hover {
+  transform: scale(1.05) rotate(-2deg);
+}
+
+.teamSection:first-child .teamLogo {
+  margin-left: 40px;
+}
+
+.slotsGrid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  /* 간격 대폭 줄임 (따닥) */
+  width: 100%;
+  max-width: 100%;
+  margin-top: 35px;
+}
+
+/* 4명일 때: A팀은 오른쪽으로 좀 더 이동 */
+.teamSection:first-child .slots4 {
+  padding-left: 60px;
+  /* 오른쪽으로 이동 */
+}
+
+/* 5명일 때: 3명 / 2명 줄바꿈 유도 + 축소 */
+.slots5 {
+  max-width: 300px;
+  /* 강제 줄바꿈 */
+  margin-top: 5px;
+  /* 약간만 위로 */
+  gap: 2px 10px;
+  /* 가로 간격 좀 벌림 */
+  transform: scale(0.9);
+  transform-origin: top center;
+}
+
+/* 6명일 때: 3명 / 3명 줄바꿈 유도 + 축소 */
+.slots6 {
+  max-width: 320px;
+  /* 강제 줄바꿈 */
+  margin-top: 5px;
+  transform: scale(0.9);
+  transform-origin: top center;
+}
+
+/* 기존 gameArea 스타일 (혹시 몰라 둠) */
 .gameArea {
   display: flex;
   align-items: center;
@@ -300,6 +445,14 @@
   margin-right: 3rem;
 }
 
+/* 5명, 6명일 때 버튼을 좀 더 위로 올림 */
+.footer5,
+.footer6 {
+  margin-top: -30px;
+  position: relative;
+  z-index: 50;
+}
+
 .buttonGroup {
   display: flex;
   justify-content: flex-end;
@@ -317,8 +470,8 @@
   color: #333;
   /* 글자색은 진한 회색이 더 귀여워요 */
   font-weight: 900;
-  font-size: 1.2rem;
-  padding: 0.5rem 1.2rem;
+  font-size: 1.5rem;
+  padding: 0.8rem 1.5rem;
 
   /* 2. 핵심: 비정형 테두리 (손으로 깎은 듯한 느낌) */
   border: 3px solid #333;
@@ -358,14 +511,21 @@
   text-align: center;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  /* 이미지 중앙 정렬 */
   gap: 0.5rem;
+  width: 100%;
+  /* 부모 너비 채움 */
 }
 
 .modalAvatar {
   width: 5rem;
   height: 5rem;
   object-fit: contain;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
+  /* 간격 줄임 */
+  margin-top: 30px;
+  /* 위로 여백 추가 */
 }
 
 .modalTitle {
@@ -396,19 +556,19 @@
 }
 
 .buttonTeamA {
-  background-color: #3b82f6;
-}
-
-.buttonTeamA:hover {
-  background-color: #2563eb;
-}
-
-.buttonTeamB {
   background-color: #ef4444;
 }
 
-.buttonTeamB:hover {
+.buttonTeamA:hover {
   background-color: #dc2626;
+}
+
+.buttonTeamB {
+  background-color: #3b82f6;
+}
+
+.buttonTeamB:hover {
+  background-color: #2563eb;
 }
 
 .buttonKick {
@@ -458,6 +618,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  /* 수직 중앙 정렬 추가 */
   background: none;
   border: none;
   cursor: pointer;
@@ -491,6 +653,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
+  text-align: center;
+  /* 텍스트 중앙 정렬 명시 */
 }
 
 .emptyMessage {
@@ -499,31 +663,7 @@
   padding: 1rem;
 }
 
-.vsText {
-  font-size: 5rem;
-  /* 조금 더 키워도 좋아요! */
-  font-weight: 900;
-  font-style: italic;
 
-  /* 1. 색상: 강렬한 빨간색 계열 그라데이션 또는 단색 */
-  color: #ff4d4d;
-
-  /* 2. 외곽선: Setup 페이지 컨셉인 두꺼운 테두리 (#333) */
-  /* -webkit-text-stroke를 쓰면 글자 안에 두꺼운 선이 생깁니다 */
-  -webkit-text-stroke: 2.5px #333;
-
-  /* 3. 그림자: 입체감 있는 겹치기 그림자 (만화 느낌) */
-  text-shadow:
-    4px 4px 0px #333,
-    8px 8px 0px rgba(0, 0, 0, 0.1);
-
-  /* 4. 애니메이션: 로고처럼 계속 부들부들 떨리는 효과 */
-  animation: vsJitter 0.2s infinite;
-
-  position: relative;
-  z-index: 10;
-  user-select: none;
-}
 
 .vsContainer {
   position: relative;
@@ -589,8 +729,10 @@
 }
 
 .settingInput {
-  width: 100%; /* 부모 너비에 딱 맞춤 */
-  box-sizing: border-box; /* 패딩 포함해서 너비 계산 */
+  width: 100%;
+  /* 부모 너비에 딱 맞춤 */
+  box-sizing: border-box;
+  /* 패딩 포함해서 너비 계산 */
   padding: 12px;
   border: 3px solid #333;
   border-radius: 10px;
@@ -641,17 +783,20 @@
 .settingModalContent {
   box-sizing: border-box;
   width: 100%;
-  padding: 10px 20px; /* 좌우 여백 확보 */
+  padding: 10px 20px;
+  /* 좌우 여백 확보 */
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px; /* 간격 조금 줄임 (20px -> 15px) */
+  gap: 15px;
+  /* 간격 조금 줄임 (20px -> 15px) */
 
   /* ⭐ 핵심: 내용이 길어지면 스크롤 생기게 설정 */
   max-height: 70vh;
   overflow-y: auto;
   width: 100%;
-  min-width: 300px; /* 너무 좁아지지 않게 */
+  min-width: 300px;
+  /* 너무 좁아지지 않게 */
 
   /* 스크롤바 디자인 (크롬/사파리) */
   scrollbar-width: thin;
@@ -661,10 +806,12 @@
 .settingModalContent::-webkit-scrollbar {
   width: 6px;
 }
+
 .settingModalContent::-webkit-scrollbar-thumb {
   background-color: #d97706;
   border-radius: 10px;
 }
+
 .settingModalContent::-webkit-scrollbar-track {
   background-color: transparent;
 }
@@ -674,7 +821,8 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 5px; /* 라벨과 입력창 사이 간격 좁힘 */
+  gap: 5px;
+  /* 라벨과 입력창 사이 간격 좁힘 */
 }
 
 /* 3. 인원수 조절기 (기존 유지하되 높이 고정) */
@@ -684,10 +832,12 @@
   justify-content: center;
   gap: 15px;
   background: #eee;
-  padding: 8px 15px; /* 패딩 살짝 줄임 */
+  padding: 8px 15px;
+  /* 패딩 살짝 줄임 */
   border-radius: 50px;
   border: 2px solid #333;
-  width: 100%; /* 꽉 차게 */
+  width: 100%;
+  /* 꽉 차게 */
   box-sizing: border-box;
 }
 
@@ -704,7 +854,8 @@
 }
 
 .timeControl {
-  flex: 1; /* 반반 차지 */
+  flex: 1;
+  /* 반반 차지 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -722,7 +873,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fffbeb; /* 연한 노란색 배경으로 구분 */
+  background: #fffbeb;
+  /* 연한 노란색 배경으로 구분 */
   padding: 5px 10px;
   border-radius: 20px;
   border: 2px solid #333;
@@ -731,7 +883,8 @@
 }
 
 .counterSmall .countBtn {
-  width: 28px; /* 버튼 크기 작게 */
+  width: 28px;
+  /* 버튼 크기 작게 */
   height: 28px;
   font-size: 0.8rem;
   border: 1px solid #333;

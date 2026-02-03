@@ -4,6 +4,7 @@ import { Intro } from './pages/Intro.tsx';
 import Create from './pages/create/Create.tsx';
 import Setup from './pages/setup/Setup.tsx';
 import GameRoom from './pages/GameRoom.tsx';
+// import MyProfile from './pages/MyProfile.tsx'; // 제거
 import NotFound from './pages/NotFound';;
 import { socket } from './lib/socket';
 import { initSocketHandlers } from './lib/socketHandlers';
@@ -15,7 +16,7 @@ import JudgeResultPhase from './components/game/phases/JudgeResultPhase.tsx';
 import FinalResultPhase from './components/game/phases/FinalResultPhase.tsx';
 import { RoomValidationGuard, GameEntryGuard } from '@/components/routes/RouteGuards';
 import KickModal from '@/components/common/KickModal';
-import BGMPlayer from '@/components/common/BGMPlayer';
+import BGMPlayer from '@/components/common/BGMPlayer'; // 🎵 추가
 // 임시 페이지 컴포넌트 (나중에 src/pages/.. 로 분리하세요)
 const TempResult = () => <div className="p-10 text-2xl font-bold">결과 화면</div>;
 
@@ -37,14 +38,15 @@ function App() {
         <BrowserRouter>
             <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
                 {/* <DevRemote /> */}
+                <BGMPlayer /> {/* 🎵 전역 BGM 플레이어 */}
                 <KickModal />
-                <BGMPlayer />
                 <Routes>
                     {/* 1. 메인화면 */}
                     <Route path="/" element={<Intro />} />
 
                     {/* 2. 방 만들기 */}
                     <Route path="/create" element={<Create />} />
+                    {/* <Route path="/profile" element={<MyProfile />} /> */}
 
                     {/* 3. 방 입장 (Setup) & 게임방 (GameRoom) - 공통: 방 유효성 검사 */}
                     <Route element={<RoomValidationGuard />}>

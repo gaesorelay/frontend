@@ -36,7 +36,7 @@ export default function Setup() {
   const playClick = () => {
     const audio = new Audio(clickMp3);
     audio.volume = 0.8;
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
   };
 
   // 1. GameStore
