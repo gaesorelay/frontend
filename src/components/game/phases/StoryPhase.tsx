@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Background } from '@/components/common/background';
-import { useGameStore } from '@/store/useGameStore'; // 스토어 임포트
+import { useGameStore } from '@/store/useGameStore';
+import { useAudioStore } from '@/store/useAudioStore';
 import { getCardImage } from '@/lib/cardMapper'; // 카드 이미지 매퍼
 import { getStoryteller } from '@/lib/gameLogic'; // ⭐️ 작성자 찾기 로직
 import storyLogoImg from '@/assets/logo/logo_story.png';
@@ -10,6 +11,7 @@ import ChatArea from '../ChatArea';
 
 const StoryPhase = () => {
   const { teamAStory, teamBStory, roundData } = useGameStore();
+  const { isMuted, toggleMute } = useAudioStore(); // ⭐️ 뮤트 상태 가져오기
   const [currentTeam, setCurrentTeam] = useState<'A' | 'B'>('A');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
@@ -117,6 +119,33 @@ const StoryPhase = () => {
         )}
       </AnimatePresence>
 
+
+
+      {/* 🔇 뮤트 버튼 (좌측 상단 고정) */}
+      <button
+        onClick={toggleMute}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          zIndex: 9999,
+          background: 'rgba(255, 255, 255, 0.8)',
+          border: '3px solid #333',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          fontSize: '24px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '3px 3px 0px rgba(0,0,0,0.2)',
+        }}
+        title={isMuted ? '소리 켜기' : '소리 끄기'}
+      >
+        {isMuted ? '🔇' : '🔊'}
+      </button>
+
       <div style={styles.container}>
         <div style={styles.leftSection}>
           {!isFinished && !showIntro && (
@@ -200,7 +229,7 @@ const StoryPhase = () => {
           <ChatArea />
         </div>
       </div>
-    </Background>
+    </Background >
   );
 };
 

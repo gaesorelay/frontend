@@ -7,6 +7,7 @@ import CardArea from '@/components/game/CardArea';
 
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
+import { useAudioStore } from '@/store/useAudioStore'; // 오디오 스토어 추가
 import { socket } from '@/lib/socket';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { getCardImage } from '@/lib/cardMapper';
@@ -25,6 +26,10 @@ import logo3 from '@/assets/logo/logo_3.png';
 import logo2 from '@/assets/logo/logo_2.png';
 import logo1 from '@/assets/logo/logo_1.png';
 import logoStart from '@/assets/logo/logo_start.png';
+
+// --- Sound Effects ---
+import clockMp3 from '@/assets/sound/clocksound.mp3';
+import boomMp3 from '@/assets/sound/boom.mp3';
 
 import { TURN_COUNT } from '@/constants/game';
 
@@ -172,7 +177,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
       const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
 
       setTimeLeft(remaining);
-      setIsUrgent(remaining <= 10 && remaining > 0);
+      setIsUrgent(remaining <= 7 && remaining > 0);
 
       if (remaining <= 0) {
         clearInterval(interval);
@@ -182,6 +187,29 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     // 3. 클린업 (중요: currentRound가 바뀔 때 이전 인터벌을 확실히 죽임)
     return () => clearInterval(interval);
   }, [roundData?.startedAt, roundDuration, currentRound]); // 👈 여기에 currentRound를 추가하세요!
+
+  // 🔊 사운드 이펙트 로직
+  const { isMuted, toggleMute } = useAudioStore(); // Toggle 추가
+
+  // 1. 긴박한 상황(7초 이하)일 때 시계 소리 재생
+  useEffect(() => {
+    let audio: HTMLAudioElement | null = null;
+
+    if (isUrgent && !isMuted) {
+      audio = new Audio(clockMp3);
+      audio.volume = 0.6;
+      // audio.loop = true; // 7초 파일이므로 루프 없이 한 번 재생
+      audio.play().catch(() => { });
+    }
+
+    return () => {
+      // isUrgent가 끝나거나(끝났거나), 뮤트하거나, 언마운트 되면 정지
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
+  }, [isUrgent, isMuted]);
 
   // ⭐️ 턴 변경(또는 언마운트) 시 자동 제출 로직
   // 1. 턴이 바뀌는 순간 직전 턴 내용을 자동 제출
@@ -357,9 +385,9 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
   const crazyTimerStyle: React.CSSProperties = {
     ...kitchBoxStyle,
-    backgroundColor: timeLeft <= 10 ? '#ff4757' : '#FFD93D', // 10초 남으면 빨개짐
-    color: timeLeft <= 10 ? '#fff' : '#000',
-    transform: timeLeft <= 10 ? 'scale(1.1) rotate(2deg)' : 'rotate(-2deg)',
+    backgroundColor: timeLeft <= 7 ? '#ff4757' : '#FFD93D', // 7초 남으면 빨개짐
+    color: timeLeft <= 7 ? '#fff' : '#000',
+    transform: timeLeft <= 7 ? 'scale(1.1) rotate(2deg)' : 'rotate(-2deg)',
     transition: 'all 0.2s ease-in-out',
   };
 
@@ -545,7 +573,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
           <header style={headerStyle}>
             {/* 타이머 구역 */}
             <div style={crazyTimerStyle} className={isUrgent ? 'panic-timer' : 'normal-timer'}>
-              <div style={badgeStyle}>{timeLeft <= 10 ? '빨리빨리!!' : '기다리는중..'}</div>
+              <div style={badgeStyle}>{timeLeft <= 7 ? '빨리빨리!!' : '기다리는중..'}</div>
               <Timer
                 size={28}
                 strokeWidth={3}
@@ -577,21 +605,44 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
               </div>
             </div>
 
-            {/* 우측 빈 공간 (밸런스용) 혹은 추가 정보 */}
-            <div
-              style={{
-                ...kitchBoxStyle,
-                backgroundColor: isMyTurn ? '#ff4757' : '#7bed9f',
-                transform: 'rotate(2deg)',
-              }}
-            >
-              <span style={{ fontWeight: 'bold', color: isMyTurn ? '#fff' : '#000' }}>
-                {myInfo?.role === 'AUDIENCE'
-                  ? '👀 관전 중...'
-                  : isMyTurn
-                    ? '✍️ 당신의 턴! 짖으세요!'
-                    : '💤 동료가 짖는 중...'}
-              </span>
+            {/* 우측 상단: 상태 배지 + 오디오 컨트롤 */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+              {/* 🔇 뮤트 버튼 */}
+              <button
+                onClick={toggleMute}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  border: '3px solid #333',
+                  borderRadius: '50%',
+                  width: '45px',
+                  height: '45px',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '3px 3px 0px rgba(0,0,0,0.2)',
+                }}
+                title={isMuted ? '소리 켜기' : '소리 끄기'}
+              >
+                {isMuted ? '🔇' : '🔊'}
+              </button>
+
+              <div
+                style={{
+                  ...kitchBoxStyle,
+                  backgroundColor: isMyTurn ? '#ff4757' : '#7bed9f',
+                  transform: 'rotate(2deg)',
+                }}
+              >
+                <span style={{ fontWeight: 'bold', color: isMyTurn ? '#fff' : '#000' }}>
+                  {myInfo?.role === 'AUDIENCE'
+                    ? '👀 관전 중...'
+                    : isMyTurn
+                      ? '✍️ 당신의 턴! 짖으세요!'
+                      : '💤 동료가 짖는 중...'}
+                </span>
+              </div>
             </div>
           </header>
 
