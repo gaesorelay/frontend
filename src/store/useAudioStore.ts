@@ -6,7 +6,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import main from '@/assets/sound/BGM1.mp3';
 import lobby from '@/assets/sound/waiting.mp3';
 import game from '@/assets/sound/BGM3.mp3';
-import shuffle from '@/assets/sound/CARDSHUFFLE.mp3';
+import shuffle from '@/assets/sound/cardshuffle.mp3';
 
 // sfx
 import cardShuffle from '@/assets/sound/CARDSHUFFLE.wav';
