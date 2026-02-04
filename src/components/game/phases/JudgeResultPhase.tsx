@@ -7,6 +7,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import { getResultJudgeImage } from '@/lib/judgeMapper'; // 이미지 매퍼
 import { getAvatarSrc } from '@/lib/avatarMapper';
+import { useAudioStore } from '@/store/useAudioStore'; // 🔊 추가
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
 const getAvatarUrl = getAvatarSrc;
@@ -35,6 +36,7 @@ const JudgeResultPhase = () => {
   // 1. Store에서 투표 결과(voteResult)와 게임 정보(roundData) 둘 다 가져옴
   const { voteResult, roundData, players } = useGameStore();
   const { isHost } = useUserStore();
+  const { playSFX } = useAudioStore(); // 🔊 SFX 함수 가져오기
 
   const navigator = useNavigate();
   const [introPhase, setIntroPhase] = useState(1);
@@ -110,12 +112,15 @@ const JudgeResultPhase = () => {
   // ⭐️ 100초 후 자동 exit (별도 Effect로 분리)
   useEffect(() => {
     if (introPhase === 7) {
+      // 🎉 최종 결과(7단계) 진입 시 박수 갈채 재생!
+      playSFX('APPLAUSE');
+
       const timer = setTimeout(() => {
         navigator('/');
       }, 100000);
       return () => clearTimeout(timer);
     }
-  }, [introPhase, navigator]);
+  }, [introPhase, navigator, playSFX]);
 
   // 5. 점수 카운팅 애니메이션
   useEffect(() => {

@@ -179,7 +179,7 @@ const JudgeShufflePhase = () => {
       setHighlightId(null);
       setIsFinished(true);
       // [3단계] ⭐️ 소개 시퀀스 시작 (그리드 사라지고 3명만 등장)
-      await wait(1000);
+      await wait(2000);
       setShowIntroUI(true); // 화면 전환
 
       // 1명씩 포커스 (0 -> 1 -> 2)

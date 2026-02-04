@@ -48,9 +48,6 @@ const BGMPlayer = () => {
             if (gamePhase === 'LOBBY') {
                 targetTrack = waitingMp3;
             }
-            else if (gamePhase.startsWith('TURN')) {
-                targetTrack = bgm3;
-            }
             else if (gamePhase === 'STORY') {
                 if (storyBgmMode === 'GAMEOVER') {
                     targetTrack = gameoverMp3;

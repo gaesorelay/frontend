@@ -17,6 +17,11 @@ import click from '@/assets/sound/click.mp3';
 import gameFinish from '@/assets/sound/GAMEFINISH.wav';
 import paper from '@/assets/sound/PAPER.wav';
 
+// New Sounds
+import applause from '@/assets/sound/applause.mp3';
+import countdown from '@/assets/sound/countdown.mp3';
+import buttonBeep from '@/assets/sound/button_beep.mp3';
+
 const SOUND_ASSETS = {
     BGM: {
         MAIN: main, // 메인 & 캐릭터 선택 공용
@@ -32,6 +37,9 @@ const SOUND_ASSETS = {
         CLICK: click,
         GAMEFINISH: gameFinish,
         PAPER: paper,
+        APPLAUSE: applause,
+        COUNTDOWN: countdown,
+        BUTTON_BEEP: buttonBeep,
     },
 } as const;
 
@@ -83,6 +91,7 @@ export const useAudioStore = create<AudioState>()(
                     if (isSameTrack) {
                         // 소리가 안 나고 있다면(차단되었었다면) 다시 재생 시도
                         if (bgmAudio.paused && !isMuted) {
+                            bgmAudio.volume = 0.5; // ⭐️ 볼륨 복구 (stopBGM으로 0이 되었을 수 있음)
                             bgmAudio.play().catch(() => { });
                         }
                         return; // 같은 곡이 이미 재생 중이면 여기서 중단 (노래 끊김 방지)
