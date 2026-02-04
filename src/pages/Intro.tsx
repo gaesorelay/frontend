@@ -32,8 +32,7 @@ export const Intro = () => {
   const setRoomId = useUserStore((state) => state.setRoomId);
 
   // 오디오 상태 (전역 사용)
-  const { isMuted, toggleMute } = useAudioStore();
-
+  const { isMuted, toggleMute, playBGM } = useAudioStore();
   // --------------------------------------------------------
   // 상태 관리
   // --------------------------------------------------------
@@ -53,14 +52,9 @@ export const Intro = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
   // --------------------------------------------------------
   // 핸들러 함수
   // --------------------------------------------------------
-  const handleToggleMute = () => {
-    toggleMute();
-    playClick();
-  };
 
   const playBark = () => {
     if (isMuted) return;
@@ -107,7 +101,7 @@ export const Intro = () => {
 
         {/* Mute Button */}
         <button
-          onClick={handleToggleMute}
+          onClick={toggleMute}
           style={{
             position: 'absolute', top: '20px', right: '20px', zIndex: 1000,
             background: 'rgba(255, 255, 255, 0.8)', border: '2px solid #333',

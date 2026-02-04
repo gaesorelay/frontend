@@ -15,8 +15,9 @@ import leftArrowImg from '@/assets/logo/leftarrow.png';
 import rightArrowImg from '@/assets/logo/rightarrow.png';
 import SetupDecorations from './components/SetupDecorations';
 import refreshIcon from '@/assets/refresh.svg';
-import clickMp3 from '@/assets/sound/click.mp3';
+// import clickMp3 from '@/assets/sound/click.mp3';
 import RuleGuide from '@/components/common/RuleGuide';
+import SoundButton from '@/components/common/SoundButton';
 
 // 🐶 강아지 이미지 로딩
 import { AVATAR_LIST } from '@/lib/avatarMapper';
@@ -27,17 +28,6 @@ export default function Setup() {
 
   // 오디오 상태 (전역 Store 사용)
   const { isMuted, toggleMute } = useAudioStore();
-
-  const handleToggleMute = () => {
-    toggleMute();
-    playClick();
-  };
-
-  const playClick = () => {
-    const audio = new Audio(clickMp3);
-    audio.volume = 0.8;
-    audio.play().catch(() => { });
-  };
 
   // 1. GameStore
   const { roomConfig, roomTitle, setRoomInfo, setHasEntered, reset } = useGameStore();
@@ -79,18 +69,15 @@ export default function Setup() {
 
   const handlePrev = () => {
     if (totalDogs === 0) return;
-    playClick();
     setAvatarIdx((prev) => (prev === 0 ? totalDogs - 1 : prev - 1));
   };
 
   const handleNext = () => {
     if (totalDogs === 0) return;
-    playClick();
     setAvatarIdx((prev) => (prev === totalDogs - 1 ? 0 : prev + 1));
   };
 
   const handleRandomAvatar = () => {
-    playClick();
     if (totalDogs > 0) {
       // 현재와 다른 랜덤 인덱스 선택
       let newIdx = Math.floor(Math.random() * totalDogs);
@@ -103,7 +90,6 @@ export default function Setup() {
 
   // ⭐️ 완료 버튼 핸들러
   const handleComplete = async () => {
-    playClick();
     if (!nickname.trim()) return alert('닉네임을 입력해주세요!');
 
     setIsLoading(true);
@@ -365,8 +351,9 @@ export default function Setup() {
 
   return (
     <div style={styles.container}>
-      <button
-        onClick={handleToggleMute}
+      <SoundButton
+        sfx="CLICK"
+        onClick={toggleMute}
         style={{
           position: 'absolute',
           top: '20px',
@@ -386,7 +373,7 @@ export default function Setup() {
         }}
       >
         {isMuted ? '🔇' : '🔊'}
-      </button>
+      </SoundButton>
 
       <SetupDecorations selectedDogIcon={selectedDog.icon} />
       <img src={logoTitle} alt="방 만들기" style={styles.logo} />
@@ -394,14 +381,15 @@ export default function Setup() {
       <div style={styles.mainContentRow}>
         {/* 1. 왼쪽: 캐릭터 설정 (기존 코드) */}
         <div style={styles.characterSetupSection}>
-          <button
+          <SoundButton
+            sfx="DOG1"
             onClick={handlePrev}
             style={styles.arrowBtn}
             onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
             onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
             <img src={leftArrowImg} alt="이전" style={styles.arrowIcon} />
-          </button>
+          </SoundButton>
 
           <div style={styles.cardBox}>
             <div style={styles.imageContainer}>
@@ -414,7 +402,8 @@ export default function Setup() {
               ) : (
                 <span style={{ fontSize: '12px', color: 'red' }}>이미지 없음</span>
               )}
-              <button
+              <SoundButton
+                sfx="DOG1"
                 onClick={handleRandomAvatar}
                 style={styles.randomBtn}
                 title="랜덤 변경"
@@ -422,7 +411,7 @@ export default function Setup() {
                 onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1) rotate(0deg)')}
               >
                 <img src={refreshIcon} alt="랜덤" style={styles.randomIcon} />
-              </button>
+              </SoundButton>
             </div>
             <label style={styles.label}>닉네임 입력</label>
             <input
@@ -434,23 +423,24 @@ export default function Setup() {
             />
           </div>
 
-          <button
+          <SoundButton
+            sfx="DOG1"
             onClick={handleNext}
             style={styles.arrowBtn}
             onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
             onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
             <img src={rightArrowImg} alt="다음" style={styles.arrowIcon} />
-          </button>
+          </SoundButton>
         </div>
 
         {/* 2. 오른쪽: 게임 룰 가이드 */}
         <RuleGuide />
       </div>
       <div style={styles.buttonGroup}>
-        <button
+        <SoundButton
+          sfx="CLICK"
           onClick={() => {
-            playClick();
             navigate(-1);
           }}
           style={{ ...styles.button, background: '#f5f5f5' }}
@@ -458,8 +448,9 @@ export default function Setup() {
           onMouseUp={(e) => (e.currentTarget.style.transform = 'translate(0, 0)')}
         >
           돌아가기
-        </button>
-        <button
+        </SoundButton>
+        <SoundButton
+          sfx="CLICK"
           onClick={handleComplete}
           disabled={isLoading}
           style={{
@@ -473,7 +464,7 @@ export default function Setup() {
           onMouseUp={(e) => !isLoading && (e.currentTarget.style.transform = 'translate(0, 0)')}
         >
           {isLoading ? '로딩 중...' : isHost ? '설정 완료!' : '입장하기'}
-        </button>
+        </SoundButton>
       </div>
     </div>
   );
