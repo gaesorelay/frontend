@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/useGameStore';
@@ -6,14 +7,31 @@ import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import type { ChatMessage } from '@/types/game';
 
-
 // 이미지 로드 로직 유지
 import { getAvatarSrc } from '@/lib/avatarMapper';
+
+// Reaction Images
+import boneImg from '@/assets/decorations/bone.png';
+import heartImg from '@/assets/decorations/heart.png';
+import starImg from '@/assets/decorations/star.png';
+import footImg from '@/assets/decorations/foot.png';
+import bigHeartImg from '@/assets/decorations/big_heart.png';
+import shibaImg from '@/assets/dog/shiba.png';
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
 const getAvatarUrl = getAvatarSrc;
 
-const REACTION_EMOJIS = ['🐶', '🔥', '🤣', '👍', '👎', '🍅'];
+// 🐶 이모지 대신 이미지 매핑 (Key -> Image Source)
+const REACTION_MAP: Record<string, string> = {
+  'bone': boneImg,
+  'heart': heartImg,
+  'star': starImg,
+  'foot': footImg,
+  'big_heart': bigHeartImg,
+  'shiba': shibaImg,
+};
+
+const REACTION_KEYS = Object.keys(REACTION_MAP);
 
 const ChatArea = () => {
   const { messages, addMessage, players } = useGameStore();
@@ -23,7 +41,8 @@ const ChatArea = () => {
 
   // 리액션 관련
   const [showReactions, setShowReactions] = useState(false);
-  const [floatingReactions, setFloatingReactions] = useState<{ id: number; emoji: string; x: number }[]>([]);
+  // emoji string 대신 image key를 저장
+  const [floatingReactions, setFloatingReactions] = useState<{ id: number; reactionKey: string; x: number; size: number }[]>([]);
 
   // 1. 소켓 이벤트 리스너 설정
   useEffect(() => {
@@ -39,6 +58,7 @@ const ChatArea = () => {
       addMessage(newMessage);
     };
 
+    // 서버에서는 { emoji: 'bone' } 형태로 보내줌 (기존 emoji 필드 재사용)
     const handleReaction = (data: { emoji: string }) => {
       triggerFloatingReaction(data.emoji);
     };
@@ -67,18 +87,27 @@ const ChatArea = () => {
   };
 
   // 리액션 발사 로직
-  const triggerFloatingReaction = (emoji: string) => {
+  const triggerFloatingReaction = (reactionKey: string) => {
+    // 없는 키면 무시
+    if (!REACTION_MAP[reactionKey]) return;
+
     const id = Date.now() + Math.random();
-    const x = Math.floor(Math.random() * 60) + 20;
-    setFloatingReactions(prev => [...prev, { id, emoji, x }]);
+    // ⭐️ X값 랜덤 범위 대폭 확대 (5% ~ 95%) -> 더 정신없게!
+    const x = Math.floor(Math.random() * 90) + 5;
+    // 사이즈도 약간 랜덤 (0.8 ~ 1.5배)
+    const size = 0.8 + Math.random() * 0.7;
+
+    setFloatingReactions(prev => [...prev, { id, reactionKey, x, size }]);
     setTimeout(() => {
       setFloatingReactions(prev => prev.filter(r => r.id !== id));
     }, 2000);
   };
 
-  const handleSendReaction = (emoji: string) => {
-    socket.emit('send_reaction', { emoji, nickname });
-    // triggerFloatingReaction(emoji);
+  const handleSendReaction = (reactionKey: string) => {
+    // emoji 필드에 키값을 담아서 보냄
+    socket.emit('send_reaction', { emoji: reactionKey, nickname });
+    // 내 화면에도 즉시 표시 (선택사항, 소켓으로 돌아오면 중복될 수 있으니 주석처리된 대로 둠 or 즉시반응 원하면 주석해제)
+    // triggerFloatingReaction(reactionKey);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -89,7 +118,6 @@ const ChatArea = () => {
   };
 
   // 1. 루프 밖에서 '나의 팀'이 무엇인지 딱 한 번만 정의 (Zustand players 활용)
-  // map 외부이므로 성능에 영향이 거의 없습니다.
   const myInfo = players.find(p => p.currentSocketId === socket.id || p.nickname === nickname);
   const myActualTeam = myInfo?.team || 'NONE'; // 내 팀 (A, B, 또는 NONE)
 
@@ -97,14 +125,6 @@ const ChatArea = () => {
     <div className="sketch-box-container" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', paddingLeft: '10px', maxWidth: '25rem' }}>
       <style>{`
         /* 🐶 멍멍이 스타일: 쫀득하고 촐싹거리는 애니메이션 */
-        @keyframes elastic-bounce {
-            0% { transform: scale(0) translateY(100px) rotate(-10deg); opacity: 0; } 
-            40% { transform: scale(1.1) translateY(-20px) rotate(5deg); opacity: 1; } 
-            60% { transform: scale(0.9) translateY(10px) rotate(-3deg); } 
-            80% { transform: scale(1.05) translateY(-5px) rotate(2deg); } 
-            100% { transform: scale(1) translateY(0) rotate(0deg); } 
-        }
-
         @keyframes tail-wag {
             0% { transform: rotate(0deg); }
             25% { transform: rotate(2deg); }
@@ -146,22 +166,39 @@ const ChatArea = () => {
         }
       `}</style>
 
-      {/* 솟아오르는 리액션 레이어 */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
-        <AnimatePresence>
-          {floatingReactions.map(r => (
-            <motion.div
-              key={r.id}
-              initial={{ y: '1000%', x: `${r.x}%`, opacity: 0, scale: 0.5 }}
-              animate={{ y: '-20%', opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1, 0.8] }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              style={{ position: 'absolute', fontSize: '2.5rem' }}
-            >
-              {r.emoji}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+
+      {/* 솟아오르는 리액션 레이어 (Portal을 사용하여 화면 전체에 표시) */}
+      {createPortal(
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 99999, overflow: 'hidden' }}>
+          <AnimatePresence>
+            {floatingReactions.map(r => (
+              <motion.div
+                key={r.id}
+                initial={{ y: 150, opacity: 0, scale: 0.5, rotate: 0 }}
+                animate={{
+                  y: - window.innerHeight - 200, // 화면 전체 높이만큼 위로 이동 + 여유분
+                  opacity: [0, 1, 1, 0],
+                  scale: [0.5, r.size, r.size, r.size * 0.8],
+                  rotate: [0, -20, 20, -10, 0]
+                }}
+                transition={{ duration: 4, ease: "easeOut" }}
+                style={{
+                  position: 'absolute',
+                  left: `${r.x}%`,
+                  bottom: '-50px'
+                }}
+              >
+                <img
+                  src={REACTION_MAP[r.reactionKey]}
+                  alt="reaction"
+                  style={{ width: '80px', height: '80px', objectFit: 'contain', filter: 'drop-shadow(4px 4px 2px rgba(0,0,0,0.3))' }}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>,
+        document.body
+      )}
 
       <div style={{ padding: '15px', background: 'transparent', borderBottom: '4px dashed #111', fontWeight: '900', textAlign: 'center', fontSize: '1.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
         <MessageSquare size={24} color="#111" />
@@ -222,16 +259,7 @@ const ChatArea = () => {
           }
 
           // 아바타 URL 가져오기
-          const avatarUrl = getAvatarUrl(msg.avatarId);
-
-
-          // ID 기반 고정 회전값 (-2 ~ 2도)
-          // 숫자가 아닐 수도 있으니 안전하게 처리
-          let rotation = 0;
-          try {
-            const numId = typeof msg.id === 'number' ? msg.id : parseInt(String(msg.id).slice(-2)) || 0;
-            rotation = (numId % 4) - 2;
-          } catch (e) { rotation = 1; }
+          // const avatarUrl = getAvatarUrl(msg.avatarId); // 사용안함
 
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
@@ -242,6 +270,7 @@ const ChatArea = () => {
                     width: '32px', height: '32px', borderRadius: '50%',
                     border: `2px solid ${currentConfig.border}`
                   }}
+                  alt="avatar"
                 />
               </div>
 
@@ -294,19 +323,23 @@ const ChatArea = () => {
                   gap: '5px',
                   boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
                   zIndex: 100,
-                  width: '50px',
+                  width: '60px', // width 약간 늘림
                   alignItems: 'center'
                 }}
               >
-                {REACTION_EMOJIS.map(emoji => (
+                {REACTION_KEYS.map(key => (
                   <motion.button
-                    key={emoji}
-                    whileHover={{ scale: 1.3 }}
+                    key={key}
+                    whileHover={{ scale: 1.2 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => handleSendReaction(emoji)}
-                    style={{ fontSize: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', padding: '2px' }}
+                    onClick={() => handleSendReaction(key)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
                   >
-                    {emoji}
+                    <img
+                      src={REACTION_MAP[key]}
+                      alt={key}
+                      style={{ width: '35px', height: '35px', objectFit: 'contain' }}
+                    />
                   </motion.button>
                 ))}
               </motion.div>
@@ -314,8 +347,8 @@ const ChatArea = () => {
           </AnimatePresence>
 
           {/* 리액션 트리거 아이콘 */}
-          <div style={{ fontSize: '1.8rem', cursor: 'pointer', filter: 'grayscale(0.2)', transition: '0.2s' }}>
-            😊
+          <div style={{ fontSize: '1.8rem', cursor: 'pointer', filter: 'grayscale(0.0)', transition: '0.2s' }}>
+            <img src={boneImg} style={{ width: '30px', height: '30px' }} alt="reaction trigger" />
           </div>
         </div>
 
