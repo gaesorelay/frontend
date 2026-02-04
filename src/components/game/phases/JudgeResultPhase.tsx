@@ -340,7 +340,7 @@ const JudgeResultPhase = () => {
 
         {introPhase === 7 && (
           <div style={{
-            position: 'fixed', bottom: '30px', right: '480px', zIndex: 11000,
+            position: 'fixed', bottom: '15px', right: '480px', zIndex: 11000,
             display: 'flex', gap: '20px'
           }}>
             <button
@@ -374,7 +374,7 @@ const JudgeResultPhase = () => {
           </div>
         )}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', height: '100vh', maxHeight: '100vh' }}>
           <ChatArea />
         </div>
       </div>
