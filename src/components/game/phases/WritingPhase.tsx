@@ -189,21 +189,40 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   }, [roundData?.startedAt, roundDuration, currentRound]); // 👈 여기에 currentRound를 추가하세요!
 
   // 🔊 사운드 이펙트 로직
-  const { isMuted, toggleMute } = useAudioStore(); // Toggle 추가
+  const { isMuted, toggleMute, playSFX, playBGM, stopBGM } = useAudioStore();
 
-  // 1. 긴박한 상황(7초 이하)일 때 시계 소리 재생
+  // 1. 카운트다운 시작 시 효과음 재생
+  useEffect(() => {
+    // 카운트다운 숫자가 3일 때 시작음 재생 (필요 시 다른 로직으로 변경 가능)
+    if (countdown === 3) {
+      playSFX('COUNTDOWN');
+    }
+
+    // 카운트다운이 완전히 끝났을 때(null이 되었을 때) BGM 재생
+    if (countdown === null) {
+      playBGM('GAME');
+    }
+  }, [countdown, playSFX, playBGM]);
+
+  // 2. 마운트/언마운트 시 BGM 처리
+  useEffect(() => {
+    // 언마운트 시 BGM 정지
+    return () => {
+      stopBGM();
+    };
+  }, [stopBGM]);
+
+  // 3. 긴박한 상황(7초 이하)일 때 시계 소리 재생
   useEffect(() => {
     let audio: HTMLAudioElement | null = null;
 
     if (isUrgent && !isMuted) {
       audio = new Audio(clockMp3);
       audio.volume = 0.6;
-      // audio.loop = true; // 7초 파일이므로 루프 없이 한 번 재생
       audio.play().catch(() => { });
     }
 
     return () => {
-      // isUrgent가 끝나거나(끝났거나), 뮤트하거나, 언마운트 되면 정지
       if (audio) {
         audio.pause();
         audio.currentTime = 0;

@@ -4,6 +4,7 @@ import { MessageSquare, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
+import { useAudioStore } from '@/store/useAudioStore'; // 오디오 스토어 추가
 import { socket } from '@/lib/socket';
 import type { ChatMessage } from '@/types/game';
 
@@ -103,6 +104,8 @@ const ChatArea = () => {
     // 서버에서는 { emoji: 'bone' } 형태로 보내줌 (기존 emoji 필드 재사용)
     const handleReaction = (data: { emoji: string }) => {
       if (data.emoji.includes('|')) return; // 구분자(|)가 있으면 방해 공작이므로 무시
+      // 🐶 이모지 효과음 재생 (모든 사용자)
+      useAudioStore.getState().playSFX('BUTTON_BEEP');
       triggerFloatingReaction(data.emoji);
     };
 
