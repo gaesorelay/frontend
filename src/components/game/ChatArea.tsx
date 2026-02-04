@@ -11,16 +11,39 @@ import type { ChatMessage } from '@/types/game';
 import { getAvatarSrc } from '@/lib/avatarMapper';
 
 // Reaction Images
+// Reaction Images
 import boneImg from '@/assets/decorations/bone.png';
 import heartImg from '@/assets/decorations/heart.png';
 import starImg from '@/assets/decorations/star.png';
 import footImg from '@/assets/decorations/foot.png';
 import bigHeartImg from '@/assets/decorations/big_heart.png';
 import shibaImg from '@/assets/dog/shiba.png';
+import gaesoImg from '@/assets/gaesorelay.png';
+
+// New Emojis
+import sadgeImg from '@/assets/decorations/emoji/sadge.png';
+import hangImg from '@/assets/decorations/emoji/hang.png';
+import jihyunClapImg from '@/assets/decorations/emoji/jihyun_clap.gif';
+import catDdabongImg from '@/assets/decorations/emoji/cat_ddabong.png';
+import gloomyCatImg from '@/assets/decorations/emoji/gloomy_cat.png';
+import goodCommImg from '@/assets/decorations/emoji/good_communication.png';
+import hmmImg from '@/assets/decorations/emoji/hmm.gif';
+import jerryThanksImg from '@/assets/decorations/emoji/jerry_thanks.gif';
+import jihyunCharImg from '@/assets/decorations/emoji/jihyun_character.png';
+import kkkImg from '@/assets/decorations/emoji/kkk.gif';
+import questionImg from '@/assets/decorations/emoji/question_mark.png';
+import sojungImg from '@/assets/decorations/emoji/sojung_princess.gif';
+import taeheeConImg from '@/assets/decorations/emoji/taehee_con.png';
+import taeheeLoveImg from '@/assets/decorations/emoji/taehee_lovebeam.gif';
+import yejinClapImg from '@/assets/decorations/emoji/yejin_clap.gif';
+
+
+
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
 const getAvatarUrl = getAvatarSrc;
 
+// 🐶 이모지 대신 이미지 매핑 (Key -> Image Source)
 // 🐶 이모지 대신 이미지 매핑 (Key -> Image Source)
 const REACTION_MAP: Record<string, string> = {
   'bone': boneImg,
@@ -29,6 +52,24 @@ const REACTION_MAP: Record<string, string> = {
   'foot': footImg,
   'big_heart': bigHeartImg,
   'shiba': shibaImg,
+  'gaeso': gaesoImg,
+
+  // New Additions
+  'sadge': sadgeImg,
+  'hang': hangImg,
+  'jihyun_clap': jihyunClapImg,
+  'cat_ddabong': catDdabongImg,
+  'gloomy_cat': gloomyCatImg,
+  'good_comm': goodCommImg,
+  'hmm': hmmImg,
+  'jerry_thanks': jerryThanksImg,
+  'jihyun_char': jihyunCharImg,
+  'kkk': kkkImg,
+  'question': questionImg,
+  'sojung': sojungImg,
+  'taehee_con': taeheeConImg,
+  'taehee_love': taeheeLoveImg,
+  'yejin_clap': yejinClapImg,
 };
 
 const REACTION_KEYS = Object.keys(REACTION_MAP);
@@ -318,13 +359,15 @@ const ChatArea = () => {
                   border: '3px solid #111',
                   borderRadius: '15px',
                   padding: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
+                  // ⭐️ 그리드 레이아웃 적용 (5열)
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(5, 1fr)',
                   gap: '5px',
                   boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
                   zIndex: 100,
-                  width: '60px', // width 약간 늘림
-                  alignItems: 'center'
+                  width: '240px', // 5개 * (35px + gap) 정도 고려해서 넓힘
+                  alignItems: 'center',
+                  placeItems: 'center' // 그리드 아이템 중앙 정렬
                 }}
               >
                 {REACTION_KEYS.map(key => (
@@ -333,7 +376,7 @@ const ChatArea = () => {
                     whileHover={{ scale: 1.2 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleSendReaction(key)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     <img
                       src={REACTION_MAP[key]}
