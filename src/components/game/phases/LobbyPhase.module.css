@@ -218,9 +218,12 @@
   height: 100%;
   background-color: rgba(0, 0, 0, 0.3);
   border-right: 2px solid rgba(217, 119, 6, 0.5);
-  overflow-y: auto;
+  overflow-y: hidden;
+  /* auto -> hidden: 내부 리스트가 스크롤되도록 */
   transition: all 0.3s ease;
   z-index: 15;
+  display: flex;
+  flex-direction: column;
 }
 
 .audienceBar::-webkit-scrollbar {
@@ -237,6 +240,41 @@
   opacity: 0;
   overflow: hidden;
   border: none;
+}
+
+/* 사이드바 전용 버튼 (리스트 아래 고정) */
+.returnButtonSidebar {
+  width: 90%;
+  margin: 10px auto;
+  padding: 12px;
+  border: 3px solid #333;
+  border-radius: 15px;
+  background-color: #a7f3d0;
+  /* 연한 초록색 */
+  color: #064e3b;
+  font-weight: 900;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  /* 크기 줄어들이지 않음 */
+  z-index: 20;
+}
+
+.returnButtonSidebar:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
+  background-color: #6ee7b7;
+}
+
+.returnButtonSidebar:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
 }
 
 .sidebarToggle {
@@ -901,3 +939,5 @@
   font-weight: 900;
   color: #333;
 }
+
+/* 관전석 이동 버튼 (제거됨 - 사이드바 버튼으로 대체) */

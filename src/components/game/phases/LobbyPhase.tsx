@@ -61,7 +61,7 @@ const LobbyPhase = ({
   const playClick = () => {
     const audio = new Audio(clickMp3);
     audio.volume = 0.8;
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
   };
 
   const handleToggleMute = () => {
@@ -94,6 +94,8 @@ const LobbyPhase = ({
 
   console.log('🔍 유저 데이터 구조 확인:', users);
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
+  const myUser = users.find((u: any) => u.nickname === myNickname);
+  const isMyRolePlayer = myUser?.role === 'PLAYER';
 
   const { roomConfig, roomTitle, setRoomConfig, setRoomTitle } = useGameStore();
 
@@ -455,6 +457,29 @@ const LobbyPhase = ({
     }
   };
 
+  const handleReturnToAudience = () => {
+    if (!myUser) return;
+    if (!window.confirm('팀에서 나가 관전석으로 돌아가시겠습니까?')) return;
+
+    playClick();
+
+    if (TEST_MODE) {
+      setUsers(
+        users.map((u: any) =>
+          u.nickname === myNickname
+            ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
+            : u
+        )
+      );
+    } else {
+      socket.emit('leave_team', {
+        public_user_id: myUser.publicUserId,
+        team: myUser.team,
+        slot_index: myUser.slotIndex,
+      });
+    }
+  };
+
   return (
     <Background>
       <div className={styles.container}>
@@ -713,27 +738,44 @@ const LobbyPhase = ({
                 </div>
               </div>
             </div>
-            {isHost && (
+            {(isHost || isMyRolePlayer) && (
               <footer className={`${styles.footerArea} ${styles['footer' + maxStorytellers]}`}>
                 <div className={styles.buttonGroup}>
-                  <button
-                    onClick={() => {
-                      playClick();
-                      handleRandomAssign();
-                    }}
-                    className={styles.randomButton}
-                  >
-                    랜덤 팀 배정
-                  </button>
-                  <button
-                    onClick={() => {
-                      playClick();
-                      handleStartGame();
-                    }}
-                    className={`${styles.randomButton} ${styles.startButton}`}
-                  >
-                    게임 시작!
-                  </button>
+                  {isMyRolePlayer && (
+                    <button
+                      onClick={() => {
+                        playClick();
+                        handleReturnToAudience();
+                      }}
+                      className={styles.randomButton}
+                      style={{ backgroundColor: '#a7f3d0', marginRight: 'auto', marginLeft: '80px' }}
+                    >
+                      관전으로 이동
+                    </button>
+                  )}
+
+                  {isHost && (
+                    <>
+                      <button
+                        onClick={() => {
+                          playClick();
+                          handleRandomAssign();
+                        }}
+                        className={styles.randomButton}
+                      >
+                        랜덤 팀 배정
+                      </button>
+                      <button
+                        onClick={() => {
+                          playClick();
+                          handleStartGame();
+                        }}
+                        className={`${styles.randomButton} ${styles.startButton}`}
+                      >
+                        게임 시작!
+                      </button>
+                    </>
+                  )}
                 </div>
               </footer>
             )}

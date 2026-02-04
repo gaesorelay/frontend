@@ -13,9 +13,11 @@ interface AudienceListProps {
   isHost: boolean;
   onSelect: (user: User) => void;
   onClose?: () => void;
+  showReturnButton?: boolean;
+  onReturn?: () => void;
 }
 
-export const AudienceList = ({ list, isHost, onSelect, onClose }: AudienceListProps) => {
+export const AudienceList = ({ list, isHost, onSelect, onClose, showReturnButton, onReturn }: AudienceListProps) => {
   const { nickname: myNickname } = useUserStore();
   const sortedList = [...list].sort((a, b) => {
     if (a.nickname === myNickname) return -1; // 내가 앞쪽으로
@@ -61,6 +63,12 @@ export const AudienceList = ({ list, isHost, onSelect, onClose }: AudienceListPr
           );
         })}
       </ul>
+
+      {showReturnButton && onReturn && (
+        <button className={styles.returnAudienceButton} onClick={onReturn}>
+          👀 나도 관전하기
+        </button>
+      )}
     </div>
   );
 };
