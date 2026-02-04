@@ -21,6 +21,7 @@ import paper from '@/assets/sound/PAPER.wav';
 import applause from '@/assets/sound/applause.mp3';
 import countdown from '@/assets/sound/countdown.mp3';
 import buttonBeep from '@/assets/sound/button_beep.mp3';
+import bark4Mp3 from '@/assets/sound/bark4.mp3'; // 🐶 추가
 
 const SOUND_ASSETS = {
     BGM: {
@@ -34,6 +35,7 @@ const SOUND_ASSETS = {
         DOG1: dog1,
         DOG2: dog2,
         DOG3: dog3,
+        DOG4: bark4Mp3, // 🐶 B팀 타이핑용
         CLICK: click,
         GAMEFINISH: gameFinish,
         PAPER: paper,
