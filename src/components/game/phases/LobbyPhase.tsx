@@ -7,12 +7,11 @@ import { TeamSlot } from '@/components/game/TeamSlot';
 // import { TeamBoard } from '@/components/game/TeamBoard'; // 사용 안 함
 import { AudienceList } from '@/components/game/AudienceList';
 import { Background } from '@/components/common/background';
+import SoundButton from '@/components/common/SoundButton';
 
 import Modal from '@/components/common/Modal';
 import styles from '@/components/game/phases/LobbyPhase.module.css';
 import { animationStyles } from '@/pages/create/createAnimations';
-// import waitingMp3 from '@/assets/sound/waiting.mp3'; // Remove local BGM
-import clickMp3 from '@/assets/sound/click.mp3';
 
 // 나가기 버튼
 import { useNavigate } from 'react-router-dom';
@@ -55,37 +54,12 @@ const LobbyPhase = ({
 }: LobbyProps) => {
   // 🐶 Avatar ID -> Image 변환
   // 이제 전역 Mapper를 사용합니다.
-  const { isMuted, toggleMute, setMuted } = useAudioStore();
+  const { isMuted, toggleMute } = useAudioStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const playClick = () => {
-    const audio = new Audio(clickMp3);
-    audio.volume = 0.8;
-    audio.play().catch(() => { });
-  };
 
   const handleToggleMute = () => {
     toggleMute();
-    playClick();
   };
-
-  // 🎵 로비 BGM (waiting.mp3)
-  // 🎵 로비 BGM (waiting.mp3) -> App.tsx 전역 관리로 이동됨
-  useEffect(() => {
-    // ⭐️ 입장 시 강제로 소리 켜기 (초기 상태 재생 보장)
-    setMuted(false);
-  }, []);
-
-  // 뮤트 상태 동기화
-  // 뮤트 상태 동기화는 App.tsx에서 전역 처리하므로 여기선 제거
-  /*
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.muted = isMuted;
-      // ...
-    }
-  }, [isMuted]);
-  */
 
   const users = rawUsers.map((user) => ({
     ...user,
@@ -498,16 +472,16 @@ const LobbyPhase = ({
             />
           </aside>
 
-          <button
+          <SoundButton
+            sfx='CLICK'
             onClick={() => {
-              playClick();
               setIsAudienceBarOpen(!isAudienceBarOpen);
             }}
             className={styles.sidebarToggle}
             title={isAudienceBarOpen ? '닫기' : '관전자 목록'}
           >
             {isAudienceBarOpen ? '◀' : '▶'}
-          </button>
+          </SoundButton>
 
           <main className={styles.mainBoard}>
             {/* 상단 헤더 */}
@@ -522,7 +496,6 @@ const LobbyPhase = ({
                   <div
                     className={styles.codeContainer}
                     onClick={() => {
-                      playClick();
                       handleCopyCode();
                     }}
                   >
@@ -543,9 +516,9 @@ const LobbyPhase = ({
 
                 <div className={styles.topRight}>
                   {/* 🔇 뮤트 버튼 (설정 버튼 왼쪽) */}
-                  <button
+                  <SoundButton
+                    sfx='CLICK'
                     onClick={() => {
-                      playClick();
                       handleToggleMute();
                     }}
                     style={{
@@ -564,13 +537,12 @@ const LobbyPhase = ({
                     title={isMuted ? '소리 켜기' : '소리 끄기'}
                   >
                     {isMuted ? '🔇' : '🔊'}
-                  </button>
+                  </SoundButton>
                   {/* 내 정보 버튼 제거됨 */}
                   {isHost && (
                     <motion.button
                       className={styles.exitButton}
                       onClick={() => {
-                        playClick();
                         setIsSettingOpen(true);
                       }}
                       whileHover={{ scale: 1.1, rotate: 5 }}
@@ -582,7 +554,6 @@ const LobbyPhase = ({
                   <motion.button
                     className={styles.exitButton}
                     onClick={() => {
-                      playClick();
                       handleExit();
                     }}
                     whileHover={{ scale: 1.1, rotate: 5 }}
@@ -615,19 +586,21 @@ const LobbyPhase = ({
                   <div className={styles.settingField}>
                     <label>최대 인원 (전체)</label>
                     <div className={styles.counter}>
-                      <button
+                      <SoundButton
+                        sfx='CLICK'
                         className={styles.countBtn}
                         onClick={() => updateConfig('maxPlayers', editConfig.maxPlayers - 1, 2, 20)}
                       >
                         -
-                      </button>
+                      </SoundButton>
                       <span className={styles.countNum}>{editConfig.maxPlayers}명</span>
-                      <button
+                      <SoundButton
+                        sfx='CLICK'
                         className={styles.countBtn}
                         onClick={() => updateConfig('maxPlayers', editConfig.maxPlayers + 1, 2, 20)}
                       >
                         +
-                      </button>
+                      </SoundButton>
                     </div>
                   </div>
 
@@ -638,56 +611,60 @@ const LobbyPhase = ({
                       <div className={styles.timeControl}>
                         <span>작성</span>
                         <div className={styles.counterSmall}>
-                          <button
+                          <SoundButton
+                            sfx='CLICK'
                             className={styles.countBtn}
                             onClick={() =>
                               updateConfig('roundTime', editConfig.roundTime - 5, 15, 45)
                             }
                           >
                             -
-                          </button>
+                          </SoundButton>
                           <span className={styles.countNum}>{editConfig.roundTime}s</span>
-                          <button
+                          <SoundButton
+                            sfx='CLICK'
                             className={styles.countBtn}
                             onClick={() =>
                               updateConfig('roundTime', editConfig.roundTime + 5, 15, 45)
                             }
                           >
                             +
-                          </button>
+                          </SoundButton>
                         </div>
                       </div>
                       <div className={styles.timeControl}>
                         <span>투표</span>
                         <div className={styles.counterSmall}>
-                          <button
+                          <SoundButton
+                            sfx='CLICK'
                             className={styles.countBtn}
                             onClick={() => updateConfig('voteTime', editConfig.voteTime - 5, 5, 15)}
                           >
                             -
-                          </button>
+                          </SoundButton>
                           <span className={styles.countNum}>{editConfig.voteTime}s</span>
-                          <button
+                          <SoundButton
+                            sfx='CLICK'
                             className={styles.countBtn}
                             onClick={() => updateConfig('voteTime', editConfig.voteTime + 5, 5, 15)}
                           >
                             +
-                          </button>
+                          </SoundButton>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <div className={styles.modalActions}>
-                    <button
+                    <SoundButton
+                      sfx='CLICK'
                       className={styles.saveButton}
                       onClick={() => {
-                        playClick();
                         handleSaveSettings();
                       }}
                     >
                       설정 저장하기
-                    </button>
+                    </SoundButton>
                   </div>
                 </div>
               </Modal>
@@ -741,41 +718,24 @@ const LobbyPhase = ({
             {(isHost || isMyRolePlayer) && (
               <footer className={`${styles.footerArea} ${styles['footer' + maxStorytellers]}`}>
                 <div className={styles.buttonGroup}>
-                  {isMyRolePlayer && (
-                    <button
-                      onClick={() => {
-                        playClick();
-                        handleReturnToAudience();
-                      }}
-                      className={styles.randomButton}
-                      style={{ backgroundColor: '#a7f3d0', marginRight: 'auto', marginLeft: '80px' }}
-                    >
-                      관전으로 이동
-                    </button>
-                  )}
-
-                  {isHost && (
-                    <>
-                      <button
-                        onClick={() => {
-                          playClick();
-                          handleRandomAssign();
-                        }}
-                        className={styles.randomButton}
-                      >
-                        랜덤 팀 배정
-                      </button>
-                      <button
-                        onClick={() => {
-                          playClick();
-                          handleStartGame();
-                        }}
-                        className={`${styles.randomButton} ${styles.startButton}`}
-                      >
-                        게임 시작!
-                      </button>
-                    </>
-                  )}
+                  <SoundButton
+                    sfx='CLICK'
+                    onClick={() => {
+                      handleRandomAssign();
+                    }}
+                    className={styles.randomButton}
+                  >
+                    랜덤 팀 배정
+                  </SoundButton>
+                  <SoundButton
+                    sfx='CLICK'
+                    onClick={() => {
+                      handleStartGame();
+                    }}
+                    className={`${styles.randomButton} ${styles.startButton}`}
+                  >
+                    게임 시작!
+                  </SoundButton>
                 </div>
               </footer>
             )}
@@ -799,34 +759,34 @@ const LobbyPhase = ({
                 어떻게 할까요?
               </h2>
               <div className={styles.modalButtonGrid}>
-                <button
+                <SoundButton
+                  sfx='CLICK'
                   onClick={() => {
-                    playClick();
                     moveUserToTeam('A');
                   }}
                   className={`${styles.modalButton} ${styles.buttonTeamA}`}
                 >
                   A팀 배정
-                </button>
-                <button
+                </SoundButton>
+                <SoundButton
+                  sfx='CLICK'
                   onClick={() => {
-                    playClick();
                     moveUserToTeam('B');
                   }}
                   className={`${styles.modalButton} ${styles.buttonTeamB}`}
                 >
                   B팀 배정
-                </button>
+                </SoundButton>
                 {!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname && (
-                  <button
+                  <SoundButton
+                    sfx='CLICK'
                     onClick={() => {
-                      playClick();
                       handleKickUser();
                     }}
                     className={`${styles.modalButton} ${styles.buttonKick}`}
                   >
                     🚪 강퇴하기
-                  </button>
+                  </SoundButton>
                 )}
               </div>
             </div>
@@ -846,17 +806,17 @@ const LobbyPhase = ({
                 {users
                   .filter((u) => u.role === 'AUDIENCE')
                   .map((user) => (
-                    <button
+                    <SoundButton
+                      sfx='CLICK'
                       key={user.userToken}
                       onClick={() => {
-                        playClick();
                         handleSelectPlayer(user);
                       }}
                       className={styles.playerButton}
                     >
                       <img src={user.avatar} alt={user.nickname} className={styles.playerAvatar} />
                       <span className={styles.playerNickname}>{user.nickname}</span>
-                    </button>
+                    </SoundButton>
                   ))}
                 {users.filter((u) => u.role === 'AUDIENCE').length === 0 && (
                   <div className={styles.emptyMessage}>대기 중인 사람이 없습니다 텅~ 🍃</div>
