@@ -95,6 +95,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   cardFrame: {
     width: '100%',
+    height: '225px',
     backgroundColor: '#fff',
     border: '3px solid #333',
     boxShadow: '6px 6px 0px rgba(0,0,0,0.8)',
@@ -105,6 +106,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
