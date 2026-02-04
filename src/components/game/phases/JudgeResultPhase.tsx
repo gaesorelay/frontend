@@ -97,11 +97,11 @@ const JudgeResultPhase = () => {
 
     const timers = [
       setTimeout(() => setIntroPhase(2), 2000),   // A팀 관객 점수
-      setTimeout(() => setIntroPhase(3), 6000),   // B팀 관객 점수
-      setTimeout(() => setIntroPhase(4), 10000),  // 1차 합산
-      setTimeout(() => setIntroPhase(5), 17000),  // A팀 AI 심사
-      setTimeout(() => setIntroPhase(6), 22000),  // B팀 AI 심사
-      setTimeout(() => setIntroPhase(7), 27000),  // 최종 합산
+      setTimeout(() => setIntroPhase(3), 6000),   // B팀 관객 점수 (4초)
+      setTimeout(() => setIntroPhase(4), 10000),  // 1차 합산     (4초)
+      setTimeout(() => setIntroPhase(5), 16000),  // A팀 AI 심사  (6초 대기 후 시작)
+      setTimeout(() => setIntroPhase(6), 25000),  // B팀 AI 심사  (A팀 9초 감상)
+      setTimeout(() => setIntroPhase(7), 34000),  // 최종 합산    (B팀 9초 감상)
       // 8단계(Game Over)로 가지 않음!
     ];
     return () => timers.forEach(t => clearTimeout(t));
