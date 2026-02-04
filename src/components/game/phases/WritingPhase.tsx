@@ -388,7 +388,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
             src={getCountdownImage()!}
             alt="countdown"
             style={{
-              height: countdown === 'START' ? '100px' : '200px',
+              height: countdown === 'START' ? '170px' : '270px',
               animation: 'pop-in 0.8s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards'
             }}
           />

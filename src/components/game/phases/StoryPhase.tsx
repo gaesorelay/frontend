@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/useGameStore'; // 스토어 임포트
 import { getCardImage } from '@/lib/cardMapper'; // 카드 이미지 매퍼
 import { getStoryteller } from '@/lib/gameLogic'; // ⭐️ 작성자 찾기 로직
 import storyLogoImg from '@/assets/logo/logo_story.png';
+import finishLogoImg from '@/assets/logo/logo_finish.png'; // ⭐️ 인트로 로고 추가
 import ChatArea from '../ChatArea';
 
 const StoryPhase = () => {
@@ -12,6 +13,9 @@ const StoryPhase = () => {
   const [currentTeam, setCurrentTeam] = useState<'A' | 'B'>('A');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+
+  // ⭐️ 인트로 애니메이션 상태 추가
+  const [showIntro, setShowIntro] = useState(true);
 
   // 1. 실제 데이터 결합 (카드 ID + 해당 팀의 문장)
   const stories = useMemo(() => {
@@ -25,9 +29,17 @@ const StoryPhase = () => {
     }));
   }, [currentTeam, teamAStory, teamBStory, roundData]);
 
-  // 2. 페이지 자동 넘김 로직
+  // ⭐️ 인트로 타이머 (2초 후 해제)
   useEffect(() => {
-    if (isFinished) return;
+    const timer = setTimeout(() => {
+      setShowIntro(false);
+    }, 2500); // 2.5초 정도 유지
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 2. 페이지 자동 넘김 로직 (인트로 끝나면 시작)
+  useEffect(() => {
+    if (isFinished || showIntro) return; // ⭐️ 인트로 중이면 넘기지 않음
 
     const timer = setInterval(() => {
       if (currentIndex < stories.length - 1) {
@@ -51,7 +63,7 @@ const StoryPhase = () => {
     }, 4000); // 감상 시간 (이미지+텍스트 고려하여 약간 넉넉히)
 
     return () => clearInterval(timer);
-  }, [currentIndex, currentTeam, stories.length, isFinished]);
+  }, [currentIndex, currentTeam, stories.length, isFinished, showIntro]);
 
   return (
     <Background>
@@ -67,9 +79,47 @@ const StoryPhase = () => {
         .pulse-logo { animation: pulse-soft 0.5s infinite ease-in-out; }
       `}</style>
 
+      {/* ⭐️ 인트로 오버레이 */}
+      <AnimatePresence>
+        {showIntro && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(255, 255, 255, 0.4)', // 살짝 밝게
+              backdropFilter: 'blur(15px)', // ⭐️ 블러 처리
+              zIndex: 9999,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <motion.img
+              src={finishLogoImg}
+              alt="Intro Logo"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1.2, opacity: 1 }}
+              exit={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 0.8, ease: "backOut" }}
+              style={{
+                width: '600px', // 적절한 크기
+                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))'
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div style={styles.container}>
         <div style={styles.leftSection}>
-          {!isFinished && (
+          {!isFinished && !showIntro && (
             <header style={styles.header} className='pulse-logo'>
               <img src={storyLogoImg} alt="로고" style={styles.logo} />
               <motion.div
@@ -88,7 +138,7 @@ const StoryPhase = () => {
           )}
 
           <AnimatePresence mode="wait">
-            {!isFinished && stories.length > 0 && (
+            {!isFinished && !showIntro && stories.length > 0 && (
               <motion.div
                 key={`${currentTeam}-${currentIndex}`} // 팀/인덱스 바뀔 때마다 애니메이션 실행
                 initial={{ opacity: 0, x: 50 }}
@@ -139,7 +189,9 @@ const StoryPhase = () => {
 
           {isFinished && (
             <div className="gungsuh-font" style={{ fontSize: '3rem', color: '#333' }}>
-              감상이 완료되었습니다! 투표를 준비하세요! 🗳️
+              감상이 완료되었습니다!
+              <br />
+              투표를 준비하세요! 🗳️
             </div>
           )}
         </div>
