@@ -84,6 +84,13 @@ const JudgeResultPhase = () => {
 
   const winnerName = (voteResult?.winner === 'A' ? 'A팀' : voteResult?.winner === 'B' ? 'B팀' : (totalA > totalB ? 'A팀' : 'B팀'));
 
+  // ⭐️ 승리 멘트 랜덤 선택 (점수가 바뀌지 않는 한 고정)
+  const randomWinMent = useMemo(() => {
+    const wTeam = totalA >= totalB ? 'A팀' : 'B팀';
+    const rawMent = WIN_MENTS[Math.floor(Math.random() * WIN_MENTS.length)];
+    return rawMent.replace("${teamName}", wTeam);
+  }, [totalA, totalB]);
+
   // 4. 페이즈 타이머
   useEffect(() => {
     if (!voteResult) return;
@@ -181,20 +188,20 @@ const JudgeResultPhase = () => {
         @keyframes zoom-in-judge { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         @keyframes pop-comment { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-        .particle-full { position: absolute; color: #facc15; font-size: 3rem; font-weight: 900; animation: full-screen-pop 0.4s forwards; text-shadow: 4px 4px 0 #000; z-index: 11000; }
+        .particle-full { position: absolute; color: #facc15; font-size: 5vmin; font-weight: 900; animation: full-screen-pop 0.4s forwards; text-shadow: 0.5vmin 0.5vmin 0 #000; z-index: 11000; }
         .intro-overlay { position: absolute; width: 100%; top: 0; left: 0; height: 100%; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; transition: 0.5s; }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .score-huge { font-size: 11rem; color: #fff; text-shadow: 0 0 30px #ff4444; font-weight: 900; }
-        .gauge-container { width: 300px; height: 35px; background: #333; border: 3px solid #111; border-radius: 20px; overflow: hidden; position: relative; }
+        .score-huge { font-size: 15vmin; color: #fff; text-shadow: 0 0 30px #ff4444; font-weight: 900; }
+        .gauge-container { width: 30vmin; height: 3.5vmin; background: #333; border: 0.4vmin solid #111; border-radius: 2vmin; overflow: hidden; position: relative; }
         .gauge-fill { height: 100%; transition: width 0.1s ease-out; }
-        .judge-card-mini { width: 110px; text-align: center; background: #fff; padding: 10px; border-radius: 10px; border: 2px solid #111; font-size: 0.8rem; }
-        .winner-card { width: 160px; text-align: center; background: #fffdf0; padding: 20px; border-radius: 20px; border: 4px solid #111; box-shadow: 8px 8px 0 rgba(0,0,0,0.2); }
+        .judge-card-mini { width: 12vmin; text-align: center; background: #fff; padding: 1vmin; border-radius: 1vmin; border: 0.3vmin solid #111; font-size: 1.2vmin; }
+        .winner-card { width: 18vmin; text-align: center; background: #fffdf0; padding: 2vmin; border-radius: 2vmin; border: 0.5vmin solid #111; box-shadow: 1vmin 1vmin 0 rgba(0,0,0,0.2); }
       `}</style>
 
       {[4, 7].includes(introPhase) && <img src={resultLogo} style={{
-        position: 'absolute', top: '-100px',
-        left: 'calc((100vw - 380px) / 2)', transform: 'translateX(-50%)',
-        height: '350px', width: 'auto', zIndex: 20001, filter: 'drop-shadow(4px 4px 0 #000)',
+        position: 'absolute', top: '-10vmin',
+        left: 'calc(50% - 15vmin)', transform: 'translateX(-50%)',
+        height: '35vh', width: 'auto', zIndex: 20001, filter: 'drop-shadow(0.5vmin 0.5vmin 0 #000)',
         objectFit: 'contain'
       }} />}
 
@@ -203,12 +210,12 @@ const JudgeResultPhase = () => {
           <span key={p.id} className="particle-full" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: `rotate(${p.rot}deg)` }}>+1</span>
         ))}
 
-        {introPhase === 1 && <img src={finalLogo} style={{ width: '50%', objectFit: 'contain', animation: 'elastic-zoomies 0.8s' }} />}
+        {introPhase === 1 && <img src={finalLogo} style={{ width: '50vmin', objectFit: 'contain', animation: 'elastic-zoomies 0.8s' }} />}
 
         {(introPhase === 2 || introPhase === 3) && (
           <div key={`phase-${introPhase}`} style={{ textAlign: 'center', animation: introPhase === 2 ? 'slide-in-left 0.5s both' : 'slide-in-right 0.5s both' }}>
-            <div style={{ marginBottom: '-30px' }}>
-              <img src={introPhase === 2 ? AteamLogo : BteamLogo} style={{ width: '650px', objectFit: 'contain', filter: 'drop-shadow(5px 5px 0 #000)' }} />
+            <div style={{ marginBottom: '-3vmin' }}>
+              <img src={introPhase === 2 ? AteamLogo : BteamLogo} style={{ width: '60vmin', objectFit: 'contain', filter: 'drop-shadow(0.5vmin 0.5vmin 0 #000)' }} />
             </div>
             <div className="score-huge">{animScore}</div>
           </div>
@@ -216,33 +223,33 @@ const JudgeResultPhase = () => {
 
         {(introPhase === 5 || introPhase === 6) && (
           <div key={`judge-${introPhase}`} style={{ textAlign: 'center', width: '100%', animation: 'zoom-in-judge 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '30px', marginBottom: '40px', background: 'rgba(255,255,255,0.1)', padding: '20px 50px', borderRadius: '20px', border: '3px solid #333' }}>
-              <img src={introPhase === 5 ? ateamImg : bteamImg} style={{ height: '110px', objectFit: 'contain' }} />
-              <img src={airesultImg} style={{ height: '220px', objectFit: 'contain' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3vmin', marginBottom: '4vmin', background: 'rgba(255,255,255,0.1)', padding: '2vmin 5vmin', borderRadius: '2vmin', border: '0.4vmin solid #333' }}>
+              <img src={introPhase === 5 ? ateamImg : bteamImg} style={{ height: '12vmin', objectFit: 'contain' }} />
+              <img src={airesultImg} style={{ height: '24vmin', objectFit: 'contain' }} />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '15px', justifyContent: 'center', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '2vmin', justifyContent: 'center', width: '100%' }}>
               {realJudges.map((j, i) => {
                 const pScore = introPhase === 5 ? j.scoreA : j.scoreB;
                 const pComment = introPhase === 5 ? j.commentA : j.commentB;
                 return (
                   <div key={i} style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-                    background: '#fff', padding: '20px', borderRadius: '20px', border: '4px solid #111',
-                    width: '240px', animation: `slide-in-right 0.4s ${i * 0.15}s both`,
-                    boxShadow: '10px 10px 0 rgba(0,0,0,0.2)', position: 'relative'
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1vmin',
+                    background: '#fff', padding: '2vmin', borderRadius: '2vmin', border: '0.5vmin solid #111',
+                    width: '25vmin', animation: `slide-in-right 0.4s ${i * 0.15}s both`,
+                    boxShadow: '1vmin 1vmin 0 rgba(0,0,0,0.2)', position: 'relative'
                   }}>
-                    <img src={j.image} style={{ width: '120px', height: '120px', borderRadius: '15px', objectFit: 'cover', border: '3px solid #ddd' }} />
+                    <img src={j.image} style={{ width: '12vmin', height: '12vmin', borderRadius: '1.5vmin', objectFit: 'cover', border: '0.4vmin solid #ddd' }} />
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#111', marginBottom: '5px' }}>{j.name}</div>
-                      <div style={{ fontSize: '1.1rem', color: '#555', wordBreak: 'keep-all', lineHeight: '1.3', animation: `pop-comment 0.5s ${0.3 + i * 0.2}s both` }}>
+                      <div style={{ fontWeight: 900, fontSize: '1.5vmin', color: '#111', marginBottom: '0.5vmin' }}>{j.name}</div>
+                      <div style={{ fontSize: '1.3vmin', color: '#555', wordBreak: 'keep-all', lineHeight: '1.3', animation: `pop-comment 0.5s ${0.3 + i * 0.2}s both` }}>
                         "{pComment}"
                       </div>
                     </div>
                     <div style={{
-                      position: 'absolute', top: '-15px', right: '-15px',
-                      background: '#ff0000', color: '#fff', fontSize: '1.5rem', fontWeight: 900,
-                      padding: '5px 15px', borderRadius: '20px', border: '3px solid #fff',
-                      boxShadow: '4px 4px 0 rgba(0,0,0,0.3)', transform: 'rotate(15deg)',
+                      position: 'absolute', top: '-1.5vmin', right: '-1.5vmin',
+                      background: '#ff0000', color: '#fff', fontSize: '2vmin', fontWeight: 900,
+                      padding: '0.5vmin 1.5vmin', borderRadius: '2vmin', border: '0.4vmin solid #fff',
+                      boxShadow: '0.5vmin 0.5vmin 0 rgba(0,0,0,0.3)', transform: 'rotate(15deg)',
                       animation: `pop-comment 0.5s ${0.6 + i * 0.2}s both`
                     }}>
                       +{pScore}
@@ -251,7 +258,7 @@ const JudgeResultPhase = () => {
                 );
               })}
             </div>
-            <div style={{ fontSize: '2.5rem', color: '#facc15', marginTop: '30px', fontWeight: 900, textShadow: '2px 2px 0 #000', animation: 'elastic-zoomies 0.5s 1.5s both' }}>
+            <div style={{ fontSize: '4vmin', color: '#facc15', marginTop: '3vmin', fontWeight: 900, textShadow: '0.3vmin 0.3vmin 0 #000', animation: 'elastic-zoomies 0.5s 1.5s both' }}>
               AI Score: {introPhase === 5 ? aiTotalA : aiTotalB}점
             </div>
           </div>
@@ -261,120 +268,120 @@ const JudgeResultPhase = () => {
       </div>
 
       <div style={{ flex: 1, display: 'flex' }}>
-        <div style={{ flex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '15vh', justifyContent: 'flex-start', opacity: [4, 7].includes(introPhase) ? 1 : 0, transition: '0.5s' }}>
-          <div style={{ display: 'flex', gap: '60px', padding: '2vh 0 0 20px' }}>
+        <div style={{ flex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', opacity: [4, 7].includes(introPhase) ? 1 : 0, transition: '0.5s' }}>
+          <div style={{ display: 'flex', gap: '6vmin', padding: '2vh 0 0 2vmin' }}>
             {/* A팀 섹션 */}
             <div style={{ textAlign: 'center' }}>
-              <img src={teamALogo} style={{ width: '380px', objectFit: 'contain' }} />
+              <img src={teamALogo} style={{ width: '25vw', maxWidth: '300px', objectFit: 'contain' }} />
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: '22vw', fontWeight: 900, fontSize: '2vmin', marginBottom: '0.5vmin', textShadow: '0.2vmin 0.2vmin 0 #000', margin: '0 auto' }}>
                 <span style={{ color: '#ffb3b3' }}>관객 {stagePublicA}</span>
                 <span style={{ color: '#ff3333' }}>AI {stageAIA}</span>
               </div>
-              <div className="gauge-container">
+              <div className="gauge-container" style={{ width: '22vw', margin: '0 auto', height: '3vmin' }}>
                 <div className="gauge-fill" style={{ width: `${((stagePublicA + stageAIA) / (totalA + totalB || 1)) * 100}%`, background: '#ff4444' }} />
                 <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${(stagePublicA / (totalA + totalB || 1)) * 100}%`, background: '#ff7f7f', opacity: 0.8 }} />
               </div>
             </div>
 
-            <div style={{ fontSize: '5rem', fontWeight: 900, alignSelf: 'center' }}>VS</div>
+            <div style={{ fontSize: '8vmin', fontWeight: 900, alignSelf: 'center' }}>VS</div>
 
             <div style={{ textAlign: 'center' }}>
-              <img src={teamBLogo} style={{ width: '380px', objectFit: 'contain' }} />
+              <img src={teamBLogo} style={{ width: '25vw', maxWidth: '300px', objectFit: 'contain' }} />
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px', fontWeight: 900, fontSize: '1.5rem', marginBottom: '5px', textShadow: '2px 2px 0 #000' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: '22vw', fontWeight: 900, fontSize: '2vmin', marginBottom: '0.5vmin', textShadow: '0.2vmin 0.2vmin 0 #000', margin: '0 auto' }}>
                 <span style={{ color: '#99ccff' }}>관객 {stagePublicB}</span>
                 <span style={{ color: '#3385ff' }}>AI {stageAIB}</span>
               </div>
-              <div className="gauge-container">
+              <div className="gauge-container" style={{ width: '22vw', margin: '0 auto', height: '3vmin' }}>
                 <div className="gauge-fill" style={{ width: `${((stagePublicB + stageAIB) / (totalA + totalB || 1)) * 100}%`, background: '#3b82f6' }} />
                 <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${(stagePublicB / (totalA + totalB || 1)) * 100}%`, background: '#7fb2ff', opacity: 0.8 }} />
               </div>
             </div>
           </div>
 
-          <div style={{ marginTop: '50px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ marginTop: '5vh', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {introPhase === 4 ? (
               // Phase 4: 심사위원단 (기존 유지)
               <>
-                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', marginBottom: '20px', background: '#333', padding: '5px 30px', borderRadius: '20px', border: '2px solid #fff', boxShadow: '5px 5px 0 #000' }}>
+                <div style={{ fontSize: '3vmin', fontWeight: 900, color: '#fff', marginBottom: '2vmin', background: '#333', padding: '0.5vmin 3vmin', borderRadius: '2vmin', border: '0.3vmin solid #fff', boxShadow: '0.5vmin 0.5vmin 0 #000' }}>
                   AI 심사위원단
                 </div>
-                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: '2vmin', justifyContent: 'center' }}>
                   {realJudges.map((j, i) => (
                     <div key={i} className="judge-card-mini" style={{ animation: `elastic-zoomies 0.5s ${i * 0.1}s both` }}>
-                      <img src={j.image} style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ddd', marginBottom: '5px' }} />
-                      <div style={{ fontWeight: 900 }}>{j.name}</div>
+                      <img src={j.image} style={{ width: '8vmin', height: '8vmin', borderRadius: '50%', objectFit: 'cover', border: '0.3vmin solid #ddd', marginBottom: '0.5vmin' }} />
+                      <div style={{ fontWeight: 900, fontSize: '1.2vmin' }}>{j.name}</div>
                     </div>
                   ))}
                 </div>
               </>
             ) : (
               // Phase 7: 우승 팀 멤버들 (NEW!)
-              <div style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both' }}>
+              <div style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both', width: '100%' }}>
                 <div style={{
-                  position: 'relative', fontSize: '3rem', fontWeight: 900, color: '#facc15',
-                  textShadow: '4px 4px 0 #000', marginBottom: '20px', display: 'inline-block'
+                  position: 'relative', fontSize: '4vmin', fontWeight: 900, color: '#facc15',
+                  textShadow: '0.4vmin 0.4vmin 0 #000', marginBottom: '2vmin', display: 'inline-block'
                 }}>
-                  ✨ 개소리의 승자는 {finalWinnerTeam} TEAM! ✨
-                  <div style={{ fontSize: '1.5rem', color: '#fff', marginTop: '5px', textShadow: '2px 2px 0 #000' }}>
+                  ✨ {randomWinMent} ✨
+                  <div style={{ fontSize: '2vmin', color: '#fff', marginTop: '0.5vmin', textShadow: '0.2vmin 0.2vmin 0 #000' }}>
                     Dog Score: {finalWinnerTeam === 'A' ? totalA : totalB} 점
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', marginTop: '20px' }}>
+                <div style={{ display: 'flex', gap: '3vmin', justifyContent: 'center', marginTop: '2vmin' }}>
                   {winningPlayers.map((p, i) => (
                     <div key={p.userToken} className="winner-card" style={{ animation: `elastic-zoomies 0.6s ${i * 0.15}s both` }}>
                       <img
                         src={getAvatarUrl(p.avatarId)}
-                        style={{ width: '100px', height: '100px', borderRadius: '50%', border: '4px solid #facc15', marginBottom: '10px', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }}
+                        style={{ width: '10vmin', height: '10vmin', borderRadius: '50%', border: '0.5vmin solid #facc15', marginBottom: '1vmin', boxShadow: '0 0.5vmin 1vmin rgba(0,0,0,0.2)' }}
                       />
-                      <div style={{ fontSize: '1.3rem', fontWeight: 900 }}>{p.nickname}</div>
+                      <div style={{ fontSize: '1.8vmin', fontWeight: 900 }}>{p.nickname}</div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        </div>
 
-        {introPhase === 7 && (
-          <div style={{
-            position: 'fixed', bottom: '15px', right: '480px', zIndex: 11000,
-            display: 'flex', gap: '20px'
-          }}>
-            <button
-              onClick={() => navigator('/')}
-              style={{
-                fontSize: '1.5rem', fontWeight: 900,
-                padding: '10px 30px', borderRadius: '30px', border: '3px solid #fff',
-                background: '#ff4444', color: '#fff', cursor: 'pointer',
-                boxShadow: '5px 5px 0 rgba(0,0,0,0.5)', transition: '0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-              onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              나가기
-            </button>
-            {isHost && (
+          {introPhase === 7 && (
+            <div style={{
+              position: 'absolute', bottom: '4vmin', right: '4vmin', zIndex: 11000,
+              display: 'flex', gap: '2vmin'
+            }}>
               <button
-                onClick={() => socket.emit('restart_game')}
+                onClick={() => navigator('/')}
                 style={{
-                  fontSize: '1.5rem', fontWeight: 900,
-                  padding: '10px 30px', borderRadius: '30px', border: '3px solid #fff',
-                  background: '#333', color: '#fff', cursor: 'pointer',
-                  boxShadow: '5px 5px 0 rgba(0,0,0,0.5)', transition: '0.2s'
+                  fontSize: '2.5vmin', fontWeight: 900,
+                  padding: '1.5vmin 4vmin', borderRadius: '3vmin', border: '0.4vmin solid #fff',
+                  background: '#ff4444', color: '#fff', cursor: 'pointer',
+                  boxShadow: '0.5vmin 0.5vmin 0 rgba(0,0,0,0.5)', transition: '0.2s'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                 onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                한 판 더 하기
+                나가기
               </button>
-            )}
-          </div>
-        )}
+              {isHost && (
+                <button
+                  onClick={() => socket.emit('restart_game')}
+                  style={{
+                    fontSize: '2.5vmin', fontWeight: 900,
+                    padding: '1.5vmin 4vmin', borderRadius: '3vmin', border: '0.4vmin solid #fff',
+                    background: '#333', color: '#fff', cursor: 'pointer',
+                    boxShadow: '0.5vmin 0.5vmin 0 rgba(0,0,0,0.5)', transition: '0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  한 판 더 하기
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', height: '100vh', maxHeight: '100vh' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1vmin', padding: '1vmin', height: '100vh', maxHeight: '100vh' }}>
           <ChatArea />
         </div>
       </div>
