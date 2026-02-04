@@ -10,8 +10,8 @@ import finishLogoImg from '@/assets/logo/logo_finish.png'; // ⭐️ 인트로 �
 import ChatArea from '../ChatArea';
 
 const StoryPhase = () => {
-  const { teamAStory, teamBStory, roundData } = useGameStore();
-  const { isMuted, toggleMute } = useAudioStore(); // ⭐️ 뮤트 상태 가져오기
+  const { teamAStory, teamBStory, roundData, setStoryReviewFinished } = useGameStore();
+  const { isMuted, toggleMute, playSFX } = useAudioStore(); // ⭐️ 뮤트 상태, SFX 재생 함수 가져오기
   const [currentTeam, setCurrentTeam] = useState<'A' | 'B'>('A');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
@@ -33,6 +33,7 @@ const StoryPhase = () => {
 
   // ⭐️ 인트로 타이머 (2초 후 해제)
   useEffect(() => {
+    setStoryReviewFinished(false); // ⭐️ 진입 시 초기화
     const timer = setTimeout(() => {
       setShowIntro(false);
     }, 2500); // 2.5초 정도 유지
@@ -58,7 +59,11 @@ const StoryPhase = () => {
           clearInterval(timer);
         } else {
           // B팀까지 다 끝났으면 종료
-          setTimeout(() => setIsFinished(true), 1500);
+          setTimeout(() => {
+            setIsFinished(true);
+            setStoryReviewFinished(true); // ⭐️ BGM 정지 신호
+            playSFX('CYMBALS'); // ⭐️ 심벌즈 효과음 재생
+          }, 1500);
           clearInterval(timer);
         }
       }

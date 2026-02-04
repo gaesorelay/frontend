@@ -12,7 +12,7 @@ import finishMp3 from '@/assets/sound/finish.mp3';
 const BGMPlayer = () => {
     const location = useLocation();
     const { isMuted } = useAudioStore();
-    const { gamePhase } = useGameStore();
+    const { gamePhase, storyReviewFinished } = useGameStore();
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const currentTrackRef = useRef<string | null>(null);
@@ -49,7 +49,10 @@ const BGMPlayer = () => {
                 targetTrack = waitingMp3;
             }
             else if (gamePhase === 'STORY') {
-                if (storyBgmMode === 'GAMEOVER') {
+                if (storyReviewFinished) {
+                    targetTrack = null; // 스토리 감상 끝나면 음악 정지
+                }
+                else if (storyBgmMode === 'GAMEOVER') {
                     targetTrack = gameoverMp3;
                     shouldLoop = false; // 1회 재생
                 } else {
@@ -93,7 +96,7 @@ const BGMPlayer = () => {
         audio.addEventListener('ended', handleEnded);
         return () => audio.removeEventListener('ended', handleEnded);
 
-    }, [location.pathname, gamePhase, isMuted, storyBgmMode]);
+    }, [location.pathname, gamePhase, isMuted, storyBgmMode, storyReviewFinished]);
 
     // 3. 브라우저 정책 대응 (사용자 클릭 시 재생 시도)
     useEffect(() => {

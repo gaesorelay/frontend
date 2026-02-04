@@ -35,6 +35,9 @@ interface GameStoreState {
   isSabotageMode: boolean;
   toggleSabotageMode: () => void;
 
+  storyReviewFinished: boolean; // ⭐️ 스토리 감상 종료 여부
+  setStoryReviewFinished: (finished: boolean) => void;
+
   // ⭐️ [추가] 진행 중인 스토리 텍스트 (Dev Bar 제출용)
   draftText: string;
   setDraftText: (text: string) => void;
@@ -84,6 +87,8 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   hasEntered: false, // ⭐️ 정상 입장 여부 체크
   teamAStory: [],
   teamBStory: [],
+  storyReviewFinished: false,
+  setStoryReviewFinished: (finished) => set({ storyReviewFinished: finished }),
   addStoryLine: (team, text, turn) =>
     set((state) => {
       const normalizedText = text ?? '';
@@ -167,5 +172,6 @@ export const useGameStore = create<GameStoreState>()((set) => ({
       gamePhase: 'LOBBY',
       roundData: null,
       kickReason: null,
+      storyReviewFinished: false,
     }),
 }));
