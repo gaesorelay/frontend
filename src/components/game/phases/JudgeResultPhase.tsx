@@ -227,29 +227,29 @@ const JudgeResultPhase = () => {
               <img src={introPhase === 5 ? ateamImg : bteamImg} style={{ height: '12vmin', objectFit: 'contain' }} />
               <img src={airesultImg} style={{ height: '24vmin', objectFit: 'contain' }} />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '2vmin', justifyContent: 'center', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '2vw', justifyContent: 'center', width: '100%', alignItems: 'stretch' }}>
               {realJudges.map((j, i) => {
                 const pScore = introPhase === 5 ? j.scoreA : j.scoreB;
                 const pComment = introPhase === 5 ? j.commentA : j.commentB;
                 return (
                   <div key={i} style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1vmin',
-                    background: '#fff', padding: '2vmin', borderRadius: '2vmin', border: '0.5vmin solid #111',
-                    width: '25vmin', animation: `slide-in-right 0.4s ${i * 0.15}s both`,
-                    boxShadow: '1vmin 1vmin 0 rgba(0,0,0,0.2)', position: 'relative'
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5vh',
+                    background: '#fff', padding: '2vw', borderRadius: '1.5vw', border: '0.4vw solid #111',
+                    width: '23vw', animation: `slide-in-right 0.4s ${i * 0.15}s both`,
+                    boxShadow: '0.8vw 0.8vw 0 rgba(0,0,0,0.2)', position: 'relative'
                   }}>
-                    <img src={j.image} style={{ width: '12vmin', height: '12vmin', borderRadius: '1.5vmin', objectFit: 'cover', border: '0.4vmin solid #ddd' }} />
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: 900, fontSize: '1.5vmin', color: '#111', marginBottom: '0.5vmin' }}>{j.name}</div>
-                      <div style={{ fontSize: '1.3vmin', color: '#555', wordBreak: 'keep-all', lineHeight: '1.3', animation: `pop-comment 0.5s ${0.3 + i * 0.2}s both` }}>
-                        "{pComment}"
+                    <img src={j.image} style={{ width: '12vh', height: '12vh', borderRadius: '1.5vh', objectFit: 'cover', border: '0.3vw solid #ddd' }} />
+                    <div style={{ textAlign: 'center', width: '100%' }}>
+                      <div style={{ fontWeight: 900, fontSize: '1.4vw', color: '#111', marginBottom: '1vh' }}>{j.name}</div>
+                      <div style={{ fontSize: '1.4vw', color: '#333', wordBreak: 'keep-all', lineHeight: '1.4', animation: `pop-comment 0.5s ${0.3 + i * 0.2}s both`, fontWeight: '600' }}>
+                        {pComment}
                       </div>
                     </div>
                     <div style={{
-                      position: 'absolute', top: '-1.5vmin', right: '-1.5vmin',
-                      background: '#ff0000', color: '#fff', fontSize: '2vmin', fontWeight: 900,
-                      padding: '0.5vmin 1.5vmin', borderRadius: '2vmin', border: '0.4vmin solid #fff',
-                      boxShadow: '0.5vmin 0.5vmin 0 rgba(0,0,0,0.3)', transform: 'rotate(15deg)',
+                      position: 'absolute', top: '-1.5vw', right: '-1.5vw',
+                      background: '#ff0000', color: '#fff', fontSize: '2.5vw', fontWeight: 900,
+                      padding: '0.5vw 1.5vw', borderRadius: '1.5vw', border: '0.3vw solid #fff',
+                      boxShadow: '0.4vw 0.4vw 0 rgba(0,0,0,0.3)', transform: 'rotate(15deg)',
                       animation: `pop-comment 0.5s ${0.6 + i * 0.2}s both`
                     }}>
                       +{pScore}
@@ -258,7 +258,7 @@ const JudgeResultPhase = () => {
                 );
               })}
             </div>
-            <div style={{ fontSize: '4vmin', color: '#facc15', marginTop: '3vmin', fontWeight: 900, textShadow: '0.3vmin 0.3vmin 0 #000', animation: 'elastic-zoomies 0.5s 1.5s both' }}>
+            <div style={{ fontSize: '5vw', color: '#facc15', marginTop: '4vh', fontWeight: 900, textShadow: '0.3vw 0.3vw 0 #000', animation: 'elastic-zoomies 0.5s 1.5s both' }}>
               AI Score: {introPhase === 5 ? aiTotalA : aiTotalB}점
             </div>
           </div>
