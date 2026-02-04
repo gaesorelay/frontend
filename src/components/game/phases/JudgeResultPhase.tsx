@@ -319,13 +319,25 @@ const JudgeResultPhase = () => {
             ) : (
               // Phase 7: 우승 팀 멤버들 (NEW!)
               <div style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both', width: '100%' }}>
+
+                {/* 1. Final Score Comparison */}
+                <div style={{ fontSize: '5vmin', fontWeight: 900, color: '#fff', textShadow: '0.4vmin 0.4vmin 0 #000', marginBottom: '1vmin' }}>
+                  <span style={{ color: '#ff7f7f' }}>{totalA}</span> : <span style={{ color: '#7fb2ff' }}>{totalB}</span>
+                </div>
+
+                {/* 2. Winner Declaration */}
+                <div style={{ fontSize: '7vmin', fontWeight: 900, color: '#facc15', textShadow: '0.5vmin 0.5vmin 0 #000', marginBottom: '2vmin' }}>
+                  🎉 {finalWinnerTeam === 'A' ? 'A팀' : 'B팀'} 승리! 🎉
+                </div>
+
+                {/* 3. Random Ment (smaller) & Dog Score (Winning Team's Score) */}
                 <div style={{
-                  position: 'relative', fontSize: '4vmin', fontWeight: 900, color: '#facc15',
-                  textShadow: '0.4vmin 0.4vmin 0 #000', marginBottom: '2vmin', display: 'inline-block'
+                  position: 'relative', fontSize: '3vmin', fontWeight: 900, color: '#facc15',
+                  textShadow: '0.3vmin 0.3vmin 0 #000', marginBottom: '2vmin', display: 'inline-block'
                 }}>
-                  ✨ {randomWinMent} ✨
-                  <div style={{ fontSize: '2vmin', color: '#fff', marginTop: '0.5vmin', textShadow: '0.2vmin 0.2vmin 0 #000' }}>
-                    Dog Score: {finalWinnerTeam === 'A' ? totalA : totalB} 점
+                  "{randomWinMent}"
+                  <div style={{ fontSize: '2.5vmin', color: '#fff', marginTop: '1vmin', textShadow: '0.2vmin 0.2vmin 0 #000' }}>
+                    🏆 Dog Score: {finalWinnerTeam === 'A' ? totalA : totalB} 점 🏆
                   </div>
                 </div>
 
