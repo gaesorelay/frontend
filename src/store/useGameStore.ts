@@ -10,6 +10,13 @@ import type {
   RoundData,
 } from '../types/game';
 
+interface Footprint {
+  id: string;
+  x: number; // 화면 가로 % (0~100)
+  y: number; // 화면 세로 % (0~100)
+  rotation: number; // 랜덤 회전 각도
+}
+
 interface GameStoreState {
   roomConfig: RoomConfig | null;
   roomTitle: string | null;
@@ -24,6 +31,9 @@ interface GameStoreState {
   visitedRoomId: string | null;
   hasEntered: boolean;
   kickReason: string | null; // ⭐️ 강퇴 사유 (null이면 강퇴 아님)
+  footprints: Footprint[];
+  isSabotageMode: boolean;
+  toggleSabotageMode: () => void;
 
   // ⭐️ [추가] 진행 중인 스토리 텍스트 (Dev Bar 제출용)
   draftText: string;
@@ -50,6 +60,8 @@ interface GameStoreState {
   setRoundData: (data: RoundData | null) => void;
 
   addStoryLine: (team: 'A' | 'B', text: string, turn?: number) => void;
+  addFootprint: (footprint: Footprint) => void;
+  removeFootprint: (id: string) => void;
 
   resetStory: () => void;
   resetMessages: () => void;
@@ -94,6 +106,7 @@ export const useGameStore = create<GameStoreState>()((set) => ({
         teamBStory: team === 'B' ? updateStory(state.teamBStory) : state.teamBStory,
       };
     }),
+  footprints: [],
   resetStory: () => set({ teamAStory: [], teamBStory: [] }),
   resetMessages: () => set({ messages: [] }),
   kickReason: null,
@@ -131,6 +144,14 @@ export const useGameStore = create<GameStoreState>()((set) => ({
     set((state) => ({
       roundData: state.roundData ? { ...state.roundData, ...newData } : newData,
     })),
+
+  addFootprint: (fp) => set((state) => ({ footprints: [...state.footprints, fp] })),
+  removeFootprint: (id) =>
+    set((state) => ({
+      footprints: state.footprints.filter((fp) => fp.id !== id),
+    })),
+  isSabotageMode: false,
+  toggleSabotageMode: () => set((state) => ({ isSabotageMode: !state.isSabotageMode })),
   reset: () =>
     set({
       roomConfig: null,
