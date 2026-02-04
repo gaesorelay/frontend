@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
@@ -11,24 +11,64 @@ import type { ChatMessage } from '@/types/game';
 import { getAvatarSrc } from '@/lib/avatarMapper';
 
 // Reaction Images
+// Reaction Images
 import boneImg from '@/assets/decorations/bone.png';
 import heartImg from '@/assets/decorations/heart.png';
 import starImg from '@/assets/decorations/star.png';
 import footImg from '@/assets/decorations/foot.png';
 import bigHeartImg from '@/assets/decorations/big_heart.png';
 import shibaImg from '@/assets/dog/shiba.png';
+import gaesoImg from '@/assets/gaesorelay.png';
+
+// New Emojis
+import sadgeImg from '@/assets/decorations/emoji/sadge.png';
+import hangImg from '@/assets/decorations/emoji/hang.png';
+import jihyunClapImg from '@/assets/decorations/emoji/jihyun_clap.gif';
+import catDdabongImg from '@/assets/decorations/emoji/cat_ddabong.png';
+import gloomyCatImg from '@/assets/decorations/emoji/gloomy_cat.png';
+import goodCommImg from '@/assets/decorations/emoji/good_communication.png';
+import hmmImg from '@/assets/decorations/emoji/hmm.gif';
+import jerryThanksImg from '@/assets/decorations/emoji/jerry_thanks.gif';
+import jihyunCharImg from '@/assets/decorations/emoji/jihyun_character.png';
+import kkkImg from '@/assets/decorations/emoji/kkk.gif';
+import questionImg from '@/assets/decorations/emoji/question_mark.png';
+import sojungImg from '@/assets/decorations/emoji/sojung_princess.gif';
+import taeheeConImg from '@/assets/decorations/emoji/taehee_con.png';
+import taeheeLoveImg from '@/assets/decorations/emoji/taehee_lovebeam.gif';
+import yejinClapImg from '@/assets/decorations/emoji/yejin_clap.gif';
+
+
+
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
 const getAvatarUrl = getAvatarSrc;
 
 // 🐶 이모지 대신 이미지 매핑 (Key -> Image Source)
 const REACTION_MAP: Record<string, string> = {
-  bone: boneImg,
-  heart: heartImg,
-  star: starImg,
-  foot: footImg,
-  big_heart: bigHeartImg,
-  shiba: shibaImg,
+  'bone': boneImg,
+  'heart': heartImg,
+  'star': starImg,
+  'foot': footImg,
+  'big_heart': bigHeartImg,
+  'shiba': shibaImg,
+  'gaeso': gaesoImg,
+
+  // New Additions
+  'sadge': sadgeImg,
+  'hang': hangImg,
+  'jihyun_clap': jihyunClapImg,
+  'cat_ddabong': catDdabongImg,
+  'gloomy_cat': gloomyCatImg,
+  'good_comm': goodCommImg,
+  'hmm': hmmImg,
+  'jerry_thanks': jerryThanksImg,
+  'jihyun_char': jihyunCharImg,
+  'kkk': kkkImg,
+  'question': questionImg,
+  'sojung': sojungImg,
+  'taehee_con': taeheeConImg,
+  'taehee_love': taeheeLoveImg,
+  'yejin_clap': yejinClapImg,
 };
 
 const REACTION_KEYS = Object.keys(REACTION_MAP);
@@ -378,11 +418,11 @@ const ChatArea = () => {
           alignItems: 'center',
         }}
       >
-        {/* 리액션 버튼 팝업창 */}
+        {/* 2. 리액션 버튼 팝업창 */}
         <div
           onMouseEnter={() => setShowReactions(true)}
           onMouseLeave={() => setShowReactions(false)}
-          style={{ position: 'relative', margin: '0 5px' }}
+          style={{ position: 'relative', margin: '0 5px', display: 'flex', alignItems: 'center' }}
         >
           <AnimatePresence>
             {showReactions && (
@@ -398,27 +438,50 @@ const ChatArea = () => {
                   border: '3px solid #111',
                   borderRadius: '15px',
                   padding: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
+                  // ⭐️ 그리드 레이아웃 적용 (5열)
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(5, 1fr)',
                   gap: '5px',
                   boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
                   zIndex: 100,
-                  width: '60px', // width 약간 늘림
+                  width: '240px', // 5개 * (35px + gap) 정도 고려해서 넓힘
                   alignItems: 'center',
+                  placeItems: 'center' // 그리드 아이템 중앙 정렬
                 }}
               >
+                {/* ⭐️ 방해 모드 토글 (관중 전용) - 팝업 내부에 배치 */}
+                {isAudience && (
+                  <button
+                    onClick={toggleSabotageMode}
+                    style={{
+                      gridColumn: '1 / -1', // 전체 너비 사용
+                      width: '100%',
+                      padding: '8px',
+                      marginBottom: '5px',
+                      background: isSabotageMode ? '#ff7675' : '#74b9ff',
+                      border: '2px solid #111',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    <span>{isSabotageMode ? '방해모드 ON 😈' : '방해모드 OFF 😇'}</span>
+                  </button>
+                )}
+
                 {REACTION_KEYS.map((key) => (
                   <motion.button
                     key={key}
                     whileHover={{ scale: 1.2 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleSendReaction(key)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: '5px',
-                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     <img
                       src={REACTION_MAP[key]}
@@ -431,58 +494,21 @@ const ChatArea = () => {
             )}
           </AnimatePresence>
 
-          {/* 리액션 트리거 아이콘 */}
+          {/* 리액션 트리거 아이콘 (스마일로 변경) */}
           <div
             style={{
               fontSize: '1.8rem',
               cursor: 'pointer',
               filter: 'grayscale(0.0)',
               transition: '0.2s',
-            }}
-          >
-            <img src={boneImg} style={{ width: '30px', height: '30px' }} alt="reaction trigger" />
-          </div>
-        </div>
-
-        {/* 내 현재 아바타 미리보기 */}
-        <div style={{ marginRight: '10px', flexShrink: 0 }}>
-          <img
-            src={getAvatarUrl(myAvatarId)}
-            style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid #111' }}
-            alt="me"
-          />
-        </div>
-
-        {/* 4. ⭐️ Go 버튼 삭제 -> 방해 모드 토글 버튼으로 교체 */}
-        {isAudience && (
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleSabotageMode}
-            title={isSabotageMode ? '방해 그만하기 (천사 모드)' : '방해 시작하기 (악마 모드)'}
-            style={{
-              width: '50px',
-              height: '46px',
-              background: isSabotageMode ? '#74b9ff' : '#ff7675', // 천사: 파랑, 악마: 빨강
-              border: '3px solid #111',
-              borderRadius: '15px',
-              cursor: 'pointer',
-              fontSize: '1.8rem', // 이모지 크기
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '3px 3px 0 rgba(0,0,0,0.2)',
-              transform: 'rotate(-2deg)', // 삐딱한 감성 유지
-              transition: 'background 0.3s',
+              justifyContent: 'center'
             }}
           >
-            {/* 상태에 따라 이모지 변경 */}
-            {isSabotageMode ? '😇' : '😈'}
-          </motion.button>
-        )}
-
-        {/* 플레이어인 경우 빈 공간 채우기용 (선택 사항) */}
-        {!isAudience && <div style={{ width: '10px' }} />}
+            <Smile size={32} color="#111" strokeWidth={2.5} />
+          </div>
+        </div>
 
         <input
           value={chatInput}
@@ -495,9 +521,9 @@ const ChatArea = () => {
             border: '3px solid #111',
             borderRadius: '15px',
             outline: 'none',
-            marginRight: '10px',
             fontSize: '1.1rem',
             background: '#fffdf0',
+            marginLeft: '5px' // 간격 추가
           }}
           placeholder="멍멍! 짖어봐!"
         />
