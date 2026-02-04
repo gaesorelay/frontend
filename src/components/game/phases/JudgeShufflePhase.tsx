@@ -2,6 +2,8 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useGameStore } from '@/store/useGameStore'; // ⭐️ Store
 import { getJudgeImage } from '@/lib/judgeMapper'; // ⭐️ Mapper
+import { useAudioStore } from '@/store/useAudioStore';
+
 // 🖼️ [배경 이미지]
 import bgImg from '@/assets/background.png';
 import cardLogo1 from '@/assets/logo/cardlogo1.png';
@@ -86,6 +88,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const JudgeShufflePhase = () => {
   // 1. ⭐️ Store에서 당첨된 심사위원 데이터 가져오기
   const { roundData } = useGameStore();
+  const { playSFX } = useAudioStore();
 
   // 2. ⭐️ 당첨자 명단 확정 (서버 데이터 사용)
   const targetWinners = useMemo(() => {
@@ -152,12 +155,14 @@ const JudgeShufflePhase = () => {
       let speed = 50;
       const totalSpins = 35;
 
+      // [1단계] 랜덤 하이라이트 (셔플 중)
       for (let i = 0; i < totalSpins; i++) {
         const pool = displayPool.filter((j) => !pickedIds.includes(j.id));
 
         if (pool.length > 0) {
           const randomIdx = Math.floor(Math.random() * pool.length);
           setHighlightId(pool[randomIdx].id);
+          playSFX('DRUM');
         }
 
         if (i > totalSpins - 10) speed += 15;
@@ -166,12 +171,14 @@ const JudgeShufflePhase = () => {
         await wait(speed);
       }
 
+      // [2단계] 당첨자 선택 (셔플 후)
       for (let round = 0; round < targetWinners.length; round++) {
         const winner = targetWinners[round];
 
         setHighlightId(winner.id);
         setPickedIds((prev) => [...prev, winner.id]);
 
+        playSFX('SYMBAL')
         await wait(1200);
       }
 
@@ -185,6 +192,7 @@ const JudgeShufflePhase = () => {
       // 1명씩 포커스 (0 -> 1 -> 2)
       for (let i = 0; i < targetWinners.length; i++) {
         setIntroStep(i);
+        playSFX(`DOG${i + 5}` as any)
         await wait(3500); // 멘트 읽을 시간
       }
 

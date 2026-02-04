@@ -5,13 +5,12 @@ import { useGameStore } from '@/store/useGameStore';
 
 import waitingMp3 from '@/assets/sound/waiting.mp3';
 import bgm1 from '@/assets/sound/BGM1.mp3';
-import bgm3 from '@/assets/sound/BGM3.mp3';
 import gameoverMp3 from '@/assets/sound/gameover.mp3';
 import finishMp3 from '@/assets/sound/finish.mp3';
 
 const BGMPlayer = () => {
     const location = useLocation();
-    const { isMuted } = useAudioStore();
+    const { isMuted, playBGM } = useAudioStore();
     const { gamePhase, storyReviewFinished } = useGameStore();
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -47,6 +46,10 @@ const BGMPlayer = () => {
         else if (path.startsWith('/gameroom')) {
             if (gamePhase === 'LOBBY') {
                 targetTrack = waitingMp3;
+            }
+            // 🆕 카드 셔플 페이즈 BGM 추가
+            else if (gamePhase === 'CARD_SHUFFLE') {
+                playBGM('SHUFFLE');
             }
             else if (gamePhase === 'STORY') {
                 if (storyReviewFinished) {
