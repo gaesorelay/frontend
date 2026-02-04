@@ -55,10 +55,14 @@ export const TeamSlot = ({ status, user, onClick }: TeamSlotProps) => {
 
       {/* 명패 부분에 애니메이션 추가 가능 */}
       <motion.div
-
         className={styles.nameTag}
+        initial={{ x: '-50%' }}
         variants={{
-          hover: { rotate: [0, -2, 2, 0], transition: { repeat: Infinity, duration: 0.5 } }
+          hover: {
+            x: '-50%',
+            rotate: [0, -2, 2, 0],
+            transition: { repeat: Infinity, duration: 0.5 }
+          }
         }}
       >
         <span className={styles.nickname}>{user?.nickname}</span>
