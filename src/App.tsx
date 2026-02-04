@@ -25,10 +25,28 @@ function App() {
         socket.connect();
         const cleanup = initSocketHandlers();
 
+        const handleDragStart = (event: DragEvent) => {
+            const target = event.target as HTMLElement | null;
+            if (!target) return;
+
+            const isEditable =
+                target instanceof HTMLInputElement ||
+                target instanceof HTMLTextAreaElement ||
+                target instanceof HTMLSelectElement ||
+                target.isContentEditable ||
+                !!target.closest('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]');
+
+            if (isEditable) return;
+            event.preventDefault();
+        };
+
+        document.addEventListener('dragstart', handleDragStart, { capture: true });
+
         // [Debug] 디버깅용 스토어 전역 노출
         (window as any).gameStore = import('@/store/useGameStore').then(m => m.useGameStore);
 
         return () => {
+            document.removeEventListener('dragstart', handleDragStart, { capture: true });
             cleanup();
             socket.disconnect();
         };
