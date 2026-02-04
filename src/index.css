@@ -39,6 +39,8 @@ body {
   /* place-items: center;  <- 이것도 flex일 때만 유효하므로 주석 처리하거나 제거 */
   min-width: 320px;
   min-height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 body::-webkit-scrollbar {
@@ -77,6 +79,22 @@ input,
 select,
 textarea {
   font-family: 'Gyeombalbal', sans-serif;
+}
+
+input,
+textarea,
+select,
+[contenteditable="true"],
+[contenteditable=""],
+[contenteditable="plaintext-only"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* -------------------------------------------------------- */
