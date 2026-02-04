@@ -62,7 +62,7 @@ const StoryPhase = () => {
           clearInterval(timer);
         }
       }
-    }, 4000); // 감상 시간 (이미지+텍스트 고려하여 약간 넉넉히)
+    }, 4500); // 감상 시간 (이미지+텍스트 고려하여 약간 넉넉히)
 
     return () => clearInterval(timer);
   }, [currentIndex, currentTeam, stories.length, isFinished, showIntro]);
