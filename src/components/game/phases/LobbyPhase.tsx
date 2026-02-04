@@ -434,9 +434,6 @@ const LobbyPhase = ({
   const handleReturnToAudience = () => {
     if (!myUser) return;
     if (!window.confirm('팀에서 나가 관전석으로 돌아가시겠습니까?')) return;
-
-    playClick();
-
     if (TEST_MODE) {
       setUsers(
         users.map((u: any) =>
