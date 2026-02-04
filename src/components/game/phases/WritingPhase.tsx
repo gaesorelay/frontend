@@ -11,6 +11,7 @@ import { socket } from '@/lib/socket';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { getCardImage } from '@/lib/cardMapper';
 import { getAvatarSrc } from '@/lib/avatarMapper';
+import DisturbanceLayer from '../DisturbanceLayer';
 // import { getJudgeImage } from '@/lib/judgeMapper';
 
 // --- Assets (이미지) ---
@@ -34,7 +35,6 @@ const usePrevious = <T,>(value: T) => {
   }, [value]);
   return ref.current;
 };
-
 
 // 아바타 ID를 이미지로 변환하는 헬퍼 -> avatarMapper로 대체됨
 // const getAvatarImage = ... removed
@@ -72,7 +72,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   // 1. ⭐️ [수정] store에서 users가 아니라 'players'를 가져옵니다!
   const { players, roomConfig, roundData, draftText, setDraftText } = useGameStore();
 
-  console.log(players)
+  console.log(players);
 
   // 2. 현재 턴 번호 계산
   const turnNumber = useMemo(() => {
@@ -82,7 +82,6 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
   // 3. 슬롯 설정
   const maxStorytellers = roomConfig?.storytellerCount || 4;
-
 
   // 2. ⭐️ [핵심] 현재 턴의 카드 ID 찾기
   const currentCardId = useMemo(() => {
@@ -99,20 +98,22 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     return roundData?.judgeIds || [];
   }, [roundData]);
 
-
-
   // 4. ⭐️ [수정] players 배열을 필터링합니다.
-  const teamAPlayers = useMemo(() =>
-    players // users -> players
-      .filter(p => p.team === 'A' && p.role === 'PLAYER')
-      .sort((a, b) => (a.slotIndex || 0) - (b.slotIndex || 0)),
-    [players]);
+  const teamAPlayers = useMemo(
+    () =>
+      players // users -> players
+        .filter((p) => p.team === 'A' && p.role === 'PLAYER')
+        .sort((a, b) => (a.slotIndex || 0) - (b.slotIndex || 0)),
+    [players]
+  );
 
-  const teamBPlayers = useMemo(() =>
-    players // users -> players
-      .filter(p => p.team === 'B' && p.role === 'PLAYER')
-      .sort((a, b) => (a.slotIndex || 0) - (b.slotIndex || 0)),
-    [players]);
+  const teamBPlayers = useMemo(
+    () =>
+      players // users -> players
+        .filter((p) => p.team === 'B' && p.role === 'PLAYER')
+        .sort((a, b) => (a.slotIndex || 0) - (b.slotIndex || 0)),
+    [players]
+  );
 
   // 5. 현재 작성자(Active User) 계산
   const activeUserA = useMemo(() => {
@@ -133,9 +134,12 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
   // 7. 나의 상태 확인 (관전자 혹은 플레이어)
   const { userToken } = useUserStore();
-  const myInfo = useMemo(() => players.find(p => p.userToken === userToken), [players, userToken]);
-  const isMyTurn = useMemo(() =>
-    (activeUserA?.userToken === userToken) || (activeUserB?.userToken === userToken),
+  const myInfo = useMemo(
+    () => players.find((p) => p.userToken === userToken),
+    [players, userToken]
+  );
+  const isMyTurn = useMemo(
+    () => activeUserA?.userToken === userToken || activeUserB?.userToken === userToken,
     [activeUserA, activeUserB, userToken]
   );
   const myTeam = useMemo(() => {
@@ -160,7 +164,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   useEffect(() => {
     // 1. 시작 시점을 변수에 고정 (서버 데이터가 없으면 현재 시간 사용)
     const startTime = roundData?.startedAt ? new Date(roundData.startedAt).getTime() : Date.now();
-    const endTime = startTime + (roundDuration * 1000);
+    const endTime = startTime + roundDuration * 1000;
 
     // 2. 인터벌 설정
     const interval = setInterval(() => {
@@ -191,13 +195,15 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     if (turnNumber === prevTurnNumber) return;
     if (!prevTeam || !latestUserTokenRef.current) return;
 
-    console.log(`💾 [WritingPhase] 턴 종료로 인한 자동 제출: ${prevDraftText ?? ''}, Turn: ${prevTurnNumber}`);
+    console.log(
+      `💾 [WritingPhase] 턴 종료로 인한 자동 제출: ${prevDraftText ?? ''}, Turn: ${prevTurnNumber}`
+    );
     socket.emit('submit_story', {
       roomId: latestRoomIdRef.current || '',
       message: prevDraftText ?? '',
       team: prevTeam,
       userToken: latestUserTokenRef.current,
-      turn: prevTurnNumber
+      turn: prevTurnNumber,
     });
     setDraftText('');
   }, [turnNumber, prevTurnNumber, prevTeam, prevDraftText, setDraftText]);
@@ -205,7 +211,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   useEffect(() => {
     return () => {
       const duration = Date.now() - mountTimeRef.current;
-      // 언마운트 된 시간이 100ms 이하이면 submit_story 이벤트 발송안 함 
+      // 언마운트 된 시간이 100ms 이하이면 submit_story 이벤트 발송안 함
       // 로컬 환경 방지
       if (import.meta.env.DEV && duration < 100) return;
 
@@ -213,40 +219,105 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
       const token = latestUserTokenRef.current;
       if (!team || !token) return;
 
-      console.log(`💾 [WritingPhase] 언마운트로 인한 자동 제출: ${latestDraftRef.current}, Turn: ${latestTurnRef.current}`);
+      console.log(
+        `💾 [WritingPhase] 언마운트로 인한 자동 제출: ${latestDraftRef.current}, Turn: ${latestTurnRef.current}`
+      );
       socket.emit('submit_story', {
         roomId: latestRoomIdRef.current || '',
         message: latestDraftRef.current,
         team,
         userToken: token,
-        turn: latestTurnRef.current
+        turn: latestTurnRef.current,
       });
       useGameStore.getState().setDraftText('');
     };
   }, []);
 
   const formatTime = (sec: number) => {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
+    const m = Math.floor(sec / 60)
+      .toString()
+      .padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
-
   // --- Styles (기존 스타일 그대로 유지) ---
   const paperBoxStyle: React.CSSProperties = {
-    backgroundColor: '#fdfcf0', border: '3px solid #333', boxShadow: '4px 4px 0px rgba(0,0,0,0.15)',
-    borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '10px 20px', fontFamily: 'SchoolSafeLittleOne, sans-serif',
+    backgroundColor: '#fdfcf0',
+    border: '3px solid #333',
+    boxShadow: '4px 4px 0px rgba(0,0,0,0.15)',
+    borderRadius: '255px 15px 225px 15px / 15px 225px 15px 255px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '10px 20px',
+    fontFamily: 'SchoolSafeLittleOne, sans-serif',
   };
-  const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 60px', height: '120px', background: 'transparent' };
-  const mainStyle: React.CSSProperties = { flex: 3, padding: '0 20px', alignItems: 'stretch', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px' };
-  const leftColumnStyle: React.CSSProperties = { height: '100%', flex: 0.8, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' };
-  const centerColumnStyle: React.CSSProperties = { flex: 1.5, display: 'flex', flexDirection: 'column', gap: '10px' };
-  const teamSectionStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '10px', ...paperBoxStyle, borderRadius: '20px', alignItems: 'stretch', padding: '10px 15px', justifyContent: 'flex-start', flex: 1, overflow: 'hidden' };
-  const teamHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem', fontWeight: 'bold' };
-  const teamIndicatorStyle = (color: string): React.CSSProperties => ({ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: color, border: '2px solid #333' });
+  const headerStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px 60px',
+    height: '120px',
+    background: 'transparent',
+  };
+  const mainStyle: React.CSSProperties = {
+    flex: 3,
+    padding: '0 20px',
+    alignItems: 'stretch',
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    gap: '4px',
+  };
+  const leftColumnStyle: React.CSSProperties = {
+    height: '100%',
+    flex: 0.8,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  };
+  const centerColumnStyle: React.CSSProperties = {
+    flex: 1.5,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  };
+  const teamSectionStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    ...paperBoxStyle,
+    borderRadius: '20px',
+    alignItems: 'stretch',
+    padding: '10px 15px',
+    justifyContent: 'flex-start',
+    flex: 1,
+    overflow: 'hidden',
+  };
+  const teamHeaderStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+  };
+  const teamIndicatorStyle = (color: string): React.CSSProperties => ({
+    width: '12px',
+    height: '12px',
+    borderRadius: '50%',
+    backgroundColor: color,
+    border: '2px solid #333',
+  });
   const storytellersStyle: React.CSSProperties = { display: 'flex', gap: '8px' };
-  const rightColumnStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px' };
+  const rightColumnStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    padding: '10px',
+  };
 
   // 아바타 스타일
   const getAvatarStyle = (isActive: boolean, color: string): React.CSSProperties => ({
@@ -335,10 +406,15 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   // 렌더링 헬퍼
   const renderTeamAvatars = (teamPlayers: any[], activeUser: any, color: string) => {
     return Array.from({ length: maxStorytellers }).map((_, i) => {
-      const player = teamPlayers.find(p => p.slotIndex === i);
+      const player = teamPlayers.find((p) => p.slotIndex === i);
 
       if (!player) {
-        return <div key={`empty-${i}`} style={{ width: 40, height: 40, borderRadius: 10, border: '2px dashed #e5e7eb' }} />;
+        return (
+          <div
+            key={`empty-${i}`}
+            style={{ width: 40, height: 40, borderRadius: 10, border: '2px dashed #e5e7eb' }}
+          />
+        );
       }
 
       const isActive = player && activeUser && player.userToken === activeUser.userToken;
@@ -347,20 +423,22 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
       return (
         <div key={player.userToken} style={{ position: 'relative' }}>
           {/* 상단 라벨 (ME 또는 닉네임) */}
-          <div style={{
-            position: 'absolute',
-            top: '-15px', // 닉네임 길이를 고려해 살짝 더 올렸습니다
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: isMe ? '#000' : '#fff', // 나면 검정, 남이면 흰색
-            color: isMe ? '#fff' : '#000',           // 나면 흰색, 남이면 검정
-            fontSize: '0.65rem',
-            padding: '2px 6px',
-            borderRadius: '4px',
-            zIndex: 30,
-            border: isMe ? 'none' : '1px solid #e5e7eb', // 남일 때는 테두리를 주어 흰 배경과 구분
-            whiteSpace: 'nowrap' // 닉네임이 길어도 줄바꿈 방지
-          }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: '-15px', // 닉네임 길이를 고려해 살짝 더 올렸습니다
+              left: '50%',
+              transform: 'translateX(-50%)',
+              backgroundColor: isMe ? '#000' : '#fff', // 나면 검정, 남이면 흰색
+              color: isMe ? '#fff' : '#000', // 나면 흰색, 남이면 검정
+              fontSize: '0.65rem',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              zIndex: 30,
+              border: isMe ? 'none' : '1px solid #e5e7eb', // 남일 때는 테두리를 주어 흰 배경과 구분
+              whiteSpace: 'nowrap', // 닉네임이 길어도 줄바꿈 방지
+            }}
+          >
             {isMe ? 'ME' : player.nickname}
           </div>
 
@@ -376,30 +454,45 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
   return (
     <Background>
+      <DisturbanceLayer />
       {/* ⭐️ 카운트다운 오버레이 */}
       {countdown !== null && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center',
-          backgroundColor: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(8px)',
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 9999,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
           <img
             key={countdown} // key를 바꿔야 애니메이션이 재실행됨
             src={getCountdownImage()!}
             alt="countdown"
             style={{
               height: countdown === 'START' ? '170px' : '270px',
-              animation: 'pop-in 0.8s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards'
+              animation: 'pop-in 0.8s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards',
             }}
           />
         </div>
       )}
 
-      <div style={{
-        width: '100%', height: '100%', display: 'flex',
-        filter: countdown !== null ? 'blur(4px)' : 'none', // 카운트다운 중일 때 배경도 살짝 블러
-        transition: 'filter 0.5s ease'
-      }}>
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          filter: countdown !== null ? 'blur(4px)' : 'none', // 카운트다운 중일 때 배경도 살짝 블러
+          transition: 'filter 0.5s ease',
+        }}
+      >
         <style>
           {`
             /* 카운트다운 팝 애니메이션 */
@@ -450,34 +543,54 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
         <div style={mainStyle} className={isUrgent ? 'panic-mode' : ''}>
           {/* --- [수정된 개소릴레이 헤더] --- */}
           <header style={headerStyle}>
-
             {/* 타이머 구역 */}
             <div style={crazyTimerStyle} className={isUrgent ? 'panic-timer' : 'normal-timer'}>
               <div style={badgeStyle}>{timeLeft <= 10 ? '빨리빨리!!' : '기다리는중..'}</div>
-              <Timer size={28} strokeWidth={3} style={{ animation: isUrgent ? 'none' : 'spin-slow 4s linear infinite' }} />
-              <span style={{
-                fontFamily: 'monospace',
-                fontSize: '1.8rem',
-                fontWeight: 900,
-              }}>
+              <Timer
+                size={28}
+                strokeWidth={3}
+                style={{ animation: isUrgent ? 'none' : 'spin-slow 4s linear infinite' }}
+              />
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: '1.8rem',
+                  fontWeight: 900,
+                }}
+              >
                 {formatTime(timeLeft)}
               </span>
             </div>
 
             {/* 중앙: logo_play 적용 구역 */}
             <div style={logoWrapperStyle}>
-              <img src={logoPlay} alt="개소릴레이 로고" style={logoImgStyle} className={isUrgent ? 'panic-logo' : 'pulse-logo'} />
+              <img
+                src={logoPlay}
+                alt="개소릴레이 로고"
+                style={logoImgStyle}
+                className={isUrgent ? 'panic-logo' : 'pulse-logo'}
+              />
 
               <div style={roundBadgeStyle}>
-                제 <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>{turnNumber}</span>회차 짖기 / {TURN_COUNT}
+                제 <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>{turnNumber}</span>회차
+                짖기 / {TURN_COUNT}
               </div>
             </div>
 
             {/* 우측 빈 공간 (밸런스용) 혹은 추가 정보 */}
-            <div style={{ ...kitchBoxStyle, backgroundColor: isMyTurn ? '#ff4757' : '#7bed9f', transform: 'rotate(2deg)' }}>
+            <div
+              style={{
+                ...kitchBoxStyle,
+                backgroundColor: isMyTurn ? '#ff4757' : '#7bed9f',
+                transform: 'rotate(2deg)',
+              }}
+            >
               <span style={{ fontWeight: 'bold', color: isMyTurn ? '#fff' : '#000' }}>
-                {myInfo?.role === 'AUDIENCE' ? '👀 관전 중...' :
-                  isMyTurn ? '✍️ 당신의 턴! 짖으세요!' : '💤 동료가 짖는 중...'}
+                {myInfo?.role === 'AUDIENCE'
+                  ? '👀 관전 중...'
+                  : isMyTurn
+                    ? '✍️ 당신의 턴! 짖으세요!'
+                    : '💤 동료가 짖는 중...'}
               </span>
             </div>
           </header>
@@ -485,10 +598,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
           <div style={contentStyle}>
             {/* Left: Image & Judges */}
             <div style={leftColumnStyle}>
-              <CardArea
-                cardIds={roundData?.cardIds || []}
-                currentTurn={turnNumber}
-              />
+              <CardArea cardIds={roundData?.cardIds || []} currentTurn={turnNumber} />
               <JudgeArea judges={judges} />
             </div>
 

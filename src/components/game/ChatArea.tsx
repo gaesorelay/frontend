@@ -23,26 +23,28 @@ const getAvatarUrl = getAvatarSrc;
 
 // 🐶 이모지 대신 이미지 매핑 (Key -> Image Source)
 const REACTION_MAP: Record<string, string> = {
-  'bone': boneImg,
-  'heart': heartImg,
-  'star': starImg,
-  'foot': footImg,
-  'big_heart': bigHeartImg,
-  'shiba': shibaImg,
+  bone: boneImg,
+  heart: heartImg,
+  star: starImg,
+  foot: footImg,
+  big_heart: bigHeartImg,
+  shiba: shibaImg,
 };
 
 const REACTION_KEYS = Object.keys(REACTION_MAP);
 
 const ChatArea = () => {
-  const { messages, addMessage, players } = useGameStore();
+  const { messages, addMessage, players, isSabotageMode, toggleSabotageMode } = useGameStore();
   const { nickname, avatarId: myAvatarId, userToken: myToken } = useUserStore();
-  const [chatInput, setChatInput] = useState("");
+  const [chatInput, setChatInput] = useState('');
   const chatListRef = useRef<HTMLDivElement>(null);
 
   // 리액션 관련
   const [showReactions, setShowReactions] = useState(false);
   // emoji string 대신 image key를 저장
-  const [floatingReactions, setFloatingReactions] = useState<{ id: number; reactionKey: string; x: number; size: number }[]>([]);
+  const [floatingReactions, setFloatingReactions] = useState<
+    { id: number; reactionKey: string; x: number; size: number }[]
+  >([]);
 
   // 1. 소켓 이벤트 리스너 설정
   useEffect(() => {
@@ -60,6 +62,7 @@ const ChatArea = () => {
 
     // 서버에서는 { emoji: 'bone' } 형태로 보내줌 (기존 emoji 필드 재사용)
     const handleReaction = (data: { emoji: string }) => {
+      if (data.emoji.includes('|')) return; // 구분자(|)가 있으면 방해 공작이므로 무시
       triggerFloatingReaction(data.emoji);
     };
 
@@ -83,7 +86,7 @@ const ChatArea = () => {
   const handleSend = () => {
     if (!chatInput.trim()) return;
     socket.emit('send_chat', { message: chatInput });
-    setChatInput("");
+    setChatInput('');
   };
 
   // 리액션 발사 로직
@@ -97,9 +100,9 @@ const ChatArea = () => {
     // 사이즈도 약간 랜덤 (0.8 ~ 1.5배)
     const size = 0.8 + Math.random() * 0.7;
 
-    setFloatingReactions(prev => [...prev, { id, reactionKey, x, size }]);
+    setFloatingReactions((prev) => [...prev, { id, reactionKey, x, size }]);
     setTimeout(() => {
-      setFloatingReactions(prev => prev.filter(r => r.id !== id));
+      setFloatingReactions((prev) => prev.filter((r) => r.id !== id));
     }, 2000);
   };
 
@@ -118,11 +121,23 @@ const ChatArea = () => {
   };
 
   // 1. 루프 밖에서 '나의 팀'이 무엇인지 딱 한 번만 정의 (Zustand players 활용)
-  const myInfo = players.find(p => p.currentSocketId === socket.id || p.nickname === nickname);
+  const myInfo = players.find((p) => p.currentSocketId === socket.id || p.nickname === nickname);
   const myActualTeam = myInfo?.team || 'NONE'; // 내 팀 (A, B, 또는 NONE)
+  const isAudience = !myInfo || myInfo.role === 'AUDIENCE';
 
   return (
-    <div className="sketch-box-container" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', paddingLeft: '10px', maxWidth: '25rem' }}>
+    <div
+      className="sketch-box-container chat-area-container"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        paddingLeft: '10px',
+        maxWidth: '25rem',
+      }}
+    >
       <style>{`
         /* 🐶 멍멍이 스타일: 쫀득하고 촐싹거리는 애니메이션 */
         @keyframes tail-wag {
@@ -166,32 +181,44 @@ const ChatArea = () => {
         }
       `}</style>
 
-
       {/* 솟아오르는 리액션 레이어 (Portal을 사용하여 화면 전체에 표시) */}
       {createPortal(
-        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 99999, overflow: 'hidden' }}>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 99999,
+            overflow: 'hidden',
+          }}
+        >
           <AnimatePresence>
-            {floatingReactions.map(r => (
+            {floatingReactions.map((r) => (
               <motion.div
                 key={r.id}
                 initial={{ y: 150, opacity: 0, scale: 0.5, rotate: 0 }}
                 animate={{
-                  y: - window.innerHeight - 200, // 화면 전체 높이만큼 위로 이동 + 여유분
+                  y: -window.innerHeight - 200, // 화면 전체 높이만큼 위로 이동 + 여유분
                   opacity: [0, 1, 1, 0],
                   scale: [0.5, r.size, r.size, r.size * 0.8],
-                  rotate: [0, -20, 20, -10, 0]
+                  rotate: [0, -20, 20, -10, 0],
                 }}
-                transition={{ duration: 4, ease: "easeOut" }}
+                transition={{ duration: 4, ease: 'easeOut' }}
                 style={{
                   position: 'absolute',
                   left: `${r.x}%`,
-                  bottom: '-50px'
+                  bottom: '-50px',
                 }}
               >
                 <img
                   src={REACTION_MAP[r.reactionKey]}
                   alt="reaction"
-                  style={{ width: '80px', height: '80px', objectFit: 'contain', filter: 'drop-shadow(4px 4px 2px rgba(0,0,0,0.3))' }}
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(4px 4px 2px rgba(0,0,0,0.3))',
+                  }}
                 />
               </motion.div>
             ))}
@@ -200,16 +227,39 @@ const ChatArea = () => {
         document.body
       )}
 
-      <div style={{ padding: '15px', background: 'transparent', borderBottom: '4px dashed #111', fontWeight: '900', textAlign: 'center', fontSize: '1.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+      <div
+        style={{
+          padding: '15px',
+          background: 'transparent',
+          borderBottom: '4px dashed #111',
+          fontWeight: '900',
+          textAlign: 'center',
+          fontSize: '1.8rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+        }}
+      >
         <MessageSquare size={24} color="#111" />
         <span>실시간 개소리판</span>
       </div>
 
-      <div ref={chatListRef} style={{ flex: 1, padding: '15px', overflowY: 'auto', background: 'transparent', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div
+        ref={chatListRef}
+        style={{
+          flex: 1,
+          padding: '15px',
+          overflowY: 'auto',
+          background: 'transparent',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+        }}
+      >
         {messages.map((msg) => {
-
           // 1. 메세지 작성자의 실시간 정보 찾기
-          const senderInfo = players.find(p => p.currentSocketId === msg.userToken);
+          const senderInfo = players.find((p) => p.currentSocketId === msg.userToken);
 
           const isMe = msg.nickname === nickname || (myToken && msg.userToken === myToken);
           const isSystem = msg.nickname === 'SYSTEM';
@@ -235,23 +285,34 @@ const ChatArea = () => {
             currentConfig = { bg: '#dbeafe', border: '#3b82f6' };
           }
 
-          // 4. 라벨 판별 
-          let teamLabel = "";
+          // 4. 라벨 판별
+          let teamLabel = '';
           if (isMe) {
-            teamLabel = "(나)";
+            teamLabel = '(나)';
           } else if (isAudience) {
-            teamLabel = "(관전자)";
+            teamLabel = '(관전자)';
           } else {
             // 내 팀(myActualTeam)과 메시지 작성자의 팀(userTeam)을 단순 비교!
-            const isOurTeam = (myActualTeam !== 'NONE') && (myActualTeam === userTeam);
-            teamLabel = isOurTeam ? "(우리팀)" : "(상대팀)";
+            const isOurTeam = myActualTeam !== 'NONE' && myActualTeam === userTeam;
+            teamLabel = isOurTeam ? '(우리팀)' : '(상대팀)';
           }
 
           // 시스템 메시지 처리
           if (isSystem) {
             return (
-              <div key={msg.id} style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
-                <span style={{ fontSize: '0.8rem', color: '#888', backgroundColor: 'rgba(0,0,0,0.05)', padding: '5px', borderRadius: '15px' }}>
+              <div
+                key={msg.id}
+                style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}
+              >
+                <span
+                  style={{
+                    fontSize: '0.8rem',
+                    color: '#888',
+                    backgroundColor: 'rgba(0,0,0,0.05)',
+                    padding: '5px',
+                    borderRadius: '15px',
+                  }}
+                >
                   📢 {msg.text}
                 </span>
               </div>
@@ -267,27 +328,37 @@ const ChatArea = () => {
                 <img
                   src={getAvatarUrl(senderInfo?.avatarId || msg.avatarId)}
                   style={{
-                    width: '32px', height: '32px', borderRadius: '50%',
-                    border: `2px solid ${currentConfig.border}`
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    border: `2px solid ${currentConfig.border}`,
                   }}
                   alt="avatar"
                 />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: '0.8rem', marginBottom: '2px', color: currentConfig.border, fontWeight: 'bold' }}>
+                <div
+                  style={{
+                    fontSize: '0.8rem',
+                    marginBottom: '2px',
+                    color: currentConfig.border,
+                    fontWeight: 'bold',
+                  }}
+                >
                   {senderInfo?.nickname || msg.nickname} {teamLabel}
                 </div>
 
-                <div className="chat-bubble" style={{
-                  background: currentConfig.bg,
-                  borderColor: currentConfig.border,
-                  transform: `rotate(${(parseInt(String(msg.id).slice(-1)) || 0) % 4 - 2}deg)`,
-                  padding: '3px',
-                }}>
-                  <div style={{ color: '#111', fontWeight: 600, fontSize: '1rem' }}>
-                    {msg.text}
-                  </div>
+                <div
+                  className="chat-bubble"
+                  style={{
+                    background: currentConfig.bg,
+                    borderColor: currentConfig.border,
+                    transform: `rotate(${((parseInt(String(msg.id).slice(-1)) || 0) % 4) - 2}deg)`,
+                    padding: '3px',
+                  }}
+                >
+                  <div style={{ color: '#111', fontWeight: 600, fontSize: '1rem' }}>{msg.text}</div>
                 </div>
               </div>
             </div>
@@ -296,8 +367,17 @@ const ChatArea = () => {
       </div>
 
       {/* 입력 영역 */}
-      <div style={{ width: '100%', boxSizing: 'border-box', display: 'flex', padding: '10px', background: 'transparent', borderTop: '4px dashed #111', alignItems: 'center' }}>
-
+      <div
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          display: 'flex',
+          padding: '10px',
+          background: 'transparent',
+          borderTop: '4px dashed #111',
+          alignItems: 'center',
+        }}
+      >
         {/* 리액션 버튼 팝업창 */}
         <div
           onMouseEnter={() => setShowReactions(true)}
@@ -324,16 +404,21 @@ const ChatArea = () => {
                   boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
                   zIndex: 100,
                   width: '60px', // width 약간 늘림
-                  alignItems: 'center'
+                  alignItems: 'center',
                 }}
               >
-                {REACTION_KEYS.map(key => (
+                {REACTION_KEYS.map((key) => (
                   <motion.button
                     key={key}
                     whileHover={{ scale: 1.2 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleSendReaction(key)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '5px',
+                    }}
                   >
                     <img
                       src={REACTION_MAP[key]}
@@ -347,7 +432,14 @@ const ChatArea = () => {
           </AnimatePresence>
 
           {/* 리액션 트리거 아이콘 */}
-          <div style={{ fontSize: '1.8rem', cursor: 'pointer', filter: 'grayscale(0.0)', transition: '0.2s' }}>
+          <div
+            style={{
+              fontSize: '1.8rem',
+              cursor: 'pointer',
+              filter: 'grayscale(0.0)',
+              transition: '0.2s',
+            }}
+          >
             <img src={boneImg} style={{ width: '30px', height: '30px' }} alt="reaction trigger" />
           </div>
         </div>
@@ -361,14 +453,54 @@ const ChatArea = () => {
           />
         </div>
 
+        {/* 4. ⭐️ Go 버튼 삭제 -> 방해 모드 토글 버튼으로 교체 */}
+        {isAudience && (
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleSabotageMode}
+            title={isSabotageMode ? '방해 그만하기 (천사 모드)' : '방해 시작하기 (악마 모드)'}
+            style={{
+              width: '50px',
+              height: '46px',
+              background: isSabotageMode ? '#74b9ff' : '#ff7675', // 천사: 파랑, 악마: 빨강
+              border: '3px solid #111',
+              borderRadius: '15px',
+              cursor: 'pointer',
+              fontSize: '1.8rem', // 이모지 크기
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '3px 3px 0 rgba(0,0,0,0.2)',
+              transform: 'rotate(-2deg)', // 삐딱한 감성 유지
+              transition: 'background 0.3s',
+            }}
+          >
+            {/* 상태에 따라 이모지 변경 */}
+            {isSabotageMode ? '😇' : '😈'}
+          </motion.button>
+        )}
+
+        {/* 플레이어인 경우 빈 공간 채우기용 (선택 사항) */}
+        {!isAudience && <div style={{ width: '10px' }} />}
+
         <input
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          style={{ minWidth: 0, flex: 1, padding: '12px', border: '3px solid #111', borderRadius: '15px', outline: 'none', marginRight: '10px', fontSize: '1.1rem', background: '#fffdf0' }}
+          style={{
+            minWidth: 0,
+            flex: 1,
+            padding: '12px',
+            border: '3px solid #111',
+            borderRadius: '15px',
+            outline: 'none',
+            marginRight: '10px',
+            fontSize: '1.1rem',
+            background: '#fffdf0',
+          }}
           placeholder="멍멍! 짖어봐!"
         />
-        <button onClick={handleSend} style={{ background: '#111', color: '#fff', border: '1px solid #111', borderRadius: '15px', padding: '0 10px', cursor: 'pointer', fontWeight: 600, fontSize: '1.1rem', transform: 'rotate(-2deg)', height: '46px' }}>Go!</button>
       </div>
     </div>
   );
