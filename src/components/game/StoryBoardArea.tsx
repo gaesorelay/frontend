@@ -3,6 +3,8 @@ import { socket } from '@/lib/socket';
 import { useUserStore } from '@/store/useUserStore';
 import { useGameStore } from '@/store/useGameStore';
 
+import { useAudioStore } from '@/store/useAudioStore'; // 🔊 추가
+
 interface StoryBoardProps {
   team: 'A' | 'B';
   activeUser: any;
@@ -14,6 +16,7 @@ interface StoryBoardProps {
 const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent }: StoryBoardProps) => {
   const { userToken } = useUserStore();
   const { teamAStory, teamBStory, addStoryLine, setDraftText } = useGameStore();
+  const { playSFX } = useAudioStore(); // 🔊 SFX
 
   // 1. [데이터 선택] 현재 팀(A/B)에 해당하는 스토리 로그를 스토어에서 가져옴
   const storyLog = team === 'A' ? teamAStory : teamBStory;
@@ -45,6 +48,10 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent }: Stor
     const handleUpdate = (data: any) => {
       if (data.team === team && data.writerToken !== userToken) {
         setCurrentTypingText(data.text);
+        // 🔊 상대방 타이핑 소리 (A팀: bark / B팀: bark4)
+        if (data.text.length > currentTypingText.length) { // 글자가 늘어날 때만 소리 (지울 땐 조용히?)
+          playSFX(team === 'A' ? 'DOG1' : 'DOG4');
+        }
       }
     };
 
@@ -62,7 +69,7 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent }: Stor
       socket.off('story_update', handleUpdate);
       socket.off('story_submitted', handleSubmit);
     };
-  }, [team, userToken, addStoryLine]);
+  }, [team, userToken, addStoryLine, playSFX, currentTypingText]);
 
   // 5. [자동 스크롤] 새로운 문장이 추가되거나 타이핑 시 하단으로 스크롤 고정
   useEffect(() => {
@@ -74,6 +81,10 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent }: Stor
   // 6. [타이핑 핸들러] 글자를 칠 때마다 서버로 실시간 전송 (Broadcasting)
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
+    // 🔊 내 타이핑 소리
+    if (text.length > currentTypingText.length) {
+      playSFX(team === 'A' ? 'DOG1' : 'DOG4');
+    }
     setCurrentTypingText(text);
     socket.emit('story_typing', { roomId, text, team, userToken });
   };
