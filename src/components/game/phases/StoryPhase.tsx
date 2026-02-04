@@ -11,7 +11,7 @@ import ChatArea from '../ChatArea';
 
 const StoryPhase = () => {
   const { teamAStory, teamBStory, roundData, setStoryReviewFinished } = useGameStore();
-  const { isMuted, toggleMute } = useAudioStore(); // ⭐️ 뮤트 상태 가져오기
+  const { isMuted, toggleMute, playSFX } = useAudioStore(); // ⭐️ 뮤트 상태, SFX 재생 함수 가져오기
   const [currentTeam, setCurrentTeam] = useState<'A' | 'B'>('A');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
@@ -62,6 +62,7 @@ const StoryPhase = () => {
           setTimeout(() => {
             setIsFinished(true);
             setStoryReviewFinished(true); // ⭐️ BGM 정지 신호
+            playSFX('CYMBALS'); // ⭐️ 심벌즈 효과음 재생
           }, 1500);
           clearInterval(timer);
         }
