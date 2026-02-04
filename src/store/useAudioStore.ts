@@ -6,37 +6,48 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import main from '@/assets/sound/BGM1.mp3';
 import lobby from '@/assets/sound/waiting.mp3';
 import game from '@/assets/sound/BGM3.mp3';
+import shuffle from '@/assets/sound/cardshuffle.mp3';
 
 // sfx
 import cardShuffle from '@/assets/sound/CARDSHUFFLE.wav';
-import cardOpen from '@/assets/sound/CARDOPEN.wav';
+import cardOpen from '@/assets/sound/CARDOPEN.mp3';
 import dog1 from '@/assets/sound/bark.wav';
 import dog2 from '@/assets/sound/bark2.wav';
 import dog3 from '@/assets/sound/bark3.wav';
 import click from '@/assets/sound/click.mp3';
 import gameFinish from '@/assets/sound/GAMEFINISH.wav';
 import paper from '@/assets/sound/PAPER.wav';
+import drum from '@/assets/sound/drum.mp3';
+import cymbals from '@/assets/sound/cymbals.mp3';
 
 // New Sounds
 import applause from '@/assets/sound/applause.mp3';
 import countdown from '@/assets/sound/countdown.mp3';
 import buttonBeep from '@/assets/sound/button_beep.mp3';
 import bark4Mp3 from '@/assets/sound/bark4.mp3'; // 🐶 추가
-import cymbals from '@/assets/sound/cymbals.mp3';
+import bark5Mp3 from '@/assets/sound/bark5.wav'; // 🐶 추가
+import bark6Mp3 from '@/assets/sound/bark6.wav'; // 🐶 추가
+import bark7Mp3 from '@/assets/sound/bark7.mp3'; // 🐶 추가
 
 const SOUND_ASSETS = {
     BGM: {
         MAIN: main, // 메인 & 캐릭터 선택 공용
         LOBBY: lobby,
         GAME: game,
+        SHUFFLE: shuffle,
     },
     SFX: {
         CARDSHUFFLE: cardShuffle,
         CARDOPEN: cardOpen,
+        DRUM: drum,
+        SYMBAL: cymbals,
         DOG1: dog1,
         DOG2: dog2,
         DOG3: dog3,
         DOG4: bark4Mp3, // 🐶 B팀 타이핑용
+        DOG5: bark5Mp3, // 🐶 추가
+        DOG6: bark6Mp3, // 🐶 추가
+        DOG7: bark7Mp3, // 🐶 추가
         CLICK: click,
         GAMEFINISH: gameFinish,
         PAPER: paper,

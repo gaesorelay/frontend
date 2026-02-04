@@ -4,6 +4,7 @@ import titleLogo from '@/assets/logo/carddistribute.png';
 import dotImage from '@/assets/logo/dot.png';
 
 import { getAvatarSrc, getTotalAvatars } from '@/lib/avatarMapper';
+import { useAudioStore } from '@/store/useAudioStore';
 
 // Decorations Import
 import bone from '@/assets/decorations/bone.png';
@@ -31,6 +32,7 @@ const CardShufflePhase = () => {
   const [visibleCount, setVisibleCount] = useState(0);
   const [dotCount, setDotCount] = useState(1);
   const [outroStep, setOutroStep] = useState(0);
+  const { playSFX } = useAudioStore(); // 카드 섞는 소리
 
   // 🆕 그림 카드 줌인 효과를 위한 상태 추가
   const [focusedCardIndex, setFocusedCardIndex] = useState(-1);
@@ -107,7 +109,7 @@ const CardShufflePhase = () => {
   useEffect(() => {
     const dotInterval = setInterval(() => setDotCount((prev) => (prev < 3 ? prev + 1 : 1)), 300);
     const shuffleInterval = setInterval(() => setShuffleTick((prev) => prev + 1), 50);
-
+    playSFX('CARDSHUFFLE');
     const stopShuffleTimer = setTimeout(() => {
       clearInterval(shuffleInterval);
       setIsShuffling(false);
@@ -124,7 +126,7 @@ const CardShufflePhase = () => {
         setTimeout(() => {
           setVisibleCount((prev) => prev + 1); // 뒤집기
           setFocusedCardIndex(i); // 줌인!
-
+          playSFX('CARDOPEN');
           // 0.3초 뒤에 다시 줌아웃 (원래 크기로 복귀)
           setTimeout(() => {
             setFocusedCardIndex(-1);
