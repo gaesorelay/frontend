@@ -715,24 +715,40 @@ const LobbyPhase = ({
             {(isHost || isMyRolePlayer) && (
               <footer className={`${styles.footerArea} ${styles['footer' + maxStorytellers]}`}>
                 <div className={styles.buttonGroup}>
-                  <SoundButton
-                    sfx='CLICK'
-                    onClick={() => {
-                      handleRandomAssign();
-                    }}
-                    className={styles.randomButton}
-                  >
-                    랜덤 팀 배정
-                  </SoundButton>
-                  <SoundButton
-                    sfx='CLICK'
-                    onClick={() => {
-                      handleStartGame();
-                    }}
-                    className={`${styles.randomButton} ${styles.startButton}`}
-                  >
-                    게임 시작!
-                  </SoundButton>
+                  {isMyRolePlayer && (
+                    <SoundButton
+                      sfx='CLICK'
+                      onClick={() => {
+                        handleReturnToAudience();
+                      }}
+                      className={styles.randomButton}
+                      style={{ backgroundColor: '#a7f3d0', marginRight: 'auto', marginLeft: '80px' }}
+                    >
+                      관전으로 이동
+                    </SoundButton>
+                  )}
+
+                  {isHost && (
+                    <>
+                      <SoundButton
+                        onClick={() => {
+                          handleRandomAssign();
+                        }}
+                        className={styles.randomButton}
+                      >
+                        랜덤 팀 배정
+                      </SoundButton>
+                      <SoundButton
+                        sfx='CLICK'
+                        onClick={() => {
+                          handleStartGame();
+                        }}
+                        className={`${styles.randomButton} ${styles.startButton}`}
+                      >
+                        게임 시작!
+                      </SoundButton>
+                    </>
+                  )}
                 </div>
               </footer>
             )}
