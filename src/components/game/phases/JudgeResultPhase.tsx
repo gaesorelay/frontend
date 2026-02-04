@@ -6,6 +6,10 @@ import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import { getResultJudgeImage } from '@/lib/judgeMapper'; // 이미지 매퍼
+import { getAvatarSrc } from '@/lib/avatarMapper';
+
+// avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
+const getAvatarUrl = getAvatarSrc;
 
 // 배경 및 로고 이미지
 import bgImg from '@/assets/background.png';
@@ -29,7 +33,7 @@ const WIN_MENTS = [
 
 const JudgeResultPhase = () => {
   // 1. Store에서 투표 결과(voteResult)와 게임 정보(roundData) 둘 다 가져옴
-  const { voteResult, roundData } = useGameStore();
+  const { voteResult, roundData, players } = useGameStore();
   const { isHost } = useUserStore();
 
   const navigator = useNavigate();
@@ -159,6 +163,10 @@ const JudgeResultPhase = () => {
 
   if (!voteResult) return null;
 
+  // 7. 우승자 판별 (단순 점수 비교 + 동점시 A)
+  const finalWinnerTeam = totalA >= totalB ? 'A' : 'B';
+  const winningPlayers = players.filter(p => p.team === finalWinnerTeam);
+
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, backgroundImage: `url(${bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center',
@@ -180,6 +188,7 @@ const JudgeResultPhase = () => {
         .gauge-container { width: 300px; height: 35px; background: #333; border: 3px solid #111; border-radius: 20px; overflow: hidden; position: relative; }
         .gauge-fill { height: 100%; transition: width 0.1s ease-out; }
         .judge-card-mini { width: 110px; text-align: center; background: #fff; padding: 10px; border-radius: 10px; border: 2px solid #111; font-size: 0.8rem; }
+        .winner-card { width: 160px; text-align: center; background: #fffdf0; padding: 20px; border-radius: 20px; border: 4px solid #111; box-shadow: 8px 8px 0 rgba(0,0,0,0.2); }
       `}</style>
 
       {[4, 7].includes(introPhase) && <img src={resultLogo} style={{
@@ -248,51 +257,7 @@ const JudgeResultPhase = () => {
           </div>
         )}
 
-        {introPhase === 8 && (
-          <div style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both', padding: '0 5vw', position: 'relative', marginTop: '15vh' }}>
-            <div style={{ fontSize: '7rem', fontWeight: 900, color: '#facc15', marginBottom: '40px', textShadow: '0 0 30px #ff0000' }}>GAME OVER</div>
-            <div style={{ fontSize: '3.5rem', background: '#fff', padding: '40px 80px', border: '8px solid #111', borderRadius: '40px', lineHeight: '1.4', transform: 'rotate(-2deg)', boxShadow: '20px 20px 0 #000' }}>{finalMent}</div>
-
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-15deg)',
-              border: '10px solid #ff0000', color: '#ff0000', padding: '20px 50px', borderRadius: '20px',
-              fontSize: '5rem', fontWeight: 900, background: 'rgba(255,255,255,0.9)',
-              animation: 'stamp-slam 0.3s 1s both', zIndex: 12000, whiteSpace: 'nowrap',
-              boxShadow: '0 0 50px rgba(255,0,0,0.5)'
-            }}>
-              인간 포기 완료!
-            </div>
-
-            <div style={{ marginTop: '80px', display: 'flex', gap: '30px', justifyContent: 'center', position: 'relative', zIndex: 13000 }}>
-              <button
-                onClick={() => setIntroPhase(7)}
-                style={{
-                  fontSize: '2.5rem', fontWeight: 900,
-                  padding: '15px 40px', borderRadius: '50px', border: '5px solid #fff',
-                  background: '#333', color: '#fff', cursor: 'pointer',
-                  boxShadow: '8px 8px 0 rgba(0,0,0,0.5)', transition: '0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                결과 화면 보기
-              </button>
-              <button
-                onClick={() => window.location.reload()}
-                style={{
-                  fontSize: '2.5rem', fontWeight: 900,
-                  padding: '15px 40px', borderRadius: '50px', border: '5px solid #111',
-                  background: '#facc15', color: '#111', cursor: 'pointer',
-                  boxShadow: '8px 8px 0 rgba(0,0,0,0.5)', transition: '0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                한 판 더 하기
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Phase 8 (Game Over) Removed */}
       </div>
 
       <div style={{ flex: 1, display: 'flex' }}>
@@ -328,17 +293,48 @@ const JudgeResultPhase = () => {
             </div>
           </div>
 
-          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', marginTop: '30px', marginBottom: '10px', background: '#333', padding: '5px 30px', borderRadius: '20px', border: '2px solid #fff', boxShadow: '5px 5px 0 #000' }}>
-            AI 심사위원단
-          </div>
+          <div style={{ marginTop: '50px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {introPhase === 4 ? (
+              // Phase 4: 심사위원단 (기존 유지)
+              <>
+                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', marginBottom: '20px', background: '#333', padding: '5px 30px', borderRadius: '20px', border: '2px solid #fff', boxShadow: '5px 5px 0 #000' }}>
+                  AI 심사위원단
+                </div>
+                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                  {realJudges.map((j, i) => (
+                    <div key={i} className="judge-card-mini" style={{ animation: `elastic-zoomies 0.5s ${i * 0.1}s both` }}>
+                      <img src={j.image} style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ddd', marginBottom: '5px' }} />
+                      <div style={{ fontWeight: 900 }}>{j.name}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              // Phase 7: 우승 팀 멤버들 (NEW!)
+              <div style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both' }}>
+                <div style={{
+                  position: 'relative', fontSize: '3rem', fontWeight: 900, color: '#facc15',
+                  textShadow: '4px 4px 0 #000', marginBottom: '20px', display: 'inline-block'
+                }}>
+                  ✨ 개소리의 승자는 {finalWinnerTeam} TEAM! ✨
+                  <div style={{ fontSize: '1.5rem', color: '#fff', marginTop: '5px', textShadow: '2px 2px 0 #000' }}>
+                    Dog Score: {finalWinnerTeam === 'A' ? totalA : totalB} 점
+                  </div>
+                </div>
 
-          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-            {realJudges.map((j, i) => (
-              <div key={i} className="judge-card-mini" style={{ animation: `elastic-zoomies 0.5s ${i * 0.1}s both` }}>
-                <img src={j.image} style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ddd', marginBottom: '5px' }} />
-                <div style={{ fontWeight: 900 }}>{j.name}</div>
+                <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', marginTop: '20px' }}>
+                  {winningPlayers.map((p, i) => (
+                    <div key={p.userToken} className="winner-card" style={{ animation: `elastic-zoomies 0.6s ${i * 0.15}s both` }}>
+                      <img
+                        src={getAvatarUrl(p.avatarId)}
+                        style={{ width: '100px', height: '100px', borderRadius: '50%', border: '4px solid #facc15', marginBottom: '10px', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }}
+                      />
+                      <div style={{ fontSize: '1.3rem', fontWeight: 900 }}>{p.nickname}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
