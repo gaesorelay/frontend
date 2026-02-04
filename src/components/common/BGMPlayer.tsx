@@ -78,6 +78,24 @@ const BGMPlayer = () => {
 
     }, [location.pathname, gamePhase, isMuted]);
 
+    // 5. 브라우저 정책상 자동 재생이 막혔을 때, 사용자 인터랙션 발생 시 재생 시도
+    useEffect(() => {
+        const handleInteraction = () => {
+            const audio = audioRef.current;
+            if (audio && audio.paused && !isMuted && currentTrackRef.current) {
+                audio.play().catch(() => { });
+            }
+        };
+
+        window.addEventListener('click', handleInteraction);
+        window.addEventListener('keydown', handleInteraction);
+
+        return () => {
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('keydown', handleInteraction);
+        };
+    }, [isMuted]);
+
     return null; // UI는 없음
 };
 
