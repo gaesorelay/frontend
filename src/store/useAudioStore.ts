@@ -22,6 +22,7 @@ import applause from '@/assets/sound/applause.mp3';
 import countdown from '@/assets/sound/countdown.mp3';
 import buttonBeep from '@/assets/sound/button_beep.mp3';
 import bark4Mp3 from '@/assets/sound/bark4.mp3'; // 🐶 추가
+import cymbals from '@/assets/sound/cymbals.mp3';
 
 const SOUND_ASSETS = {
     BGM: {
@@ -42,6 +43,7 @@ const SOUND_ASSETS = {
         APPLAUSE: applause,
         COUNTDOWN: countdown,
         BUTTON_BEEP: buttonBeep,
+        CYMBALS: cymbals,
     },
 } as const;
 
