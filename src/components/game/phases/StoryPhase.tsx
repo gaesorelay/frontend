@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useAudioStore } from '@/store/useAudioStore';
 import { getCardImage } from '@/lib/cardMapper'; // 카드 이미지 매퍼
 import { getStoryteller } from '@/lib/gameLogic'; // ⭐️ 작성자 찾기 로직
+import { getAvatarSrc } from '@/lib/avatarMapper'; // ⭐️ 아바타 매퍼 추가
 import storyLogoImg from '@/assets/logo/logo_story.png';
 import finishLogoImg from '@/assets/logo/logo_finish.png'; // ⭐️ 인트로 로고 추가
 import ChatArea from '../ChatArea';
@@ -135,8 +136,6 @@ const StoryPhase = () => {
         )}
       </AnimatePresence>
 
-
-
       {/* 🔇 뮤트 버튼 (좌측 상단 고정) */}
       <button
         onClick={toggleMute}
@@ -209,7 +208,19 @@ const StoryPhase = () => {
                       <div style={styles.textPaper}>
                         {/* ⭐️ 작성자 표시 추가 */}
                         <div style={styles.writerBadge} className="gungsuh-font">
-                          ✍️ {getStoryteller(useGameStore.getState().players, currentTeam, currentIndex + 1)?.nickname || '알 수 없는 작가'}
+                          {(() => {
+                            const teller = getStoryteller(useGameStore.getState().players, currentTeam, currentIndex + 1);
+                            return (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <img
+                                  src={getAvatarSrc(teller?.avatarId || 1)}
+                                  alt="avatar"
+                                  style={{ width: '80px', height: '80px', borderRadius: '50%', border: '1px solid #ccc' }}
+                                />
+                                <span style={{ fontSize: '2.0rem', fontWeight: 'bold', marginLeft: '10px' }}>{teller?.nickname || '알 수 없는 작가'}</span>
+                              </div>
+                            );
+                          })()}
                         </div>
                         <p className="gungsuh-font" style={styles.bookText}>
                           {stories[currentIndex].content}
@@ -351,13 +362,9 @@ const styles: { [key: string]: React.CSSProperties } = {
   // ⭐️ 작성자 배지 스타일
   writerBadge: {
     textAlign: 'center',
-    fontSize: '0.9rem',
-    color: '#666',
-    marginBottom: '10px',
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '15px',
-    padding: '2px 10px',
+    marginBottom: '20px', // 간격 좀 더 벌림
+    // 배경/테두리 제거
+    backgroundColor: 'transparent',
     display: 'inline-block',
     alignSelf: 'center', // flex item 중앙 정렬
   },
