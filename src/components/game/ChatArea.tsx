@@ -20,8 +20,6 @@ import footImg from '@/assets/decorations/foot.png';
 import bigHeartImg from '@/assets/decorations/big_heart.png';
 import shibaImg from '@/assets/dog/shiba.png';
 import gaesoImg from '@/assets/gaesorelay.png';
-
-// New Emojis
 import sadgeImg from '@/assets/decorations/emoji/sadge.png';
 import hangImg from '@/assets/decorations/emoji/hang.png';
 import jihyunClapImg from '@/assets/decorations/emoji/jihyun_clap.gif';
@@ -38,7 +36,10 @@ import taeheeConImg from '@/assets/decorations/emoji/taehee_con.png';
 import taeheeLoveImg from '@/assets/decorations/emoji/taehee_lovebeam.gif';
 import yejinClapImg from '@/assets/decorations/emoji/yejin_clap.gif';
 
-
+//new
+import junyoungImg from '@/assets/decorations/emoji/junyoung.png';
+import hamzziImg from '@/assets/decorations/emoji/hamzzi.png';
+import penguinDanceImg from '@/assets/decorations/emoji/penguin_dance.gif';
 
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
@@ -53,8 +54,6 @@ const REACTION_MAP: Record<string, string> = {
   'big_heart': bigHeartImg,
   'shiba': shibaImg,
   'gaeso': gaesoImg,
-
-  // New Additions
   'sadge': sadgeImg,
   'hang': hangImg,
   'jihyun_clap': jihyunClapImg,
@@ -70,6 +69,11 @@ const REACTION_MAP: Record<string, string> = {
   'taehee_con': taeheeConImg,
   'taehee_love': taeheeLoveImg,
   'yejin_clap': yejinClapImg,
+  //new
+  'junyoung': junyoungImg,
+  'hamzzi': hamzziImg,
+  'penguin_dance': penguinDanceImg,
+
 };
 
 const REACTION_KEYS = Object.keys(REACTION_MAP);
