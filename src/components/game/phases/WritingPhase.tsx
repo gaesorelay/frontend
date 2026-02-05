@@ -733,7 +733,12 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
             </div>
 
             <div style={centerColumnStyle}>
-              <div style={teamSectionStyle}>
+              <div style={{
+                ...teamSectionStyle,
+                // ✨ [동적 사이즈 조절] 내 턴이고 내가 A팀이면 2배로 확대, 아니면 기본 1
+                flex: (isMyTurn && myTeam === 'A') ? 2 : 1,
+                transition: 'flex 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)', // 부드러운 전환 효과
+              }}>
                 <div style={teamHeaderStyle}>
                   <div style={teamIndicatorStyle('#ef4444')} />
                   <span style={{ color: '#ef4444' }}>A팀</span>
@@ -746,7 +751,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
                   {activeUserA && (
                     <div
                       style={{
-                        fontSize: '1.3rem',
+                        fontSize: '1.0rem',
                         fontWeight: 'bold',
                         color: '#ef4444',
                         animation: 'pulse-soft 2s infinite',
@@ -769,7 +774,12 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
                 </div>
               </div>
 
-              <div style={teamSectionStyle}>
+              <div style={{
+                ...teamSectionStyle,
+                // ✨ [동적 사이즈 조절] 내 턴이고 내가 B팀이면 2배로 확대, 아니면 기본 1
+                flex: (isMyTurn && myTeam === 'B') ? 2 : 1,
+                transition: 'flex 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)',
+              }}>
                 <div style={teamHeaderStyle}>
                   <div style={teamIndicatorStyle('#3b82f6')} />
                   <span style={{ color: '#3b82f6' }}>B팀</span>
@@ -782,7 +792,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
                   {activeUserB && (
                     <div
                       style={{
-                        fontSize: '1.3rem',
+                        fontSize: '1.0rem',
                         fontWeight: 'bold',
                         color: '#3b82f6',
                         animation: 'pulse-soft 2s infinite',

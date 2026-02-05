@@ -164,7 +164,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     minHeight: 0,
   },
   logSection: {
-    flex: 1, // 남은 공간 모두 차지
+    flex: 1,
     overflowY: 'auto',
     padding: '20px',
     backgroundColor: '#fff',
@@ -175,6 +175,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundSize: '100% 1.8rem',
     lineHeight: '1.8rem',
     boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)',
+    transition: 'flex 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+    minHeight: '100px',
+    boxSizing: 'border-box',
   },
   storyParagraph: {
     fontSize: '1.1rem',
@@ -206,25 +209,32 @@ const styles: { [key: string]: React.CSSProperties } = {
   inputWrapper: {
     display: 'flex',
     alignItems: 'stretch',
-    transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+    transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+    minHeight: '40px',
+    flexShrink: 0,
+    boxSizing: 'border-box',
   },
   myTurn: {
-    // transform: 'translateY(-2px) scale(1.01)',
+    flex: 3, // ✨ [핵심 수정] 내 턴일 때 입력창 비율을 3배로 늘림 (로그:입력 = 1:3)
   },
   textarea: {
     width: '100%',
-    padding: '7px 15px',
+    height: '100%',
+    padding: '15px',
     border: '3px solid #000',
     borderRadius: '12px',
     fontFamily: 'inherit',
-    fontSize: '1rem',
+    fontSize: '1.2rem',
+    lineHeight: '1.6rem',
     resize: 'none',
-    backgroundColor: '#FFD93D', // 내 차례일 땐 노란색으로 강조
+    backgroundColor: '#FFD93D',
     outline: 'none',
     fontWeight: 'bold',
+    boxSizing: 'border-box',
   },
   waitMessage: {
     width: '100%',
+    height: '100%',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -232,6 +242,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '3px dashed #333',
     borderRadius: '12px',
     color: '#666',
+    boxSizing: 'border-box',
   },
   waitText: {
     fontSize: '0.95rem',
