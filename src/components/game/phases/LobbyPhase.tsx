@@ -91,7 +91,6 @@ const LobbyPhase = ({
   // 로비 전용 UI 상태 (모달 등)는 여기서 관리해도 OK
   const [targetSlot, setTargetSlot] = useState<{ team: 'A' | 'B'; index: number } | null>(null);
   const [selectedAudience, setSelectedAudience] = useState<any | null>(null);
-  const displayTitle = roomTitle || (isHost ? '내가 만든 방 👑' : '남의 방 구경 중 👀');
   const [isAudienceBarOpen, setIsAudienceBarOpen] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isSettingOpen, setIsSettingOpen] = useState(false);
@@ -158,6 +157,9 @@ const LobbyPhase = ({
     message: string;
     onConfirm: () => void;
   } | null>(null);
+  const displayTitle =
+    (isSettingOpen ? editTitle : roomTitle) ||
+    (isHost ? '내가 만든 방 👑' : '남의 방 구경 중 👀');
 
   // 컨펌창을 여는 헬퍼 함수
   const openConfirm = (title: string, message: string, onConfirm: () => void) => {
@@ -186,7 +188,10 @@ const LobbyPhase = ({
     if (!editTitle.trim()) return alert('방 제목을 입력해주세요!');
 
     // 소켓 요청 전송
-    socket.emit('update_room_config', { config: editConfig });
+    socket.emit('update_room_config', { config: editConfig, title: editTitle });
+
+    setRoomTitle(editTitle);
+    setRoomConfig(editConfig);
 
     setIsSettingOpen(false);
     // (선택) 저장되었다는 토스트 메시지 등을 띄울 수 있음
