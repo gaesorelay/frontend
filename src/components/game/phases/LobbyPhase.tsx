@@ -12,6 +12,7 @@ import SoundButton from '@/components/common/SoundButton';
 import Modal from '@/components/common/Modal';
 import styles from '@/components/game/phases/LobbyPhase.module.css';
 import { animationStyles } from '@/pages/create/createAnimations';
+import ChatArea from '../ChatArea';
 
 // 나가기 버튼
 import { useNavigate } from 'react-router-dom';
@@ -92,6 +93,7 @@ const LobbyPhase = ({
   const [targetSlot, setTargetSlot] = useState<{ team: 'A' | 'B'; index: number } | null>(null);
   const [selectedAudience, setSelectedAudience] = useState<any | null>(null);
   const [isAudienceBarOpen, setIsAudienceBarOpen] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isSettingOpen, setIsSettingOpen] = useState(false);
 
@@ -510,6 +512,10 @@ const LobbyPhase = ({
             }}
             className={styles.sidebarToggle}
             title={isAudienceBarOpen ? '닫기' : '관전자 목록'}
+            style={{
+              border: '4px solid #333',
+              borderLeft: 'none',
+            }}
           >
             {isAudienceBarOpen ? '◀' : '▶'}
           </SoundButton>
@@ -791,6 +797,29 @@ const LobbyPhase = ({
               </footer>
             )}
           </main>
+
+          <SoundButton
+            sfx="CLICK"
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className={styles.sidebarToggle}
+            title={isChatOpen ? '채팅창 닫기' : '채팅창 열기'}
+            // 오른쪽 버튼은 왼쪽과 마진 방향이 반대여야 이쁩니다. (선택사항 inline style)
+            style={{
+              marginRight: '0px',
+              marginLeft: '5px',
+              border: '4px solid #333',
+              borderRadius: '20px 0 0 20px',
+              borderRight: 'none',
+            }}
+          >
+            {/* 오른쪽이니까 화살표 방향 반대: 닫혀있으면 왼쪽(◀)을 눌러서 열기 */}
+            {isChatOpen ? '▶' : '◀'}
+          </SoundButton>
+
+          {/* 오른쪽 채팅바 */}
+          <aside className={`${styles.chatBar} ${isChatOpen ? styles.open : styles.closed}`}>
+            <ChatArea />
+          </aside>
         </div>
       </div>
 
