@@ -524,8 +524,8 @@
 
 .buttonGroup {
   display: flex;
-  justify-content: flex-end;
-  /* 오른쪽 정렬 */
+  justify-content: center;
+  /* 중앙 정렬 */
   align-items: center;
   gap: 1rem;
   padding: 0;

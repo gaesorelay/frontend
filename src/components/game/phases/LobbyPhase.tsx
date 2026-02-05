@@ -765,8 +765,7 @@ const LobbyPhase = ({
                       className={styles.randomButton}
                       style={{
                         backgroundColor: '#a7f3d0',
-                        marginRight: 'auto',
-                        marginLeft: '80px',
+                        // 마진 제거 (중앙 정렬 위함)
                       }}
                     >
                       관전으로 이동
