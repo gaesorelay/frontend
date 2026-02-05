@@ -677,12 +677,17 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
                 <div style={teamHeaderStyle}>
                   <div style={teamIndicatorStyle('#ef4444')} />
                   <span style={{ color: '#ef4444' }}>A팀</span>
-                  <span style={{ fontSize: '0.9rem', color: '#666', marginLeft: 'auto' }}>
-                    {activeUserA ? `✍️ ${activeUserA.nickname} 작성 중...` : ''}
-                  </span>
                 </div>
-                <div style={storytellersStyle}>
-                  {renderTeamAvatars(teamAPlayers, activeUserA, '#ef4444')}
+                {/* ⭐️ 작성자 슬롯 + 작성 중 표시 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '50px' }}>
+                  <div style={storytellersStyle}>
+                    {renderTeamAvatars(teamAPlayers, activeUserA, '#ef4444')}
+                  </div>
+                  {activeUserA && (
+                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#ef4444', animation: 'pulse-soft 2s infinite' }}>
+                      ✍️ {activeUserA.nickname} 짖는 중...
+                    </div>
+                  )}
                 </div>
                 {/* ⭐️ [교체] 스토리 보드 A */}
                 {/* roomUuid는 roundData나 store에서 가져오거나 props로 받아야 함 */}
@@ -701,12 +706,17 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
                 <div style={teamHeaderStyle}>
                   <div style={teamIndicatorStyle('#3b82f6')} />
                   <span style={{ color: '#3b82f6' }}>B팀</span>
-                  <span style={{ fontSize: '0.9rem', color: '#666', marginLeft: 'auto' }}>
-                    {activeUserB ? `✍️ ${activeUserB.nickname} 짖는 중...` : ''}
-                  </span>
                 </div>
-                <div style={storytellersStyle}>
-                  {renderTeamAvatars(teamBPlayers, activeUserB, '#3b82f6')}
+                {/* ⭐️ 작성자 슬롯 + 작성 중 표시 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '50px' }}>
+                  <div style={storytellersStyle}>
+                    {renderTeamAvatars(teamBPlayers, activeUserB, '#3b82f6')}
+                  </div>
+                  {activeUserB && (
+                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#3b82f6', animation: 'pulse-soft 2s infinite' }}>
+                      ✍️ {activeUserB.nickname} 짖는 중...
+                    </div>
+                  )}
                 </div>
                 {/* ⭐️ [교체] 스토리 보드 B */}
                 <div style={{ flex: 1, minHeight: 0 }}>
