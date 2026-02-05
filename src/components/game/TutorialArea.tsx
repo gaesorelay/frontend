@@ -85,7 +85,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '2rem',
     borderRadius: '20px',
     position: 'relative',
-    width: '650px',
+    width: '700px',
     textAlign: 'center' as const, // TS 타입 추론을 위해 as const 사용
   },
   imageWrapper: {
