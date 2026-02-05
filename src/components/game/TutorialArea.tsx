@@ -41,26 +41,36 @@ const TutorialModal = ({ isOpen, onClose }) => {
         </div>
 
         <div style={styles.controls}>
-          {/* 💡 조건부 스타일링: currentIndex가 0이면 disabledBtn 스타일 추가 적용 */}
-          <button
-            style={{
-              ...styles.navBtn,
-              ...(currentIndex === 0 ? styles.disabledBtn : {})
-            }}
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-          >
-            이전
-          </button>
+          <span style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: '1.2rem',
+            fontWeight: 'bold',
+            width: 'max-content' // 텍스트 줄바꿈 방지
+          }}>
+            {currentIndex + 1} / {images.length}
+          </span>
 
-          <span>{currentIndex + 1} / {images.length}</span>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              style={{
+                ...styles.navBtn,
+                ...(currentIndex === 0 ? styles.disabledBtn : {})
+              }}
+              onClick={handlePrev}
+              disabled={currentIndex === 0}
+            >
+              이전
+            </button>
 
-          <button
-            style={styles.navBtn}
-            onClick={handleNext}
-          >
-            {currentIndex === images.length - 1 ? '시작하기' : '다음'}
-          </button>
+            <button
+              style={styles.navBtn}
+              onClick={handleNext}
+            >
+              {currentIndex === images.length - 1 ? '시작하기' : '다음'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -110,11 +120,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '10px',
   },
   controls: {
+    position: 'relative',
     width: '100%',
     display: 'flex',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
+    gap: '20px', // 카운터와 버튼 사이 간격
     marginTop: 'auto',
+    paddingRight: '130px',
   },
   navBtn: {
     padding: '8px 16px',
