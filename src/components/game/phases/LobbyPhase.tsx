@@ -137,6 +137,25 @@ const LobbyPhase = ({
       voteTime: 30,
     }
   );
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  // 컨펌창을 여는 헬퍼 함수
+  const openConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmModal(null);
+      },
+    });
+  };
 
   // 2. 모달이 열릴 때마다 현재 전역 설정값으로 초기화 (동기화)
   useEffect(() => {
@@ -207,25 +226,13 @@ const LobbyPhase = ({
     // [CASE 1: 방장이 클릭]
     if (isHost) {
       if (userInSlot) {
-        // 이미 사람이 있으면 -> 관전석으로 보내기 (Leave Team)
-        if (!window.confirm(`${userInSlot.nickname}님을 관전석으로 보낼까요?`)) return;
-
-        if (TEST_MODE) {
-          setUsers(
-            users.map((u) =>
-              u.userToken === userInSlot.userToken
-                ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
-                : u
-            )
-          );
-        } else {
-          // ✅ [수정] leave_team 이벤트 전송
-          socket.emit('leave_team', {
-            public_user_id: userInSlot.publicUserId, // userToken 아님!
-            team: teamType,
-            slot_index: slotIndex,
-          });
-        }
+        openConfirm("관전석 이동", `${userInSlot.nickname}님을 관전석으로 보낼까요?`, () => {
+          if (TEST_MODE) {
+            setUsers(users.map((u) => u.userToken === userInSlot.userToken ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null } : u));
+          } else {
+            socket.emit('leave_team', { public_user_id: userInSlot.publicUserId, team: teamType, slot_index: slotIndex });
+          }
+        });
         return;
       }
       setTargetSlot({ team: teamType, index: slotIndex });
@@ -238,70 +245,72 @@ const LobbyPhase = ({
 
       if (isMe) {
         // 내가 내 자리를 눌렀다면 퇴장(관전) 확인
-        if (!window.confirm('팀에서 나가 관전석으로 돌아가시겠습니까?')) return;
-
-        if (TEST_MODE) {
-          setUsers(
-            users.map((u) =>
-              u.nickname === myNickname
-                ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
-                : u
-            )
-          );
-        } else {
-          const me = users.find((u) => u.nickname === myNickname);
-          socket.emit('leave_team', {
-            public_user_id: me.publicUserId,
-            team: teamType,
-            slot_index: slotIndex,
-          });
-        }
+        openConfirm("팀 퇴장", "팀에서 나가 관전석으로 돌아가시겠습니까?", () => {
+          if (TEST_MODE) {
+            setUsers(
+              users.map((u) =>
+                u.nickname === myNickname
+                  ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
+                  : u
+              )
+            );
+          } else {
+            const me = users.find((u) => u.nickname === myNickname);
+            socket.emit('leave_team', {
+              public_user_id: me.publicUserId,
+              team: teamType,
+              slot_index: slotIndex,
+            });
+          }
+        });
         return; // 퇴장 처리 후 종료
       }
+
       if (userInSlot) return;
-      if (!window.confirm(`${teamType}팀 ${slotIndex + 1}번 자리에 참가하시겠습니까?`)) return;
+      openConfirm("팀 참가", `${teamType}팀 ${slotIndex + 1}번 자리에 참가하시겠습니까?`, () => {
 
-      if (TEST_MODE) {
-        // 테스트용: Guest인 나를 생성해서 넣음
-        const myToken = 'me_guest_token';
-        const amIAlreadyIn = users.find((u) => u.userToken === myToken);
+        if (TEST_MODE) {
+          // 테스트용: Guest인 나를 생성해서 넣음
+          const myToken = 'me_guest_token';
+          const amIAlreadyIn = users.find((u) => u.userToken === myToken);
 
-        if (amIAlreadyIn) {
-          setUsers(
-            users.map((u) =>
-              u.userToken === myToken
-                ? { ...u, role: 'PLAYER', team: teamType, slotIndex: slotIndex }
-                : u
-            )
-          );
+          if (amIAlreadyIn) {
+            setUsers(
+              users.map((u) =>
+                u.userToken === myToken
+                  ? { ...u, role: 'PLAYER', team: teamType, slotIndex: slotIndex }
+                  : u
+              )
+            );
+          } else {
+            const me = {
+              userToken: myToken,
+              nickname: myNickname || '나(게스트)',
+              role: 'PLAYER',
+              team: teamType,
+              slotIndex: slotIndex,
+              isHost: false,
+              avatarId: myAvatarId || 1,
+              avatar: '🐣',
+            };
+            setUsers([...users, me]);
+          }
         } else {
-          const me = {
-            userToken: myToken,
-            nickname: myNickname || '나(게스트)',
-            role: 'PLAYER',
-            team: teamType,
-            slotIndex: slotIndex,
-            isHost: false,
-            avatarId: myAvatarId || 1,
-            avatar: '🐣',
-          };
-          setUsers([...users, me]);
+          const me = users.find((u) => u.nickname === myNickname);
+          if (me) {
+            // ✅ [수정] join_team 이벤트 전송
+            socket.emit('join_team', {
+              public_user_id: me.publicUserId,
+              team: teamType,
+              slot_index: slotIndex,
+            });
+          } else {
+            console.error('내 정보를 찾을 수 없습니다.');
+          }
         }
-      } else {
-        const me = users.find((u) => u.nickname === myNickname);
-        if (me) {
-          // ✅ [수정] join_team 이벤트 전송
-          socket.emit('join_team', {
-            public_user_id: me.publicUserId,
-            team: teamType,
-            slot_index: slotIndex,
-          });
-        } else {
-          console.error('내 정보를 찾을 수 없습니다.');
-        }
-      }
-    }
-  };
+      }); // openConfirm
+    } // !ishost
+  }; // handleSlotClick
 
   const moveUserToTeam = (teamType: 'A' | 'B') => {
     if (!selectedAudience || !isHost) return;
@@ -336,14 +345,16 @@ const LobbyPhase = ({
 
   const handleKickUser = () => {
     if (!selectedAudience || !isHost) return;
-    if (!window.confirm(`${selectedAudience.nickname}님을 강퇴하시겠습니까?`)) return;
+    openConfirm("강제 퇴장", `${selectedAudience.nickname}님을 강퇴하시겠습니까?`, () => {
 
-    if (TEST_MODE) {
-      setUsers(users.filter((u) => u.userToken !== selectedAudience.userToken));
-    } else {
-      socket.emit('kick_user', { public_user_id: selectedAudience.publicUserId });
-    }
-    setSelectedAudience(null);
+
+      if (TEST_MODE) {
+        setUsers(users.filter((u) => u.userToken !== selectedAudience.userToken));
+      } else {
+        socket.emit('kick_user', { public_user_id: selectedAudience.publicUserId });
+      }
+      setSelectedAudience(null);
+    }) // openConfirm
   };
 
   const handleSelectPlayer = (user: any) => {
@@ -424,16 +435,14 @@ const LobbyPhase = ({
   const navigate = useNavigate();
 
   const handleExit = () => {
-    if (window.confirm('정말 방에서 나가시겠어요? 🐾')) {
-      // ⭐️ [추가] 서버에 "나 나간다"고 말하고 가야 함!
+    openConfirm("방 나가기", "정말 방에서 나가시겠어요? 🐾", () => {
       socket.emit('leave_room');
       navigate('/');
-    }
+    });
   };
 
   const handleReturnToAudience = () => {
     if (!myUser) return;
-    if (!window.confirm('팀에서 나가 관전석으로 돌아가시겠습니까?')) return;
     if (TEST_MODE) {
       setUsers(
         users.map((u: any) =>
@@ -839,7 +848,33 @@ const LobbyPhase = ({
           </Modal>
         </>
       )}
-    </Background>
+      {/* ⚠️ 공통 확인 모달 */}
+      <Modal isOpen={!!confirmModal?.isOpen} onClose={() => setConfirmModal(null)}>
+        <div className={styles.modalContent}>
+          <h2 className={styles.modalTitle} style={{ marginBottom: '10px' }}>{confirmModal?.title}</h2>
+          <p style={{ fontSize: '1.2rem', color: '#666', marginBottom: '30px', textAlign: 'center' }}>
+            {confirmModal?.message}
+          </p>
+          <div className={styles.modalActions} style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+            <SoundButton
+              sfx="CLICK"
+              className={styles.saveButton}
+              style={{ backgroundColor: '#ccc' }}
+              onClick={() => setConfirmModal(null)}
+            >
+              취소
+            </SoundButton>
+            <SoundButton
+              sfx="CLICK"
+              className={styles.saveButton}
+              onClick={confirmModal?.onConfirm || (() => { })}
+            >
+              확인
+            </SoundButton>
+          </div>
+        </div>
+      </Modal>
+    </Background >
   );
 };
 export default LobbyPhase;
