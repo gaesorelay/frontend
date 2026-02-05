@@ -67,8 +67,23 @@ const LobbyPhase = ({
   }));
 
   // console.log('🔍 유저 데이터 구조 확인:', users);
-  const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
-  const myUser = users.find((u: any) => u.nickname === myNickname);
+  const {
+    nickname: myNickname,
+    avatarId: myAvatarId,
+    userToken: myUserToken,
+    publicUserId: myPublicUserId,
+  } = useUserStore(); 
+  const isSameUser = (user?: any) => {
+    if (!user) return false;
+    if (myPublicUserId !== null && myPublicUserId !== undefined) {
+      if (user.publicUserId !== null && user.publicUserId !== undefined) {
+        return user.publicUserId === myPublicUserId;
+      }
+    }
+    if (myUserToken && user.userToken) return user.userToken === myUserToken;
+    return !!myNickname && user.nickname === myNickname;
+  };
+  const myUser = users.find((u: any) => isSameUser(u));
   const isMyRolePlayer = myUser?.role === 'PLAYER';
 
   const { roomConfig, roomTitle, setRoomConfig, setRoomTitle } = useGameStore();
@@ -251,7 +266,7 @@ const LobbyPhase = ({
 
     // [게스트]
     if (!isHost) {
-      const isMe = userInSlot?.nickname === myNickname;
+      const isMe = isSameUser(userInSlot);
 
       if (isMe) {
         // 내가 내 자리를 눌렀다면 퇴장(관전) 확인
@@ -259,13 +274,13 @@ const LobbyPhase = ({
           if (TEST_MODE) {
             setUsers(
               users.map((u) =>
-                u.nickname === myNickname
+                isSameUser(u)
                   ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
                   : u
               )
             );
           } else {
-            const me = users.find((u) => u.nickname === myNickname);
+            const me = users.find((u) => isSameUser(u));
             socket.emit('leave_team', {
               public_user_id: me.publicUserId,
               team: teamType,
@@ -305,7 +320,7 @@ const LobbyPhase = ({
             setUsers([...users, me]);
           }
         } else {
-          const me = users.find((u) => u.nickname === myNickname);
+          const me = users.find((u) => isSameUser(u));
           if (me) {
             // ✅ [수정] join_team 이벤트 전송
             socket.emit('join_team', {
@@ -453,7 +468,7 @@ const LobbyPhase = ({
     if (TEST_MODE) {
       setUsers(
         users.map((u: any) =>
-          u.nickname === myNickname ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null } : u
+          isSameUser(u) ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null } : u
         )
       );
     } else {
@@ -808,7 +823,7 @@ const LobbyPhase = ({
                 >
                   B팀 배정
                 </SoundButton>
-                {!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname && (
+                {!selectedAudience?.isHost && !isSameUser(selectedAudience) && (
                   <SoundButton
                     sfx="CLICK"
                     onClick={() => {
