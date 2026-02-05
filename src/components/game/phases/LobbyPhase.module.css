@@ -970,3 +970,63 @@
 }
 
 /* 관전석 이동 버튼 (제거됨 - 사이드바 버튼으로 대체) */
+
+/* 💬 플로팅 채팅 버튼 */
+.floatingChatBtn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #facc15;
+  border: 4px solid #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+  color: #111;
+}
+
+.floatingChatBtn:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.floatingChatBtn:active {
+  transform: scale(0.95);
+}
+
+/* 💬 플로팅 채팅 컨테이너 */
+.floatingChatContainer {
+  position: fixed;
+  bottom: 100px;
+  /* 버튼 위 위치 */
+  right: 30px;
+  width: 400px;
+  height: 600px;
+  max-height: 70vh;
+  z-index: 999;
+  display: none;
+  /* 채팅창 자체의 스타일은 ChatArea가 담당하지만, 
+     여기서는 위치와 등장 애니메이션 담당 */
+}
+
+.floatingChatContainer.open {
+  display: block;
+  animation: chatPopUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes chatPopUp {
+  from {
+    opacity: 0;
+    transform: scale(0.5) translate(50px, 50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+}

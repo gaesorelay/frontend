@@ -8,6 +8,7 @@ import { TeamSlot } from '@/components/game/TeamSlot';
 import { AudienceList } from '@/components/game/AudienceList';
 import { Background } from '@/components/common/background';
 import SoundButton from '@/components/common/SoundButton';
+import { MessageSquare, X } from 'lucide-react'; // 아이콘 추가
 
 import Modal from '@/components/common/Modal';
 import styles from '@/components/game/phases/LobbyPhase.module.css';
@@ -73,7 +74,7 @@ const LobbyPhase = ({
     avatarId: myAvatarId,
     userToken: myUserToken,
     publicUserId: myPublicUserId,
-  } = useUserStore(); 
+  } = useUserStore();
   const isSameUser = (user?: any) => {
     if (!user) return false;
     if (myPublicUserId !== null && myPublicUserId !== undefined) {
@@ -798,28 +799,20 @@ const LobbyPhase = ({
             )}
           </main>
 
+          {/* 💬 플로팅 채팅 버튼 */}
           <SoundButton
             sfx="CLICK"
+            className={styles.floatingChatBtn}
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className={styles.sidebarToggle}
-            title={isChatOpen ? '채팅창 닫기' : '채팅창 열기'}
-            // 오른쪽 버튼은 왼쪽과 마진 방향이 반대여야 이쁩니다. (선택사항 inline style)
-            style={{
-              marginRight: '0px',
-              marginLeft: '5px',
-              border: '4px solid #333',
-              borderRadius: '20px 0 0 20px',
-              borderRight: 'none',
-            }}
+            title={isChatOpen ? '채팅 닫기' : '채팅 열기'}
           >
-            {/* 오른쪽이니까 화살표 방향 반대: 닫혀있으면 왼쪽(◀)을 눌러서 열기 */}
-            {isChatOpen ? '▶' : '◀'}
+            {isChatOpen ? <X size={28} /> : <MessageSquare size={28} />}
           </SoundButton>
 
-          {/* 오른쪽 채팅바 */}
-          <aside className={`${styles.chatBar} ${isChatOpen ? styles.open : styles.closed}`}>
+          {/* 💬 플로팅 채팅창 (오버레이) */}
+          <div className={`${styles.floatingChatContainer} ${isChatOpen ? styles.open : styles.closed}`}>
             <ChatArea />
-          </aside>
+          </div>
         </div>
       </div>
 
@@ -932,7 +925,7 @@ const LobbyPhase = ({
             <SoundButton
               sfx="CLICK"
               className={styles.saveButton}
-              onClick={confirmModal?.onConfirm || (() => {})}
+              onClick={confirmModal?.onConfirm || (() => { })}
             >
               확인
             </SoundButton>
