@@ -1,7 +1,15 @@
 import { useAudioStore } from '@/store/useAudioStore';
 
 // 스토어에 정의된 SFX 키 타입 가져오기 (파일 위치에 따라 import 경로 확인)
-type SFXType = 'CLICK' | 'CARDSHUFFLE' | 'CARDOPEN' | 'DOG1' | 'DOG2' | 'DOG3' | 'PAPER' | 'GAMEFINISH';
+type SFXType = 'CLICK' |
+    'CARDSHUFFLE' |
+    'CARDOPEN' |
+    'DOG1' |
+    'DOG2' |
+    'DOG3' |
+    'DOG4' |
+    'PAPER' |
+    'GAMEFINISH';
 
 interface SoundButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     sfx?: SFXType;       // 재생할 소리 종류 (기본값: 'CLICK')

@@ -8,9 +8,10 @@ import bgm1 from '@/assets/sound/BGM1.mp3';
 import gameoverMp3 from '@/assets/sound/gameover.mp3';
 import finishMp3 from '@/assets/sound/finish.mp3';
 
+
 const BGMPlayer = () => {
     const location = useLocation();
-    const { isMuted, playBGM } = useAudioStore();
+    const { isMuted, playBGM, stopAllSFX } = useAudioStore();
     const { gamePhase, storyReviewFinished } = useGameStore();
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -45,6 +46,7 @@ const BGMPlayer = () => {
         }
         else if (path.startsWith('/gameroom')) {
             if (gamePhase === 'LOBBY') {
+                stopAllSFX();
                 targetTrack = waitingMp3;
             }
             // 🆕 카드 셔플 페이즈 BGM 추가
@@ -62,8 +64,12 @@ const BGMPlayer = () => {
                     targetTrack = finishMp3;
                 }
             }
-            else if (['VOTING', 'JUDGE_RESULT', 'FINAL_RESULT'].includes(gamePhase)) {
-                targetTrack = finishMp3;
+            else if (gamePhase === 'VOTING') {
+                playBGM('VOTE');
+            }
+            else if (['JUDGE_RESULT', 'FINAL_RESULT'].includes(gamePhase)) {
+                stopAllSFX();
+                playBGM('ENDING');
             }
         }
 

@@ -6,6 +6,8 @@ import voteFinishImg from '@/assets/logo/vote_finish.png';
 import ChatArea from '../ChatArea';
 import { socket } from '@/lib/socket';
 import { useGameStore } from '@/store/useGameStore';
+import SoundButton from '@/components/common/SoundButton';
+import { useAudioStore } from '@/store/useAudioStore';
 
 
 const VotingPhase = () => {
@@ -15,10 +17,12 @@ const VotingPhase = () => {
   const roomConfig = useGameStore((state) => state.roomConfig);
 
   const totalTime = roomConfig?.voteTime || 20;
-  
+
   const [timeLeft, setTimeLeft] = useState(totalTime);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [aiResult, setAiResult] = useState<any | null>(null);
+
+  const { isMuted, playSFX } = useAudioStore();
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -29,8 +33,16 @@ const VotingPhase = () => {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  // 째깍 소리 
+  useEffect(() => {
+    // 7초가 되는 그 시점에 소리가 한 번만 시작됨
+    if (timeLeft === 5 && !isMuted) {
+      playSFX('CLOCK');
+    }
+  }, [timeLeft, isMuted, playSFX]);
+
   // 2. 📡 실시간 투표 업데이트 리스너 추가
-    useEffect(() => {
+  useEffect(() => {
     const handleVoteUpdate = (data: { votesTeamA: number; votesTeamB: number }) => {
       console.log("🗳️ 투표 데이터 수신:", data);
       setVotesA(data.votesTeamA);
@@ -44,11 +56,11 @@ const VotingPhase = () => {
       socket.off('vote_updated', handleVoteUpdate);
     };
   }, []);
-  
- // 3. 🗳️ 투표 버튼 클릭 시 서버로 전송
+
+  // 3. 🗳️ 투표 버튼 클릭 시 서버로 전송
   const onVote = (team: 'A' | 'B') => {
     if (isTimeUp) return;
-    
+
     // 로컬 상태를 직접 바꾸지 않고 서버에 "나 투표했어!"라고 알립니다.
     // 서버가 이를 처리한 후 'vote_updated'를 전원에게 쏴주면 그때 내 화면도 바뀝니다.
     socket.emit('submit_vote', { team });
@@ -151,20 +163,22 @@ const VotingPhase = () => {
             </div>
 
             <div style={styles.voteButtons}>
-              <button
+              <SoundButton
+                sfx="DOG3"
                 disabled={isTimeUp}
                 style={{ ...styles.voteBtn, backgroundColor: '#FF6B6B' }}
                 onClick={() => onVote('A')}
               >
                 A팀 투표!
-              </button>
-              <button
+              </SoundButton>
+              <SoundButton
+                sfx="DOG4"
                 disabled={isTimeUp}
                 style={{ ...styles.voteBtn, backgroundColor: '#4D96FF' }}
                 onClick={() => onVote('B')}
               >
                 B팀 투표!
-              </button>
+              </SoundButton>
             </div>
           </div>
         </div>
