@@ -251,7 +251,7 @@ const GameRoom = () => {
 
   // 🛠️ [개발용] 제어 상태
   const [isAutoPlay, setIsAutoPlay] = useState(false); // 기본값: 수동 (일시정지 상태)
-  const [isDevExpanded, setIsDevExpanded] = useState(true); // 개발자 바 펼침 여부
+  const [isDevExpanded, setIsDevExpanded] = useState(false); // 개발자 바 펼침 여부
 
   // ⭐️ [복구] userToken 필요
   const { userToken } = useUserStore(); // << 추가 필요 (Line 31 근처)
@@ -379,7 +379,7 @@ const GameRoom = () => {
             ▲
           </button>
 
-          {/* 3. 중앙 개발자 컨트롤 패널 */}
+          {/* 3. 중앙 개발자 컨트롤 패널
           <div className={styles.devControlPanel}>
             <button
               onClick={handlePrevPhase}
@@ -411,7 +411,7 @@ const GameRoom = () => {
             >
               {isAutoPlay ? '▶ Auto' : '⏸ Pause'}
             </button>
-          </div>
+          </div> */}
         </header>
       ) : (
         /* 개발자 바가 꺼져있을 때: 중앙 상단 플로팅 핸들만 표시 */
