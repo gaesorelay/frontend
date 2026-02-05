@@ -88,7 +88,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const JudgeShufflePhase = () => {
   // 1. ⭐️ Store에서 당첨된 심사위원 데이터 가져오기
   const { roundData } = useGameStore();
-  const { playSFX } = useAudioStore();
+  const { playSFX, stopAllSFX } = useAudioStore();
 
   // 2. ⭐️ 당첨자 명단 확정 (서버 데이터 사용)
   const targetWinners = useMemo(() => {
@@ -162,7 +162,7 @@ const JudgeShufflePhase = () => {
         if (pool.length > 0) {
           const randomIdx = Math.floor(Math.random() * pool.length);
           setHighlightId(pool[randomIdx].id);
-          playSFX('DRUM');
+          playSFX('JUDGE_SHUFFLE');
         }
 
         if (i > totalSpins - 10) speed += 15;
@@ -177,8 +177,8 @@ const JudgeShufflePhase = () => {
 
         setHighlightId(winner.id);
         setPickedIds((prev) => [...prev, winner.id]);
-
-        playSFX('SYMBAL')
+        stopAllSFX();
+        playSFX('DANGCHUM')
         await wait(1200);
       }
 
@@ -192,7 +192,15 @@ const JudgeShufflePhase = () => {
       // 1명씩 포커스 (0 -> 1 -> 2)
       for (let i = 0; i < targetWinners.length; i++) {
         setIntroStep(i);
-        playSFX(`DOG${i + 5}` as any)
+        // 소리를 재생하면 스토어의 activeSFX 배열에 추가됩니다.
+        playSFX(`DOG${i + 5}` as any);
+
+        // 재생 직후 스토어 상태에서 가장 마지막에 추가된 오디오를 가져옵니다.
+        const lastAudio = useAudioStore.getState().activeSFX.slice(-1)[0];
+
+        if (lastAudio) {
+          lastAudio.volume = 1.0; // 이 구간에서만 볼륨 최대화
+        }
         await wait(3500); // 멘트 읽을 시간
       }
 
