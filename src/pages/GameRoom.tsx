@@ -356,7 +356,7 @@ const GameRoom = () => {
       {/* 1️⃣ 상단 정보 바 (Header) + 🛠️ Dev Controls */}
       {/* 개발자 바가 켜져있을 때만 렌더링 */}
       {/* 3. 중앙 개발자 컨트롤 패널 */}
-      {isDevExpanded ? (
+      {/* {isDevExpanded ? (
         <header className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.logo}>✨ STORY GAME</span>
@@ -411,7 +411,7 @@ const GameRoom = () => {
         >
           🛠️ DEV
         </button>
-      )}
+      )} */}
 
       {/* 2️⃣ ⭐️ [핵심] 게임 메인 무대 (Main Stage) */}
       <main className={styles.main}>{renderPhase()}</main>
