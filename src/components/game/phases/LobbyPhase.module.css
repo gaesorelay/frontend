@@ -247,14 +247,22 @@
 }
 
 .chatBar {
-  width: 300px; /* 채팅창 너비 (audienceBar와 맞추거나 조절) */
+  width: 400px;
+  /* 채팅창 너비 늘림 */
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.5); /* 예시 배경 */
-  border-left: 3px solid #000; /* 왼쪽 경계선 */
+  background-color: transparent;
+  /* 배경 투명하게 (틈으로 뒤가 보이도록) */
+  /* border-left: 3px solid #000;  왼쪽 선 제거 (둥둥 떠있는 느낌) */
   transition: all 0.3s ease-in-out;
   display: flex;
+  box-sizing: border-box;
+  /* 패딩 포함 크기 계산 */
+  padding-right: 20px;
+  /* 오른쪽 여백 확보 (잘림 방지) */
+  padding-top: 10px;
   flex-direction: column;
-  overflow: hidden; /* 닫힐 때 내부 내용 숨김 */
+  overflow: visible;
+  /* 내부 요소가(애니메이션 등) 살짝 튀어나와도 보이게 */
 }
 
 /* 닫혔을 때 스타일 (audienceBar.closed와 유사하게) */
@@ -352,6 +360,7 @@
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
