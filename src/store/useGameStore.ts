@@ -120,7 +120,7 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   setDraftText: (text) => set({ draftText: text }),
 
   setRoomActions: (title, config) => {
-    console.log('💾 [GameStore] setRoomActions:', { title, config });
+    // console.log('💾 [GameStore] setRoomActions:', { title, config });
     set({ roomTitle: title, roomConfig: config });
   },
   setRoomConfig: (newConfig) => set({ roomConfig: newConfig }),

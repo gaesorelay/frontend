@@ -9,7 +9,6 @@ import { useGameStore } from '@/store/useGameStore';
 import SoundButton from '@/components/common/SoundButton';
 import { useAudioStore } from '@/store/useAudioStore';
 
-
 const VotingPhase = () => {
   const [votesA, setVotesA] = useState(0);
   const [votesB, setVotesB] = useState(0);
@@ -33,7 +32,7 @@ const VotingPhase = () => {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // 째깍 소리 
+  // 째깍 소리
   useEffect(() => {
     // 7초가 되는 그 시점에 소리가 한 번만 시작됨
     if (timeLeft === 5 && !isMuted) {
@@ -44,7 +43,7 @@ const VotingPhase = () => {
   // 2. 📡 실시간 투표 업데이트 리스너 추가
   useEffect(() => {
     const handleVoteUpdate = (data: { votesTeamA: number; votesTeamB: number }) => {
-      console.log("🗳️ 투표 데이터 수신:", data);
+      // console.log("🗳️ 투표 데이터 수신:", data);
       setVotesA(data.votesTeamA);
       setVotesB(data.votesTeamB);
     };
