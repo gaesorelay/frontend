@@ -8,6 +8,7 @@ import game from '@/assets/sound/BGM3.mp3';
 import shuffle from '@/assets/sound/cardshuffle.mp3';
 import vote from '@/assets/sound/vote.mp3';
 import ending from '@/assets/sound/ending.mp3';
+import boogiePartyMp3 from '@/assets/sound/boogie_party.mp3';
 
 // sfx
 // import cardShuffle from '@/assets/sound/ShufflingCard.mp3';
@@ -43,6 +44,7 @@ const SOUND_ASSETS = {
     SHUFFLE: shuffle,
     VOTE: vote,
     ENDING: ending,
+    BOOGIE_PARTY: boogiePartyMp3,
   },
   SFX: {
     CARDSHUFFLE: cardShuffle,
@@ -111,7 +113,7 @@ export const useAudioStore = create<AudioState>()(
           // 👈 여기 ( ) 추가
           activeSFX: [...state.activeSFX, audio],
         }));
-        audio.play().catch(() => {});
+        audio.play().catch(() => { });
         audio.onended = () => {
           set((state) => ({
             // 👈 여기 ( ) 추가
@@ -134,7 +136,7 @@ export const useAudioStore = create<AudioState>()(
             // 소리가 안 나고 있다면(차단되었었다면) 다시 재생 시도
             if (bgmAudio.paused && !isMuted) {
               bgmAudio.volume = 0.5; // ⭐️ 볼륨 복구 (stopBGM으로 0이 되었을 수 있음)
-              bgmAudio.play().catch(() => {});
+              bgmAudio.play().catch(() => { });
             }
             return; // 같은 곡이 이미 재생 중이면 여기서 중단 (노래 끊김 방지)
           }
