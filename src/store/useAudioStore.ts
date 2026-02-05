@@ -19,6 +19,7 @@ import gameFinish from '@/assets/sound/GAMEFINISH.wav';
 import paper from '@/assets/sound/PAPER.wav';
 import drum from '@/assets/sound/drum.mp3';
 import cymbals from '@/assets/sound/cymbals.mp3';
+import nextPage from '@/assets/sound/next_page.mp3';
 
 // New Sounds
 import applause from '@/assets/sound/applause.mp3';
@@ -55,6 +56,7 @@ const SOUND_ASSETS = {
         COUNTDOWN: countdown,
         BUTTON_BEEP: buttonBeep,
         CYMBALS: cymbals,
+        NEXT_PAGE: nextPage,
     },
 } as const;
 

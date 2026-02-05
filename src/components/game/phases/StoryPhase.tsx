@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Background } from '@/components/common/background';
 import { useGameStore } from '@/store/useGameStore';
@@ -15,6 +15,7 @@ const StoryPhase = () => {
   const [currentTeam, setCurrentTeam] = useState<'A' | 'B'>('A');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const hasStartedRef = useRef(false);
 
   // ⭐️ 인트로 애니메이션 상태 추가
   const [showIntro, setShowIntro] = useState(true);
@@ -71,6 +72,16 @@ const StoryPhase = () => {
 
     return () => clearInterval(timer);
   }, [currentIndex, currentTeam, stories.length, isFinished, showIntro]);
+
+  // 페이지가 넘어갈 때마다 효과음 재생 (첫 페이지 로딩은 제외)
+  useEffect(() => {
+    if (showIntro || isFinished) return;
+    if (!hasStartedRef.current) {
+      hasStartedRef.current = true;
+      return;
+    }
+    playSFX('NEXT_PAGE');
+  }, [currentIndex, currentTeam, showIntro, isFinished, playSFX]);
 
   return (
     <Background>
