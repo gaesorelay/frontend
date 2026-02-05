@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import ruleImg1 from '@/assets/rule/rule_step1.png'; // 📌 룰 이미지 1 (시작)
 import ruleImg2 from '@/assets/rule/rule_step2.png'; // 📌 룰 이미지 2 (진행)
@@ -42,6 +42,7 @@ const RULE_DATA = [
 
 export default function GameRuleGuide() {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const totalRules = RULE_DATA.length;
   const currentRule = RULE_DATA[currentIdx];
 
@@ -52,6 +53,20 @@ export default function GameRuleGuide() {
   const handleNext = () => {
     setCurrentIdx((prev) => (prev === totalRules - 1 ? 0 : prev + 1));
   };
+
+  // ⏱ 자동 넘기기 로직
+  useEffect(() => {
+    // window를 명시하면 브라우저용 타이머임을 확실히 할 수 있습니다.
+    let timer: ReturnType<typeof setTimeout>;
+
+    if (!isPaused) {
+      timer = setInterval(() => {
+        handleNext();
+      }, 2000);
+    }
+
+    return () => clearInterval(timer);
+  }, [handleNext, isPaused]);
 
   // 🎨 스타일 (투명 배경 + 도트 네비게이션)
   const styles = {

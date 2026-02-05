@@ -14,6 +14,7 @@ import Modal from '@/components/common/Modal';
 import styles from '@/components/game/phases/LobbyPhase.module.css';
 import { animationStyles } from '@/pages/create/createAnimations';
 import ChatArea from '../ChatArea';
+import TutorialModal from '../TutorialArea';
 
 // 나가기 버튼
 import { useNavigate } from 'react-router-dom';
@@ -95,6 +96,7 @@ const LobbyPhase = ({
   const [selectedAudience, setSelectedAudience] = useState<any | null>(null);
   const [isAudienceBarOpen, setIsAudienceBarOpen] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(true);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSettingOpen, setIsSettingOpen] = useState(false);
 
@@ -819,6 +821,20 @@ const LobbyPhase = ({
           >
             <ChatArea />
           </div>
+
+          <SoundButton
+            sfx='CLICK'
+            className={`${styles.randomButton} ${styles.tutorialToggleButton}`}
+            onClick={() => setIsTutorialOpen(!isTutorialOpen)}>
+            게임방법
+          </SoundButton>
+
+          <TutorialModal
+            isOpen={isTutorialOpen}
+            onClose={() => setIsTutorialOpen(false)}
+          />
+
+
         </div>
       </div>
 

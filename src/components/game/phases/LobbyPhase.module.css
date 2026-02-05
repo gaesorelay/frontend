@@ -1030,6 +1030,18 @@
   animation: chatPopUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.tutorialToggleButton {
+  position: fixed;
+  right: 140px;
+  bottom: 30px;
+  font-size: 1.2rem;
+  padding: 0.8rem 1.5rem;
+  background-color: #facc15;
+  z-index: 2002;
+  margin-right: 0;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+}
+
 @keyframes chatPopUp {
   from {
     opacity: 0;
