@@ -35,6 +35,8 @@ import bark4Mp3 from '@/assets/sound/bark4.mp3'; // 🐶 추가
 import bark5Mp3 from '@/assets/sound/bark5.wav'; // 🐶 추가
 import bark6Mp3 from '@/assets/sound/bark6.wav'; // 🐶 추가
 import bark7Mp3 from '@/assets/sound/bark7.mp3'; // 🐶 추가
+import goodResult from '@/assets/sound/good_result.mp3'
+import tada from '@/assets/sound/tada.mp3'
 
 const SOUND_ASSETS = {
   BGM: {
@@ -69,6 +71,8 @@ const SOUND_ASSETS = {
     JUDGE_SHUFFLE: judgeShuffle,
     DANGCHUM: dangchum,
     NEXT_PAGE: nextPage,
+    GOOD_RESULT: goodResult,
+    TADA: tada,
   },
 } as const;
 

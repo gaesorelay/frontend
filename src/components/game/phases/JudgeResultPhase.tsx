@@ -106,8 +106,14 @@ const JudgeResultPhase = () => {
     if (!voteResult) return;
 
     const timers = [
-      setTimeout(() => setIntroPhase(2), 2000),   // A팀 관객 점수
-      setTimeout(() => setIntroPhase(3), 6000),   // B팀 관객 점수 (4초)
+      setTimeout(() => {
+        setIntroPhase(2);      // A팀 관객 점수
+        playSFX('GOOD_RESULT');      // ✅ A팀 관객 점수 나올 때
+      }, 2000),
+      setTimeout(() => {
+        setIntroPhase(3);      // B팀 관객 점수
+        playSFX('GOOD_RESULT');      // ✅ B팀 관객 점수 나올 때
+      }, 6000),
       setTimeout(() => setIntroPhase(4), 10000),  // 1차 합산     (4초)
       setTimeout(() => setIntroPhase(5), 16000),  // A팀 AI 심사  (6초 대기 후 시작)
       setTimeout(() => setIntroPhase(6), 27000),  // B팀 AI 심사  (A팀 11초 감상)
