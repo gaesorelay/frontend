@@ -247,14 +247,25 @@
 }
 
 .chatBar {
-  width: 300px; /* 채팅창 너비 (audienceBar와 맞추거나 조절) */
+  width: 400px;
+  /* 채팅창 너비 늘림 */
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.5); /* 예시 배경 */
-  border-left: 3px solid #000; /* 왼쪽 경계선 */
+  background-color: transparent;
+  /* 배경 투명하게 (틈으로 뒤가 보이도록) */
+  /* border-left: 3px solid #000;  왼쪽 선 제거 (둥둥 떠있는 느낌) */
   transition: all 0.3s ease-in-out;
   display: flex;
+  box-sizing: border-box;
+  /* 패딩 포함 크기 계산 */
+  padding-right: 20px;
+  /* 오른쪽 여백 확보 (잘림 방지) */
+  padding-top: 10px;
   flex-direction: column;
-  overflow: hidden; /* 닫힐 때 내부 내용 숨김 */
+  overflow: visible;
+  /* 내부 요소가(애니메이션 등) 살짝 튀어나와도 보이게 */
+  margin-right: 20px;
+  /* 오른쪽 끝 잘림 방지 (안쪽으로 이동) */
+
 }
 
 /* 닫혔을 때 스타일 (audienceBar.closed와 유사하게) */
@@ -352,6 +363,7 @@
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
@@ -512,8 +524,8 @@
 
 .buttonGroup {
   display: flex;
-  justify-content: flex-end;
-  /* 오른쪽 정렬 */
+  justify-content: center;
+  /* 중앙 정렬 */
   align-items: center;
   gap: 1rem;
   padding: 0;
@@ -958,3 +970,74 @@
 }
 
 /* 관전석 이동 버튼 (제거됨 - 사이드바 버튼으로 대체) */
+.chatToggleButton {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  font-size: 1.2rem;
+  padding: 0.8rem 1.5rem;
+  background-color: #facc15;
+  z-index: 2002;
+  margin-right: 0;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+}
+
+/* 💬 플로팅 채팅 버튼 (더 이상 사용 안 함 - 삭제 가능) */
+.floatingChatBtn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #facc15;
+  border: 4px solid #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+  color: #111;
+}
+
+.floatingChatBtn:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.floatingChatBtn:active {
+  transform: scale(0.95);
+}
+
+/* 💬 플로팅 채팅 컨테이너 */
+.floatingChatContainer {
+  position: fixed;
+  bottom: 100px;
+  /* 버튼 위 위치 */
+  right: 30px;
+  width: 400px;
+  height: 600px;
+  max-height: 70vh;
+  z-index: 999;
+  display: none;
+  /* 채팅창 자체의 스타일은 ChatArea가 담당하지만, 
+     여기서는 위치와 등장 애니메이션 담당 */
+}
+
+.floatingChatContainer.open {
+  display: block;
+  animation: chatPopUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes chatPopUp {
+  from {
+    opacity: 0;
+    transform: scale(0.5) translate(50px, 50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+}
