@@ -9,11 +9,12 @@ const ICON_LOCKED = "🚫";
 
 interface TeamSlotProps {
   status: 'LOCKED' | 'EMPTY' | 'FILLED'; // 상태 정의
-  user?: { nickname: string; avatar: string }; // 채워졌다면 유저 정보
+  user?: { nickname: string; avatar: string; publicUserId?: string | number; userToken?: string };
+  isMe?: boolean; // 채워졌다면 유저 정보
   onClick: () => void;
 }
 
-export const TeamSlot = ({ status, user, onClick }: TeamSlotProps) => {
+export const TeamSlot = ({ status, user, isMe, onClick }: TeamSlotProps) => {
   // 1. 비활성화된 슬롯 (빨간줄)
   if (status === 'LOCKED') {
     return (
@@ -42,7 +43,7 @@ export const TeamSlot = ({ status, user, onClick }: TeamSlotProps) => {
   // 3. 유저가 들어간 슬롯
   return (
     <motion.div
-      layoutId={user?.nickname}
+      layoutId={user ? String(user.publicUserId ?? user.userToken ?? user.nickname) : undefined}
       onClick={onClick}
       className={`${styles.slotBase} ${styles.filled}`}
       whileHover="hover" // 부모 요소 호버 상태 전파
@@ -65,7 +66,7 @@ export const TeamSlot = ({ status, user, onClick }: TeamSlotProps) => {
           }
         }}
       >
-        <span className={styles.nickname}>{user?.nickname}</span>
+        <span className={styles.nickname}>{user?.nickname}{isMe ? "(나)" : ""}</span>
       </motion.div>
     </motion.div>
   );
