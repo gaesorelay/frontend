@@ -8,6 +8,7 @@ import { socket } from '@/lib/socket';
 import { getResultJudgeImage } from '@/lib/judgeMapper'; // 이미지 매퍼
 import { getAvatarSrc } from '@/lib/avatarMapper';
 import { useAudioStore } from '@/store/useAudioStore'; // 🔊 추가
+import tadaMp3 from '@/assets/sound/tada.mp3';
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
 const getAvatarUrl = getAvatarSrc;
@@ -36,7 +37,14 @@ const JudgeResultPhase = () => {
   // 1. Store에서 투표 결과(voteResult)와 게임 정보(roundData) 둘 다 가져옴
   const { voteResult, roundData, players } = useGameStore();
   const { isHost } = useUserStore();
-  const { playSFX } = useAudioStore(); // 🔊 SFX 함수 가져오기
+  const { playSFX, isMuted } = useAudioStore(); // 🔊 func + state
+
+  // 🎵 Mount 시 짜잔 효과음
+  useEffect(() => {
+    if (!isMuted) {
+      new Audio(tadaMp3).play().catch(() => { });
+    }
+  }, [isMuted]);
 
   const navigator = useNavigate();
   const [introPhase, setIntroPhase] = useState(1);
