@@ -543,13 +543,40 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
         </div>
       )}
 
+      {/* ⭐️ 내 턴일 때 배경 강조 효과 (팀별 색상) */}
+      {isMyTurn && !countdown && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            // 팀 구분에 따라 배경색 분기
+            backgroundColor: myTeam === 'A'
+              ? 'rgba(239, 68, 68, 0.15)'   // A팀: Red
+              : 'rgba(59, 130, 246, 0.15)', // B팀: Blue
+            zIndex: 0,
+            pointerEvents: 'none',
+            animation: myTeam === 'A'
+              ? 'bg-pulse-red 2s infinite ease-in-out'
+              : 'bg-pulse-blue 2s infinite ease-in-out',
+            boxShadow: myTeam === 'A'
+              ? 'inset 0 0 100px rgba(239, 68, 68, 0.5)'
+              : 'inset 0 0 100px rgba(59, 130, 246, 0.5)'
+          }}
+        />
+      )}
+
       <div
         style={{
           width: '100%',
           height: '100%',
           display: 'flex',
-          filter: countdown !== null ? 'blur(4px)' : 'none', // 카운트다운 중일 때 배경도 살짝 블러
+          filter: countdown !== null ? 'blur(4px)' : 'none',
           transition: 'filter 0.5s ease',
+          position: 'relative',
+          zIndex: 1
         }}
       >
         <style>
@@ -559,6 +586,20 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
               0% { transform: scale(0.5); opacity: 0; }
               70% { transform: scale(1.2); opacity: 1; }
               100% { transform: scale(1); opacity: 1; }
+            }
+            
+            /* A팀 (Red) 펄스 */
+            @keyframes bg-pulse-red {
+              0% { background-color: rgba(239, 68, 68, 0.1); box-shadow: inset 0 0 50px rgba(239, 68, 68, 0.3); }
+              50% { background-color: rgba(239, 68, 68, 0.25); box-shadow: inset 0 0 150px rgba(239, 68, 68, 0.6); }
+              100% { background-color: rgba(239, 68, 68, 0.1); box-shadow: inset 0 0 50px rgba(239, 68, 68, 0.3); }
+            }
+
+            /* B팀 (Blue) 펄스 */
+            @keyframes bg-pulse-blue {
+              0% { background-color: rgba(59, 130, 246, 0.1); box-shadow: inset 0 0 50px rgba(59, 130, 246, 0.3); }
+              50% { background-color: rgba(59, 130, 246, 0.25); box-shadow: inset 0 0 150px rgba(59, 130, 246, 0.6); }
+              100% { background-color: rgba(59, 130, 246, 0.1); box-shadow: inset 0 0 50px rgba(59, 130, 246, 0.3); }
             }
             /* 로고 두근거림 애니메이션 */
             @keyframes pulse-soft {
