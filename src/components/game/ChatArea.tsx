@@ -39,6 +39,7 @@ import yejinClapImg from '@/assets/decorations/emoji/yejin_clap.gif';
 //new
 import junyoungImg from '@/assets/decorations/emoji/junyoung.png';
 import hamzziImg from '@/assets/decorations/emoji/hamzzi.png';
+import penguinDanceImg from '@/assets/decorations/emoji/penguin_dance.gif';
 
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
@@ -71,6 +72,7 @@ const REACTION_MAP: Record<string, string> = {
   //new
   'junyoung': junyoungImg,
   'hamzzi': hamzziImg,
+  'penguin_dance': penguinDanceImg,
 
 };
 
