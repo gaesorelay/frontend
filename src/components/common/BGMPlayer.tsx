@@ -3,119 +3,82 @@ import { useLocation } from 'react-router-dom';
 import { useAudioStore } from '@/store/useAudioStore';
 import { useGameStore } from '@/store/useGameStore';
 
-import waitingMp3 from '@/assets/sound/waiting.mp3';
-import bgm1 from '@/assets/sound/BGM1.mp3';
-import gameoverMp3 from '@/assets/sound/gameover.mp3';
-import finishMp3 from '@/assets/sound/finish.mp3';
-
 const BGMPlayer = () => {
   const location = useLocation();
-  const { isMuted, playBGM, stopAllSFX } = useAudioStore();
+  const { playBGM, playSFX, stopBGM, stopAllSFX } = useAudioStore();
   const { gamePhase, storyReviewFinished } = useGameStore();
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const currentTrackRef = useRef<string | null>(null);
-
-  // STORY 페이즈 전용: GAMEOVER(1회) -> FINISH(반복) 관리
   const [storyBgmMode, setStoryBgmMode] = useState<'GAMEOVER' | 'FINISH'>('GAMEOVER');
 
-  // 1. 페이즈가 STORY가 아니면 모드 초기화
+  // 효과음 중복 실행 방지용 Ref
+  const hasPlayedGameOver = useRef(false);
+
+  // 1. 페이즈 초기화 로직
   useEffect(() => {
     if (gamePhase !== 'STORY') {
       setStoryBgmMode('GAMEOVER');
+      hasPlayedGameOver.current = false;
     }
   }, [gamePhase]);
 
-  // 2. 메인 BGM 제어 로직
+  // 2. 메인 BGM 및 SFX 제어
   useEffect(() => {
-    // 오디오 객체 싱글톤 초기화
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-      audioRef.current.volume = 0.5;
-    }
-
-    const audio = audioRef.current;
     const path = location.pathname;
-    let targetTrack: string | null = null;
-    let shouldLoop = true;
 
-    // --- 트랙 결정 로직 ---
+    // --- [섹션 A] 경로별 기본 BGM (Main, Lobby 등) ---
     if (path === '/' || ['/intro', '/create', '/setup'].some(p => path.startsWith(p))) {
-      targetTrack = bgm1;
+      playBGM('MAIN');
     }
     else if (path.startsWith('/gameroom')) {
-      if (gamePhase === 'LOBBY') {
-        stopAllSFX();
-        targetTrack = waitingMp3;
-      }
-      // 🆕 카드 셔플 페이즈 BGM 추가
-      else if (gamePhase === 'CARD_SHUFFLE') {
-        playBGM('SHUFFLE');
-      }
-      else if (gamePhase === 'STORY') {
-        if (storyReviewFinished) {
-          targetTrack = null; // 스토리 감상 끝나면 음악 정지
-        }
-        else if (storyBgmMode === 'GAMEOVER') {
-          targetTrack = gameoverMp3;
-          shouldLoop = false; // 1회 재생
-        } else {
-          targetTrack = finishMp3;
-        }
-      }
-      else if (gamePhase === 'VOTING') {
-        playBGM('VOTE');
-      }
-      else if (['JUDGE_RESULT', 'FINAL_RESULT'].includes(gamePhase)) {
-        playBGM('BOOGIE_PARTY');
+      // --- [섹션 B] 게임 페이즈별 BGM ---
+      switch (gamePhase) {
+        case 'LOBBY':
+          stopAllSFX();
+          playBGM('LOBBY');
+          break;
+        case 'CARD_SHUFFLE':
+          playBGM('SHUFFLE');
+          break;
+        case 'VOTING':
+          playBGM('VOTE');
+          break;
+        case 'JUDGE_RESULT':
+        case 'FINAL_RESULT':
+          playBGM('BOOGIE_PARTY');
+          break;
+        case 'STORY':
+          handleStoryPhase();
+          break;
       }
     }
 
-    // --- 재생 제어 ---
-    if (targetTrack !== currentTrackRef.current) {
-      if (targetTrack) {
-        audio.src = targetTrack;
-        audio.loop = shouldLoop;
-        audio.load();
-        currentTrackRef.current = targetTrack;
+    // STORY 페이즈 전용 핸들러
+    function handleStoryPhase() {
+      if (storyReviewFinished) {
+        stopBGM();
+        return;
+      }
 
-        if (!isMuted) {
-          audio.play().catch(err => console.warn("BGM Play Blocked:", err));
+      if (storyBgmMode === 'GAMEOVER') {
+        // SFX는 한 번만 실행되도록 제어
+        if (!hasPlayedGameOver.current) {
+          stopBGM(); // 이전 BGM 정리
+          playSFX('GAME_OVER');
+          hasPlayedGameOver.current = true;
+
+          // 💡 Tip: GAME_OVER가 SFX라면, 길이를 계산해 수동으로 FINISH BGM으로 넘겨줍니다.
+          // gameover.mp3의 길이를 확인해 보세요 (예: 3000ms)
+          setTimeout(() => {
+            setStoryBgmMode('FINISH');
+          }, 3500);
         }
       } else {
-        audio.pause();
-        currentTrackRef.current = null;
+        playBGM('FINISH');
       }
-    } else {
-      // 같은 트랙 내에서 loop 설정만 바뀔 수 있음 (STORY 페이즈 등)
-      audio.loop = shouldLoop;
     }
 
-    audio.muted = isMuted;
-
-    // --- 이벤트 리스너: GAMEOVER 종료 후 FINISH로 전환 ---
-    const handleEnded = () => {
-      if (currentTrackRef.current === gameoverMp3 && gamePhase === 'STORY') {
-        setStoryBgmMode('FINISH');
-      }
-    };
-
-    audio.addEventListener('ended', handleEnded);
-    return () => audio.removeEventListener('ended', handleEnded);
-
-  }, [location.pathname, gamePhase, isMuted, storyBgmMode, storyReviewFinished]);
-
-  // 3. 브라우저 정책 대응 (사용자 클릭 시 재생 시도)
-  useEffect(() => {
-    const handleInteraction = () => {
-      if (audioRef.current?.paused && !isMuted && currentTrackRef.current) {
-        audioRef.current.play().catch(() => { });
-      }
-    };
-    window.addEventListener('click', handleInteraction);
-    return () => window.removeEventListener('click', handleInteraction);
-  }, [isMuted]);
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, gamePhase, storyBgmMode, storyReviewFinished]);
   return null;
 };
 

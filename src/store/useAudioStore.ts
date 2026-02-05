@@ -9,6 +9,7 @@ import shuffle from '@/assets/sound/cardshuffle.mp3';
 import vote from '@/assets/sound/vote.mp3';
 import ending from '@/assets/sound/ending.mp3';
 import boogiePartyMp3 from '@/assets/sound/boogie_party.mp3';
+import finishMp3 from '@/assets/sound/finish.mp3';
 
 // sfx
 // import cardShuffle from '@/assets/sound/ShufflingCard.mp3';
@@ -26,6 +27,7 @@ import clock from '@/assets/sound/clocksound.mp3';
 import judgeShuffle from '@/assets/sound/judgeshuffle.mp3';
 import dangchum from '@/assets/sound/dangchum.mp3';
 import nextPage from '@/assets/sound/next_page.mp3';
+import gameoverMp3 from '@/assets/sound/gameover.mp3';
 
 // New Sounds
 import applause from '@/assets/sound/applause.mp3';
@@ -48,6 +50,7 @@ const SOUND_ASSETS = {
     VOTE: vote,
     ENDING: ending,
     BOOGIE_PARTY: boogiePartyMp3,
+    FINISH: finishMp3
   },
   SFX: {
     CARDSHUFFLE: cardShuffle,
@@ -75,6 +78,7 @@ const SOUND_ASSETS = {
     GOOD_RESULT: goodResult,
     TADA: tada,
     NUMBER_TICK: numberTick,
+    GAME_OVER: gameoverMp3,
   },
 } as const;
 
