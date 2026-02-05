@@ -291,7 +291,7 @@ const GameRoom = () => {
           userToken,
           turn: turnNumber,
         },
-        (res: any) => {
+        () => {
           // console.log('🛠️ Dev: 강제 제출 결과:', res);
         }
       );
