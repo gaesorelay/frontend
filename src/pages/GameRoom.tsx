@@ -363,14 +363,13 @@ const GameRoom = () => {
     <div className={styles.container}>
       {/* 1️⃣ 상단 정보 바 (Header) + 🛠️ Dev Controls */}
       {/* 개발자 바가 켜져있을 때만 렌더링 */}
+      {/* 3. 중앙 개발자 컨트롤 패널
       {isDevExpanded ? (
         <header className={styles.header}>
-          {/* 1. 좌측 로고 영역 */}
           <div className={styles.headerLeft}>
             <span className={styles.logo}>✨ STORY GAME</span>
           </div>
 
-          {/* 2. 중앙 닫기 핸들 (헤더 상단에 붙음) */}
           <button
             onClick={() => setIsDevExpanded(false)}
             className={styles.closeHandleBtn}
@@ -379,7 +378,6 @@ const GameRoom = () => {
             ▲
           </button>
 
-          {/* 3. 중앙 개발자 컨트롤 패널
           <div className={styles.devControlPanel}>
             <button
               onClick={handlePrevPhase}
@@ -411,18 +409,18 @@ const GameRoom = () => {
             >
               {isAutoPlay ? '▶ Auto' : '⏸ Pause'}
             </button>
-          </div> */}
+          </div> 
         </header>
       ) : (
-        /* 개발자 바가 꺼져있을 때: 중앙 상단 플로팅 핸들만 표시 */
         <button
-          onClick={() => setIsDevExpanded(true)}
-          className={styles.floatingToggleBtn}
-          title="개발자 도구 (펼치기)"
+        onClick={() => setIsDevExpanded(true)}
+        className={styles.floatingToggleBtn}
+        title="개발자 도구 (펼치기)"
         >
           🛠️ DEV
         </button>
       )}
+      */}
 
       {/* 2️⃣ ⭐️ [핵심] 게임 메인 무대 (Main Stage) */}
       <main className={styles.main}>{renderPhase()}</main>
