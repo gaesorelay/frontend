@@ -970,8 +970,19 @@
 }
 
 /* 관전석 이동 버튼 (제거됨 - 사이드바 버튼으로 대체) */
+.chatToggleButton {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  font-size: 1.2rem;
+  padding: 0.8rem 1.5rem;
+  background-color: #facc15;
+  z-index: 2002;
+  margin-right: 0;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+}
 
-/* 💬 플로팅 채팅 버튼 */
+/* 💬 플로팅 채팅 버튼 (더 이상 사용 안 함 - 삭제 가능) */
 .floatingChatBtn {
   position: fixed;
   bottom: 30px;

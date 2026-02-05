@@ -798,18 +798,25 @@ const LobbyPhase = ({
             )}
           </main>
 
-          {/* 💬 플로팅 채팅 버튼 */}
+          {/* 💬 채팅 버튼 (우측 하단 고정 - 플로팅) */}
           <SoundButton
             sfx="CLICK"
-            className={styles.floatingChatBtn}
+            className={`${styles.randomButton} ${styles.chatToggleButton}`}
             onClick={() => setIsChatOpen(!isChatOpen)}
-            title={isChatOpen ? '채팅 닫기' : '채팅 열기'}
           >
-            {isChatOpen ? <X size={28} /> : <MessageSquare size={28} />}
+            채팅
           </SoundButton>
 
           {/* 💬 플로팅 채팅창 (오버레이) */}
-          <div className={`${styles.floatingChatContainer} ${isChatOpen ? styles.open : styles.closed}`}>
+          <div
+            className={`${styles.floatingChatContainer} ${isChatOpen ? styles.open : styles.closed}`}
+            style={{
+              bottom: '120px',    /* 인라인 스타일로 강제 적용 */
+              position: 'fixed',  /* 확실하게 고정 */
+              right: '30px',
+              zIndex: 999
+            }}
+          >
             <ChatArea />
           </div>
         </div>
