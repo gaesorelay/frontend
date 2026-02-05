@@ -263,6 +263,9 @@
   flex-direction: column;
   overflow: visible;
   /* 내부 요소가(애니메이션 등) 살짝 튀어나와도 보이게 */
+  margin-right: 20px;
+  /* 오른쪽 끝 잘림 방지 (안쪽으로 이동) */
+
 }
 
 /* 닫혔을 때 스타일 (audienceBar.closed와 유사하게) */
