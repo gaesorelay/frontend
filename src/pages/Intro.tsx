@@ -206,7 +206,7 @@ export const Intro = () => {
             <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold', color: '#333' }}>입장 코드 입력</h3>
             <input
               type="text"
-              placeholder="예: 1234"
+              placeholder="예: AZBYCX"
               value={inputCode}
               onChange={(e) => setInputCode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
