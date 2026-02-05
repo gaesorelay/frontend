@@ -77,7 +77,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   // 1. ⭐️ [수정] store에서 users가 아니라 'players'를 가져옵니다!
   const { players, roomConfig, roundData, draftText, setDraftText } = useGameStore();
 
-  console.log(players);
+  // console.log(players);
 
   // 2. 현재 턴 번호 계산
   const turnNumber = useMemo(() => {
@@ -219,7 +219,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     if (isUrgent && !isMuted) {
       audio = new Audio(clockMp3);
       audio.volume = 0.6;
-      audio.play().catch(() => { });
+      audio.play().catch(() => {});
     }
 
     return () => {
@@ -242,9 +242,9 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     if (turnNumber === prevTurnNumber) return;
     if (!prevTeam || !latestUserTokenRef.current) return;
 
-    console.log(
-      `💾 [WritingPhase] 턴 종료로 인한 자동 제출: ${prevDraftText ?? ''}, Turn: ${prevTurnNumber}`
-    );
+    // console.log(
+    //   `💾 [WritingPhase] 턴 종료로 인한 자동 제출: ${prevDraftText ?? ''}, Turn: ${prevTurnNumber}`
+    // );
     socket.emit('submit_story', {
       roomId: latestRoomIdRef.current || '',
       message: prevDraftText ?? '',
@@ -266,9 +266,9 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
       const token = latestUserTokenRef.current;
       if (!team || !token) return;
 
-      console.log(
-        `💾 [WritingPhase] 언마운트로 인한 자동 제출: ${latestDraftRef.current}, Turn: ${latestTurnRef.current}`
-      );
+      // console.log(
+      //   `💾 [WritingPhase] 언마운트로 인한 자동 제출: ${latestDraftRef.current}, Turn: ${latestTurnRef.current}`
+      // );
       socket.emit('submit_story', {
         roomId: latestRoomIdRef.current || '',
         message: latestDraftRef.current,
@@ -625,7 +625,14 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
             </div>
 
             {/* 우측 상단: 상태 배지 + 오디오 컨트롤 */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: '10px',
+              }}
+            >
               {/* 🔇 뮤트 버튼 */}
               <button
                 onClick={toggleMute}
@@ -684,7 +691,14 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
                     {renderTeamAvatars(teamAPlayers, activeUserA, '#ef4444')}
                   </div>
                   {activeUserA && (
-                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#ef4444', animation: 'pulse-soft 2s infinite' }}>
+                    <div
+                      style={{
+                        fontSize: '1.3rem',
+                        fontWeight: 'bold',
+                        color: '#ef4444',
+                        animation: 'pulse-soft 2s infinite',
+                      }}
+                    >
                       ✍️ {activeUserA.nickname} 짖는 중...
                     </div>
                   )}
@@ -713,7 +727,14 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
                     {renderTeamAvatars(teamBPlayers, activeUserB, '#3b82f6')}
                   </div>
                   {activeUserB && (
-                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#3b82f6', animation: 'pulse-soft 2s infinite' }}>
+                    <div
+                      style={{
+                        fontSize: '1.3rem',
+                        fontWeight: 'bold',
+                        color: '#3b82f6',
+                        animation: 'pulse-soft 2s infinite',
+                      }}
+                    >
                       ✍️ {activeUserB.nickname} 짖는 중...
                     </div>
                   )}
