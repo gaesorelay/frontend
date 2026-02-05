@@ -7,8 +7,11 @@ import main from '@/assets/sound/BGM1.mp3';
 import lobby from '@/assets/sound/waiting.mp3';
 import game from '@/assets/sound/BGM3.mp3';
 import shuffle from '@/assets/sound/cardshuffle.mp3';
+import vote from '@/assets/sound/vote.mp3';
+import ending from '@/assets/sound/ending.mp3';
 
 // sfx
+// import cardShuffle from '@/assets/sound/ShufflingCard.mp3';
 import cardShuffle from '@/assets/sound/CARDSHUFFLE.wav';
 import cardOpen from '@/assets/sound/CARDOPEN.mp3';
 import dog1 from '@/assets/sound/bark.wav';
@@ -19,6 +22,9 @@ import gameFinish from '@/assets/sound/GAMEFINISH.wav';
 import paper from '@/assets/sound/PAPER.wav';
 import drum from '@/assets/sound/drum.mp3';
 import cymbals from '@/assets/sound/cymbals.mp3';
+import clock from '@/assets/sound/clocksound.mp3';
+import judgeShuffle from '@/assets/sound/judgeshuffle.mp3';
+import dangchum from '@/assets/sound/dangchum.mp3';
 import nextPage from '@/assets/sound/next_page.mp3';
 
 // New Sounds
@@ -36,6 +42,8 @@ const SOUND_ASSETS = {
         LOBBY: lobby,
         GAME: game,
         SHUFFLE: shuffle,
+        VOTE: vote,
+        ENDING: ending,
     },
     SFX: {
         CARDSHUFFLE: cardShuffle,
@@ -56,6 +64,9 @@ const SOUND_ASSETS = {
         COUNTDOWN: countdown,
         BUTTON_BEEP: buttonBeep,
         CYMBALS: cymbals,
+        CLOCK: clock,
+        JUDGE_SHUFFLE: judgeShuffle,
+        DANGCHUM: dangchum,
         NEXT_PAGE: nextPage,
     },
 } as const;
@@ -66,10 +77,12 @@ type SFXType = keyof typeof SOUND_ASSETS.SFX;
 interface AudioState {
     isMuted: boolean;
     bgmAudio: HTMLAudioElement | null;
+    activeSFX: HTMLAudioElement[];
     fadeInterval: number | null; // 페이드 인터벌 관리용
     setMuted: (muted: boolean) => void;
     toggleMute: () => void;
     playSFX: (type: SFXType) => void;
+    stopAllSFX: () => void;
     playBGM: (type: BGMType) => void;
     stopBGM: (callback?: () => void) => void;
 }
@@ -79,6 +92,7 @@ export const useAudioStore = create<AudioState>()(
         (set, get) => ({
             isMuted: false,
             bgmAudio: null,
+            activeSFX: [], // 🆕 초기값
             fadeInterval: null,
 
             setMuted: (muted) => {
@@ -92,7 +106,17 @@ export const useAudioStore = create<AudioState>()(
             playSFX: (type) => {
                 const audio = new Audio(SOUND_ASSETS.SFX[type]);
                 audio.volume = get().isMuted ? 0 : 0.5;
+                // 🆕 재생이 끝나면 배열에서 제거하는 로직
+                // 🆕 현재 재생 중인 목록에 추가
+                set((state) => ({ // 👈 여기 ( ) 추가
+                    activeSFX: [...state.activeSFX, audio],
+                }));
                 audio.play().catch(() => { });
+                audio.onended = () => {
+                    set((state) => ({ // 👈 여기 ( ) 추가
+                        activeSFX: state.activeSFX.filter((a) => a !== audio),
+                    }));
+                };
             },
 
             playBGM: (type) => {
@@ -168,6 +192,15 @@ export const useAudioStore = create<AudioState>()(
                     }
                 }, 50);
                 set({ fadeInterval: interval });
+            },
+            // 🆕 모든 효과음을 칼같이 멈추는 함수
+            stopAllSFX: () => {
+                const { activeSFX } = get();
+                activeSFX.forEach((audio) => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                });
+                set({ activeSFX: [] });
             },
         }),
         {
