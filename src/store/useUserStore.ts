@@ -10,6 +10,7 @@ interface UserState {
 
   // ⭐️ [추가] 나의 고유 토큰 (신분증)
   userToken: string | null;
+  publicUserId: string | number | null;
 
   // 내 신분증
   role: UserRole;
@@ -25,6 +26,7 @@ interface UserState {
   setUserStatus: (role: UserRole, isHost: boolean) => void;
   // ⭐️ [추가] 토큰 저장 함수
   setUserToken: (token: string) => void;
+  setPublicUserId: (publicUserId: string | number | null) => void;
 
 }
 
@@ -38,6 +40,7 @@ export const useUserStore = create<UserState>((set) => ({
 
   // ⭐️ [추가] 초기값 null
   userToken: null,
+  publicUserId: null,
   
   setProfile: (nickname, avatarId) => set({ nickname, avatarId }),
   
@@ -50,4 +53,5 @@ export const useUserStore = create<UserState>((set) => ({
 
   // ⭐️ [추가] 구현
   setUserToken: (userToken) => set({ userToken }),
+  setPublicUserId: (publicUserId) => set({ publicUserId }),
 }));

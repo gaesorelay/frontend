@@ -80,9 +80,24 @@ const REACTION_KEYS = Object.keys(REACTION_MAP);
 
 const ChatArea = () => {
   const { messages, addMessage, players, isSabotageMode, toggleSabotageMode } = useGameStore();
-  const { nickname, avatarId: myAvatarId, userToken: myToken } = useUserStore();
+  const { nickname, avatarId: myAvatarId, userToken: myToken, publicUserId: myPublicUserId } = useUserStore();
   const [chatInput, setChatInput] = useState('');
   const chatListRef = useRef<HTMLDivElement>(null);
+
+  const isSameUser = (user?: { publicUserId?: string | number; userToken?: string; nickname?: string }) => {
+    if (!user) return false;
+    const userPublicId = (user as any).publicUserId ?? (user as any).public_user_id;
+    if (myPublicUserId !== null && myPublicUserId !== undefined) {
+      if (userPublicId !== null && userPublicId !== undefined) {
+        return String(userPublicId) === String(myPublicUserId);
+      }
+      if (user.userToken !== null && user.userToken !== undefined) {
+        return String(user.userToken) === String(myPublicUserId);
+      }
+    }
+    if (myToken && user.userToken) return user.userToken === myToken;
+    return !!nickname && user.nickname === nickname;
+  };
 
   // 리액션 관련
   const [showReactions, setShowReactions] = useState(false);
@@ -94,13 +109,50 @@ const ChatArea = () => {
   // 1. 소켓 이벤트 리스너 설정
   useEffect(() => {
     const handleChatMessage = (data: any) => {
+      console.log('[chat_message]', data);
+      const rawPublicUserId = data.publicUserId ?? data.public_user_id ?? null;
+      const senderToken = data.senderId ?? data.sender_id ?? data.userToken ?? data.user_token ?? 'unknown';
+      let resolvedPublicUserId: string | number | null = rawPublicUserId ?? null;
+      let resolvedTeam: 'A' | 'B' | null = data.team ?? null;
+
+      let senderInfo = players.find((p) => {
+        const playerPublicId = (p as any).publicUserId ?? (p as any).public_user_id;
+        if (rawPublicUserId !== null && rawPublicUserId !== undefined) {
+          if (playerPublicId !== null && playerPublicId !== undefined) {
+            return String(playerPublicId) === String(rawPublicUserId);
+          }
+        }
+        if (senderToken && p.userToken) return p.userToken === senderToken;
+        if (senderToken && p.currentSocketId) return p.currentSocketId === senderToken;
+        if (senderToken && p.socketId) return p.socketId === senderToken;
+        if (senderToken && playerPublicId !== null && playerPublicId !== undefined) {
+          return String(playerPublicId) === String(senderToken);
+        }
+        return false;
+      });
+
+      if (!senderInfo && data.nickname) {
+        const sameNickname = players.filter((p) => p.nickname === data.nickname);
+        if (sameNickname.length === 1) senderInfo = sameNickname[0];
+      }
+
+      const senderPublicId = (senderInfo as any)?.publicUserId ?? (senderInfo as any)?.public_user_id ?? null;
+      if (resolvedPublicUserId === null && senderPublicId !== null && senderPublicId !== undefined) {
+        resolvedPublicUserId = senderPublicId;
+      }
+      if (resolvedTeam === null && senderInfo?.team) {
+        resolvedTeam = senderInfo.team;
+      }
+
       const newMessage: ChatMessage = {
         id: Date.now().toString() + Math.random(),
-        userToken: data.senderId || 'unknown',
+        userToken: senderToken,
+        publicUserId: resolvedPublicUserId ?? undefined,
         nickname: data.nickname,
         text: data.message,
         createdAt: new Date().toISOString(),
         avatarId: data.avatarId,
+        team: resolvedTeam ?? undefined,
       };
       addMessage(newMessage);
     };
@@ -120,7 +172,7 @@ const ChatArea = () => {
       socket.off('chat_message', handleChatMessage);
       socket.off('receive_reaction', handleReaction);
     };
-  }, [addMessage]);
+  }, [addMessage, players]);
 
   // 2. 스크롤 자동 내리기
   useEffect(() => {
@@ -168,8 +220,7 @@ const ChatArea = () => {
   };
 
   // 1. 루프 밖에서 '나의 팀'이 무엇인지 딱 한 번만 정의 (Zustand players 활용)
-  const myInfo = players.find((p) => p.currentSocketId === socket.id || p.nickname === nickname);
-  const myActualTeam = myInfo?.team || 'NONE'; // 내 팀 (A, B, 또는 NONE)
+  const myInfo = players.find((p) => isSameUser(p) || (socket.id && (p.currentSocketId === socket.id || p.socketId === socket.id)));
   const isAudience = !myInfo || myInfo.role === 'AUDIENCE';
 
   return (
@@ -306,45 +357,69 @@ const ChatArea = () => {
       >
         {messages.map((msg) => {
           // 1. 메세지 작성자의 실시간 정보 찾기
-          const senderInfo = players.find((p) => p.currentSocketId === msg.userToken);
+          let senderInfo = players.find((p) => {
+            const playerPublicId = (p as any).publicUserId ?? (p as any).public_user_id;
+            if (msg.publicUserId !== null && msg.publicUserId !== undefined) {
+              if (playerPublicId !== null && playerPublicId !== undefined) {
+                return String(playerPublicId) === String(msg.publicUserId);
+              }
+            }
+            if (msg.userToken && p.userToken) return p.userToken === msg.userToken;
+            if (msg.userToken && p.currentSocketId) return p.currentSocketId === msg.userToken;
+            if (msg.userToken && p.socketId) return p.socketId === msg.userToken;
+            if (msg.userToken && playerPublicId !== null && playerPublicId !== undefined) {
+              return String(playerPublicId) === String(msg.userToken);
+            }
+            return false;
+          });
 
-          const isMe = msg.nickname === nickname || (myToken && msg.userToken === myToken);
+          if (!senderInfo && msg.nickname) {
+            const sameNickname = players.filter((p) => p.nickname === msg.nickname);
+            if (sameNickname.length === 1) senderInfo = sameNickname[0];
+          }
+
+          const msgPublicId = (msg as any).publicUserId ?? (msg as any).public_user_id;
+          const isMe =
+            (myPublicUserId !== null &&
+              myPublicUserId !== undefined &&
+              msgPublicId !== null &&
+              msgPublicId !== undefined &&
+              String(msgPublicId) === String(myPublicUserId)) ||
+            (myToken && msg.userToken === myToken) ||
+            (socket.id && msg.userToken === socket.id) ||
+            (senderInfo ? isSameUser(senderInfo) : false);
           const isSystem = msg.nickname === 'SYSTEM';
 
           // 2. 팀 판별 (스토어 데이터가 없으면 'NONE'으로 간주)
-          const userTeam = senderInfo?.team || 'NONE';
-          const isAudience = userTeam === 'NONE' || senderInfo?.role === 'AUDIENCE';
-
+          const userTeam = msg.team ?? senderInfo?.team ?? 'NONE';
           // 3. 🎨 요청하신 4가지 색상 규칙 적용
           let currentConfig = { bg: '#ffffff', border: '#9ca3af' }; // 기본값 (관중/하얀색)
 
           if (isMe) {
-            // 내가 친 채팅 (노란색)
+            // ??? ????? (?????
             currentConfig = { bg: '#facc15', border: '#111' };
-          } else if (isAudience) {
-            // 관중 (하얀색)
-            currentConfig = { bg: '#ffffff', border: '#9ca3af' };
           } else if (userTeam === 'A') {
-            // A팀 (빨간색)
+            // A?? (?????
             currentConfig = { bg: '#fee2e2', border: '#ef4444' };
           } else if (userTeam === 'B') {
-            // B팀 (파란색)
+            // B?? (?????
             currentConfig = { bg: '#dbeafe', border: '#3b82f6' };
+          } else {
+            // ????(?????
+            currentConfig = { bg: '#ffffff', border: '#9ca3af' };
           }
 
           // 4. 라벨 판별
           let teamLabel = '';
           if (isMe) {
             teamLabel = '(나)';
-          } else if (isAudience) {
-            teamLabel = '(관전자)';
+          } else if (userTeam === 'A') {
+            teamLabel = '(A팀)';
+          } else if (userTeam === 'B') {
+            teamLabel = '(B팀)';
           } else {
-            // 내 팀(myActualTeam)과 메시지 작성자의 팀(userTeam)을 단순 비교!
-            const isOurTeam = myActualTeam !== 'NONE' && myActualTeam === userTeam;
-            teamLabel = isOurTeam ? '(우리팀)' : '(상대팀)';
+            teamLabel = '(관전자)';
           }
-
-          // 시스템 메시지 처리
           if (isSystem) {
             return (
               <div

@@ -26,6 +26,7 @@ export type RoomInfo = {
 // ⭐️ [수정] avatar -> avatarId 로 변경 (숫자로 관리)
 export type Player = {
   userToken: string;
+  publicUserId?: string | number;
   socketId?: string;
   currentSocketId?: string;
   roomUuid: string;
@@ -71,10 +72,12 @@ export type VoteResult = {
 export type ChatMessage = {
   id: string;
   userToken: string;
+  publicUserId?: string | number;
   nickname: string;
   text: string;
   createdAt: string;
   avatarId?: number;
+  team?: UserTeam;
 };
 
 export type GamePhase =

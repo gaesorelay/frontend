@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/useUserStore';
 
 interface User {
   userToken: string;
+  publicUserId?: string | number;
   nickname: string;
   avatar: string;
 }
@@ -18,10 +19,19 @@ interface AudienceListProps {
 }
 
 export const AudienceList = ({ list, isHost, onSelect, onClose, showReturnButton, onReturn }: AudienceListProps) => {
-  const { nickname: myNickname } = useUserStore();
+  const { nickname: myNickname, userToken: myUserToken, publicUserId: myPublicUserId } = useUserStore();
+  const isSameUser = (user: User) => {
+    if (myPublicUserId !== null && myPublicUserId !== undefined) {
+      if (user.publicUserId !== null && user.publicUserId !== undefined) {
+        return user.publicUserId === myPublicUserId;
+      }
+    }
+    if (myUserToken && user.userToken) return user.userToken === myUserToken;
+    return !!myNickname && user.nickname === myNickname;
+  };
   const sortedList = [...list].sort((a, b) => {
-    if (a.nickname === myNickname) return -1; // 내가 앞쪽으로
-    if (b.nickname === myNickname) return 1; // 상대방이 뒤쪽으로
+    if (isSameUser(a)) return -1; // 내가 앞쪽으로
+    if (isSameUser(b)) return 1; // 상대방이 뒤쪽으로
     return 0; // 나머지는 순서 유지
   });
   return (
@@ -41,7 +51,7 @@ export const AudienceList = ({ list, isHost, onSelect, onClose, showReturnButton
       <ul className={styles.scrollArea}>
         {sortedList.map((user) => {
           // 3. 현재 렌더링 중인 유저가 나인지 체크
-          const isMe = user.nickname === myNickname;
+          const isMe = isSameUser(user);
 
           return (
             <li key={user.userToken}>

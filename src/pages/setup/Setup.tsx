@@ -39,6 +39,7 @@ export default function Setup() {
     setUserStatus,
     setRoomId,
     setUserToken,
+    setPublicUserId,
   } = useUserStore();
 
   const [nickname, setNickname] = useState('');
@@ -158,6 +159,10 @@ export default function Setup() {
               // console.log('🔑 토큰 저장 완료:', user.userToken);
               setUserToken(user.userToken); // Store 저장
               socket.auth = { token: user.userToken }; // 소켓 재연결 대비
+            }
+            const publicUserId = user.publicUserId ?? user.public_user_id ?? null;
+            if (publicUserId !== null && publicUserId !== undefined) {
+              setPublicUserId(publicUserId);
             }
 
             if (isHost) {
