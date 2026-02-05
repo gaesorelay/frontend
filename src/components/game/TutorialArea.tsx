@@ -85,21 +85,36 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '2rem',
     borderRadius: '20px',
     position: 'relative',
-    width: '700px',
-    textAlign: 'center' as const, // TS 타입 추론을 위해 as const 사용
+    width: '90vw',
+    height: '85vh',
+    maxWidth: '1600px', // 너무 커지지 않게만 제한
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center' as const,
   },
   imageWrapper: {
+    flex: 1,
+    width: '100%',
+    overflow: 'hidden',
     marginBottom: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   image: {
     width: '100%',
-    height: 'auto',
+    height: '100%',
+    objectFit: 'contain' as const,
     borderRadius: '10px',
   },
   controls: {
+    width: '100%',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 'auto',
   },
   navBtn: {
     padding: '8px 16px',
@@ -109,7 +124,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
     fontWeight: 'bold',
   },
-  // disabled 전용 스타일 별도 분리
   disabledBtn: {
     backgroundColor: '#ccc',
     cursor: 'not-allowed',
