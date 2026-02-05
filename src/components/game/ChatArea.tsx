@@ -40,6 +40,10 @@ import yejinClapImg from '@/assets/decorations/emoji/yejin_clap.gif';
 import junyoungImg from '@/assets/decorations/emoji/junyoung.png';
 import hamzziImg from '@/assets/decorations/emoji/hamzzi.png';
 import penguinDanceImg from '@/assets/decorations/emoji/penguin_dance.gif';
+import hypeHyunjiImg from '@/assets/decorations/emoji/hype_hyunji.gif';
+import signMinjunImg from '@/assets/decorations/emoji/sign_minjun.gif';
+import sparkleTaekwooImg from '@/assets/decorations/emoji/sparkle_taekwoo.gif';
+import zoomHajunImg from '@/assets/decorations/emoji/zoom_hajun.gif';
 
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
@@ -73,7 +77,10 @@ const REACTION_MAP: Record<string, string> = {
   'junyoung': junyoungImg,
   'hamzzi': hamzziImg,
   'penguin_dance': penguinDanceImg,
-
+  'hype_hyunji': hypeHyunjiImg,
+  'sign_minjun': signMinjunImg,
+  'sparkle_taekwoo': sparkleTaekwooImg,
+  'zoom_hajun': zoomHajunImg,
 };
 
 const REACTION_KEYS = Object.keys(REACTION_MAP);
@@ -197,12 +204,12 @@ const ChatArea = () => {
     // ⭐️ X값 랜덤 범위 대폭 확대 (5% ~ 95%) -> 더 정신없게!
     const x = Math.floor(Math.random() * 90) + 5;
     // 사이즈도 약간 랜덤 (0.8 ~ 1.5배)
-    const size = 0.8 + Math.random() * 0.7;
+    const size = 0.7 + Math.random() * 0.5;
 
     setFloatingReactions((prev) => [...prev, { id, reactionKey, x, size }]);
     setTimeout(() => {
       setFloatingReactions((prev) => prev.filter((r) => r.id !== id));
-    }, 2000);
+    }, 1200);
   };
 
   const handleSendReaction = (reactionKey: string) => {
@@ -312,8 +319,8 @@ const ChatArea = () => {
                   src={REACTION_MAP[r.reactionKey]}
                   alt="reaction"
                   style={{
-                    width: '80px',
-                    height: '80px',
+                    width: '55px',
+                    height: '55px',
                     objectFit: 'contain',
                     filter: 'drop-shadow(4px 4px 2px rgba(0,0,0,0.3))',
                   }}
