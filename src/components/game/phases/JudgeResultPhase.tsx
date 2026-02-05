@@ -108,11 +108,13 @@ const JudgeResultPhase = () => {
     const timers = [
       setTimeout(() => {
         setIntroPhase(2);      // A팀 관객 점수
-        playSFX('GOOD_RESULT');      // ✅ A팀 관객 점수 나올 때
+        playSFX('NUMBER_TICK');
+        playSFX('GOOD_RESULT');
       }, 2000),
       setTimeout(() => {
         setIntroPhase(3);      // B팀 관객 점수
-        playSFX('GOOD_RESULT');      // ✅ B팀 관객 점수 나올 때
+        playSFX('NUMBER_TICK');
+        playSFX('GOOD_RESULT');
       }, 6000),
       setTimeout(() => setIntroPhase(4), 10000),  // 1차 합산     (4초)
       setTimeout(() => setIntroPhase(5), 16000),  // A팀 AI 심사  (6초 대기 후 시작)

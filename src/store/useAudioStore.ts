@@ -37,6 +37,7 @@ import bark6Mp3 from '@/assets/sound/bark6.wav'; // 🐶 추가
 import bark7Mp3 from '@/assets/sound/bark7.mp3'; // 🐶 추가
 import goodResult from '@/assets/sound/good_result.mp3'
 import tada from '@/assets/sound/tada.mp3'
+import numberTick from '@/assets/sound/number_tick.mp3'
 
 const SOUND_ASSETS = {
   BGM: {
@@ -73,6 +74,7 @@ const SOUND_ASSETS = {
     NEXT_PAGE: nextPage,
     GOOD_RESULT: goodResult,
     TADA: tada,
+    NUMBER_TICK: numberTick,
   },
 } as const;
 
