@@ -127,17 +127,6 @@ const GameRoom = () => {
     setGamePhase('LOBBY');
     if (TEST_MODE) return;
 
-    // 1. 방 정보 요청 (게스트는 들어오자마자 이게 필요함)
-    socket.emit('request_room_info', { roomId }, (response: any) => {
-      if (response.status === 'success') {
-        // 방이 존재함: 스토어에 데이터 저장 및 게임 진행
-        // console.log('방 정보 로드 성공:', response.data);
-        setRoomInfo(response.data);
-      }
-    });
-
-    // 2. ⭐️ [복구] 여기서 초기 명단을 받아야 합니다!
-    // 백엔드는 입장 시 'lobby_updated' 대신 이걸 보내고 있습니다.
     // 1. ⭐️ [수정] 방 정보 요청 (콜백으로 바로 받기!)
     // 백엔드가 return { status: 'success', data: ... } 해주는 걸 여기서 받습니다.
     socket.emit('request_room_info', { roomId }, (response: any) => {
@@ -171,14 +160,6 @@ const GameRoom = () => {
     socket.on('game_started', (data) => {
       // console.log('🎮 게임 데이터 도착:', data);
 
-      // ♻️ [수정] 새 게임 시작 시 이전 상태값들 확실하게 초기화
-      const store = useGameStore.getState();
-      store.resetStory(); // 스토리 텍스트 초기화
-      store.setVoteResult(null); // 투표 결과 초기화
-      store.setGameState(null); // 이전 게임 진행 상태(턴 정보 등) 초기화
-      store.setRoundData(null); // 이전 라운드 데이터(카드 등) 삭제
-      store.resetMessages(); // 채팅 내역 초기화
-
       // imageIds, judges 등을 스토어에 저장
       setRoundData({
         cardIds: data.imageIds,
@@ -191,6 +172,17 @@ const GameRoom = () => {
     socket.on('change_phase', (response) => {
       // console.log('🎬 페이즈 변경:', response.phase); // 👈 로그 확인 필수
       const { phase, data } = response;
+
+      // ♻️ [수정] 로비로 돌아올 때(재시작 등) 상태 초기화
+      if (phase === 'LOBBY') {
+        const store = useGameStore.getState();
+        store.resetMessages();       // 채팅 내역 삭제
+        store.resetStory();          // 스토리 삭제
+        store.setVoteResult(null);   // 투표 결과 삭제
+        store.setGameState(null);    // 게임 상태 초기화
+        store.setRoundData(null);    // 라운드 데이터 삭제
+      }
+
       if (data) setRoundData(data);
       setGamePhase(phase as GamePhase);
     });
@@ -363,7 +355,7 @@ const GameRoom = () => {
     <div className={styles.container}>
       {/* 1️⃣ 상단 정보 바 (Header) + 🛠️ Dev Controls */}
       {/* 개발자 바가 켜져있을 때만 렌더링 */}
-      {/* 3. 중앙 개발자 컨트롤 패널
+      {/* 3. 중앙 개발자 컨트롤 패널 */}
       {isDevExpanded ? (
         <header className={styles.header}>
           <div className={styles.headerLeft}>
@@ -409,18 +401,17 @@ const GameRoom = () => {
             >
               {isAutoPlay ? '▶ Auto' : '⏸ Pause'}
             </button>
-          </div> 
+          </div>
         </header>
       ) : (
         <button
-        onClick={() => setIsDevExpanded(true)}
-        className={styles.floatingToggleBtn}
-        title="개발자 도구 (펼치기)"
+          onClick={() => setIsDevExpanded(true)}
+          className={styles.floatingToggleBtn}
+          title="개발자 도구 (펼치기)"
         >
           🛠️ DEV
         </button>
       )}
-      */}
 
       {/* 2️⃣ ⭐️ [핵심] 게임 메인 무대 (Main Stage) */}
       <main className={styles.main}>{renderPhase()}</main>
