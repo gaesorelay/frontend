@@ -27,6 +27,7 @@ export default function CreateControls({ items }: Props) {
             step={item.step}
             min={item.min} // ✅ 최소값 전달 (이게 없어서 1까지 내려갔던 것!)
             max={item.max} // ✅ 최대값 전달
+            allowInput={false}
           />
         </div>
       ))}

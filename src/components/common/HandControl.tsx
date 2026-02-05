@@ -7,6 +7,7 @@ interface HandControlProps {
   step?: number;
   min?: number; // 최소값
   max?: number; // 최대값
+  allowInput?: boolean;
 }
 
 export default function HandControl({
@@ -16,6 +17,7 @@ export default function HandControl({
   step = 1,
   min = 1,
   max = 9999,
+  allowInput = true,
 }: HandControlProps) {
 
   const playSound = () => {
@@ -84,8 +86,11 @@ export default function HandControl({
           type="number"
           className="no-spin" // 화살표 숨김 클래스 적용
           value={value === 0 ? '' : value} // 0일 땐 빈칸처럼 보이게 (선택사항)
-          onChange={handleChange}
-          onBlur={handleBlur}
+          onChange={allowInput ? handleChange : undefined}
+          onBlur={allowInput ? handleBlur : undefined}
+          readOnly={!allowInput}
+          inputMode={allowInput ? 'numeric' : 'none'}
+          onKeyDown={allowInput ? undefined : (e) => e.preventDefault()}
           style={{
             width: '100%',
             height: '100%',
@@ -98,6 +103,7 @@ export default function HandControl({
             paddingRight: unit ? '20px' : '0px', // 단위가 있으면 공간 확보
             fontFamily: 'inherit',
             color: '#222',
+            cursor: allowInput ? 'text' : 'default',
           }}
         />
 
