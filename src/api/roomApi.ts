@@ -9,8 +9,8 @@ import type { RoomConfig } from '@/types/game';
 export interface CreateRoomRequest {
   title: string;
   config: RoomConfig;
-  nickname: string;  // 👈 hostProfile로 감싸지 말고 바로!
-  avatarId: number;  // 👈 여기도 바로!
+  nickname: string; // 👈 hostProfile로 감싸지 말고 바로!
+  avatarId: number; // 👈 여기도 바로!
 }
 
 export interface CreateRoomResponse {
@@ -20,32 +20,30 @@ export interface CreateRoomResponse {
 }
 
 export const createRoomApi = async (data: CreateRoomRequest): Promise<CreateRoomResponse> => {
-  console.log(`📡 [API POST] 방 생성 요청:`, data);
+  // console.log(`📡 [API POST] 방 생성 요청:`, data);
   // 백엔드: @Post('rooms')
   const response = await client.post<CreateRoomResponse>('/rooms', data);
   return response.data;
 };
-
-
 
 // ----------------------------------------------------------------------
 // 2. 방 존재 확인
 // ----------------------------------------------------------------------
 
 export const checkRoomCodeApi = async (roomId: string) => {
-  console.log(`📡 [API GET] 방 조회 중: ${roomId}`);
+  // console.log(`📡 [API GET] 방 조회 중: ${roomId}`);
   try {
     // 백엔드: @Get('rooms/:roomUuid')
     // 백엔드가 { status: 'success', data: roomInfo } 형태로 준다고 가정
     const response = await client.get(`/rooms/${roomId}`);
-    
+
     if (response.data && response.data.data) {
       return { exists: true, roomId: roomId };
     } else {
       return { exists: false };
     }
   } catch (e) {
-    console.error("방 조회 실패:", e);
+    console.error('방 조회 실패:', e);
     return { exists: false };
   }
 };

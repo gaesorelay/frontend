@@ -131,7 +131,7 @@ const GameRoom = () => {
     socket.emit('request_room_info', { roomId }, (response: any) => {
       if (response.status === 'success') {
         // 방이 존재함: 스토어에 데이터 저장 및 게임 진행
-        console.log('방 정보 로드 성공:', response.data);
+        // console.log('방 정보 로드 성공:', response.data);
         setRoomInfo(response.data);
       }
     });
@@ -141,7 +141,7 @@ const GameRoom = () => {
     // 1. ⭐️ [수정] 방 정보 요청 (콜백으로 바로 받기!)
     // 백엔드가 return { status: 'success', data: ... } 해주는 걸 여기서 받습니다.
     socket.emit('request_room_info', { roomId }, (response: any) => {
-      console.log('📦 방 정보(Ack) 도착:', response);
+      // console.log('📦 방 정보(Ack) 도착:', response);
 
       if (response.status === 'success') {
         const data = response.data;
@@ -162,22 +162,22 @@ const GameRoom = () => {
 
     // 2. [수신] 유저 리스트 업데이트 (입장/퇴장/팀변경 시)
     socket.on('lobby_updated', (data) => {
-      console.log('👥 로비 업데이트:', data);
+      // console.log('👥 로비 업데이트:', data);
       setPlayers(data.users);
       // 만약 data.roomConfig 등 방 정보도 같이 온다면 여기서 setRoomInfo 업데이트
     });
 
     // 3.  게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
     socket.on('game_started', (data) => {
-      console.log('🎮 게임 데이터 도착:', data);
+      // console.log('🎮 게임 데이터 도착:', data);
 
       // ♻️ [수정] 새 게임 시작 시 이전 상태값들 확실하게 초기화
       const store = useGameStore.getState();
-      store.resetStory();       // 스토리 텍스트 초기화
+      store.resetStory(); // 스토리 텍스트 초기화
       store.setVoteResult(null); // 투표 결과 초기화
-      store.setGameState(null);  // 이전 게임 진행 상태(턴 정보 등) 초기화
-      store.setRoundData(null);  // 이전 라운드 데이터(카드 등) 삭제
-      store.resetMessages();     // 채팅 내역 초기화
+      store.setGameState(null); // 이전 게임 진행 상태(턴 정보 등) 초기화
+      store.setRoundData(null); // 이전 라운드 데이터(카드 등) 삭제
+      store.resetMessages(); // 채팅 내역 초기화
 
       // imageIds, judges 등을 스토어에 저장
       setRoundData({
@@ -189,7 +189,7 @@ const GameRoom = () => {
 
     // 4. [수신] 페이즈 변경
     socket.on('change_phase', (response) => {
-      console.log('🎬 페이즈 변경:', response.phase); // 👈 로그 확인 필수
+      // console.log('🎬 페이즈 변경:', response.phase); // 👈 로그 확인 필수
       const { phase, data } = response;
       if (data) setRoundData(data);
       setGamePhase(phase as GamePhase);
@@ -197,14 +197,14 @@ const GameRoom = () => {
 
     // 5. [수신] 최종 결과 데이터 수신
     socket.on('vote_result', (data) => {
-      console.log("🏆 [GameRoom] 서버로부터 최종 결과 데이터를 받았습니다:", data);
+      // console.log('🏆 [GameRoom] 서버로부터 최종 결과 데이터를 받았습니다:', data);
       // 스토어 저장
       useGameStore.getState().setVoteResult(data);
     });
 
     // StoryBoardArea가 언마운트되어도(턴8 종료 등) 데이터를 놓치지 않도록 여기서 처리
     socket.on('story_submitted', (data) => {
-      console.log('📜 [GameRoom] 스토리 제출 수신:', data);
+      // console.log('📜 [GameRoom] 스토리 제출 수신:', data);
       const rawText = typeof data.text === 'string' ? data.text : '';
       const text = rawText.trim().length === 0 ? '' : rawText;
       const turn = typeof data.turn === 'number' ? data.turn : undefined;
@@ -231,7 +231,7 @@ const GameRoom = () => {
 
       const duration = Date.now() - mountTimeRef.current;
       if (duration > 500) {
-        console.log(`🚪 뒤로가기 감지 (유지 시간: ${duration}ms) -> 퇴장 처리`);
+        // console.log(`🚪 뒤로가기 감지 (유지 시간: ${duration}ms) -> 퇴장 처리`);
         socket.emit('leave_room');
       }
     };
@@ -259,7 +259,7 @@ const GameRoom = () => {
   // ⭐️ [추가] 내 정보 동기화 (새로고침/재진입 시 권한 복구)
   useEffect(() => {
     if (players.length > 0 && userToken) {
-      const me = players.find(p => p.userToken === userToken);
+      const me = players.find((p) => p.userToken === userToken);
       if (me) {
         useUserStore.getState().setUserStatus(me.role, me.isHost);
       }
@@ -271,28 +271,30 @@ const GameRoom = () => {
     const { draftText, setDraftText } = useGameStore.getState();
 
     // 내 팀 찾기
-    const myPlayer = players.find(p => p.userToken === userToken);
+    const myPlayer = players.find((p) => p.userToken === userToken);
 
     // 현재 턴 번호 계산 (TURN1 -> 1)
-    const turnNumber = gamePhase.startsWith('TURN')
-      ? parseInt(gamePhase.replace('TURN', ''))
-      : 0;
+    const turnNumber = gamePhase.startsWith('TURN') ? parseInt(gamePhase.replace('TURN', '')) : 0;
 
     if (myPlayer && myPlayer.team && turnNumber > 0) {
-      console.log(`🛠️ Dev: 스킵 전 강제 제출 시도: ${draftText}, Turn: ${turnNumber}`);
+      // console.log(`🛠️ Dev: 스킵 전 강제 제출 시도: ${draftText}, Turn: ${turnNumber}`);
 
       // ⭐️ 중복 제출 방지: emit 전에 먼저 비우기
       setDraftText('');
 
-      socket.emit('submit_story', {
-        roomId,
-        message: draftText,
-        team: myPlayer.team,
-        userToken,
-        turn: turnNumber
-      }, (res: any) => {
-        console.log("🛠️ Dev: 강제 제출 결과:", res);
-      });
+      socket.emit(
+        'submit_story',
+        {
+          roomId,
+          message: draftText,
+          team: myPlayer.team,
+          userToken,
+          turn: turnNumber,
+        },
+        (res: any) => {
+          // console.log('🛠️ Dev: 강제 제출 결과:', res);
+        }
+      );
     }
 
     // 🛠️ Dev: 서버에 단계 건너뛰기 요청

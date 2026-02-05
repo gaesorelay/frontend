@@ -12,9 +12,9 @@ export const socket: Socket = io(`${SOCKET_URL}/game`, {
 
 // 디버깅용 로그
 socket.on('connect', () => {
-  console.log('✅ Socket connected:', socket.id);
+  // console.log('✅ Socket connected:', socket.id);
 });
 
 socket.on('disconnect', () => {
-  console.log('❌ Socket disconnected');
+  // console.log('❌ Socket disconnected');
 });

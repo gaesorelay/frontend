@@ -66,7 +66,7 @@ const LobbyPhase = ({
     avatar: getAvatarSrc(user.avatarId) || user.avatar,
   }));
 
-  console.log('🔍 유저 데이터 구조 확인:', users);
+  // console.log('🔍 유저 데이터 구조 확인:', users);
   const { nickname: myNickname, avatarId: myAvatarId } = useUserStore(); // Guest 입장 테스트용
   const myUser = users.find((u: any) => u.nickname === myNickname);
   const isMyRolePlayer = myUser?.role === 'PLAYER';
@@ -87,7 +87,7 @@ const LobbyPhase = ({
   useEffect(() => {
     // 서버로부터 설정 변경 알림이 오면 실행될 함수
     const handleConfigUpdate = (data: { config: RoomConfig; title?: string }) => {
-      console.log('📢 방 설정이 업데이트되었습니다:', data);
+      // console.log('📢 방 설정이 업데이트되었습니다:', data);
 
       // 1. 전역 스토어(Store) 업데이트
       if (data.config && setRoomConfig) {
@@ -226,11 +226,21 @@ const LobbyPhase = ({
     // [CASE 1: 방장이 클릭]
     if (isHost) {
       if (userInSlot) {
-        openConfirm("관전석 이동", `${userInSlot.nickname}님을 관전석으로 보낼까요?`, () => {
+        openConfirm('관전석 이동', `${userInSlot.nickname}님을 관전석으로 보낼까요?`, () => {
           if (TEST_MODE) {
-            setUsers(users.map((u) => u.userToken === userInSlot.userToken ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null } : u));
+            setUsers(
+              users.map((u) =>
+                u.userToken === userInSlot.userToken
+                  ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
+                  : u
+              )
+            );
           } else {
-            socket.emit('leave_team', { public_user_id: userInSlot.publicUserId, team: teamType, slot_index: slotIndex });
+            socket.emit('leave_team', {
+              public_user_id: userInSlot.publicUserId,
+              team: teamType,
+              slot_index: slotIndex,
+            });
           }
         });
         return;
@@ -245,7 +255,7 @@ const LobbyPhase = ({
 
       if (isMe) {
         // 내가 내 자리를 눌렀다면 퇴장(관전) 확인
-        openConfirm("팀 퇴장", "팀에서 나가 관전석으로 돌아가시겠습니까?", () => {
+        openConfirm('팀 퇴장', '팀에서 나가 관전석으로 돌아가시겠습니까?', () => {
           if (TEST_MODE) {
             setUsers(
               users.map((u) =>
@@ -267,8 +277,7 @@ const LobbyPhase = ({
       }
 
       if (userInSlot) return;
-      openConfirm("팀 참가", `${teamType}팀 ${slotIndex + 1}번 자리에 참가하시겠습니까?`, () => {
-
+      openConfirm('팀 참가', `${teamType}팀 ${slotIndex + 1}번 자리에 참가하시겠습니까?`, () => {
         if (TEST_MODE) {
           // 테스트용: Guest인 나를 생성해서 넣음
           const myToken = 'me_guest_token';
@@ -345,16 +354,14 @@ const LobbyPhase = ({
 
   const handleKickUser = () => {
     if (!selectedAudience || !isHost) return;
-    openConfirm("강제 퇴장", `${selectedAudience.nickname}님을 강퇴하시겠습니까?`, () => {
-
-
+    openConfirm('강제 퇴장', `${selectedAudience.nickname}님을 강퇴하시겠습니까?`, () => {
       if (TEST_MODE) {
         setUsers(users.filter((u) => u.userToken !== selectedAudience.userToken));
       } else {
         socket.emit('kick_user', { public_user_id: selectedAudience.publicUserId });
       }
       setSelectedAudience(null);
-    }) // openConfirm
+    }); // openConfirm
   };
 
   const handleSelectPlayer = (user: any) => {
@@ -414,7 +421,7 @@ const LobbyPhase = ({
 
   // 게임시작
   const handleStartGame = () => {
-    console.log('🚀 게임 시작 버튼 클릭됨');
+    // console.log('🚀 게임 시작 버튼 클릭됨');
     if (!isHost) return;
 
     // (선택) 인원 수 체크 등을 여기서 미리 막아도 됨
@@ -435,7 +442,7 @@ const LobbyPhase = ({
   const navigate = useNavigate();
 
   const handleExit = () => {
-    openConfirm("방 나가기", "정말 방에서 나가시겠어요? 🐾", () => {
+    openConfirm('방 나가기', '정말 방에서 나가시겠어요? 🐾', () => {
       socket.emit('leave_room');
       navigate('/');
     });
@@ -446,9 +453,7 @@ const LobbyPhase = ({
     if (TEST_MODE) {
       setUsers(
         users.map((u: any) =>
-          u.nickname === myNickname
-            ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null }
-            : u
+          u.nickname === myNickname ? { ...u, role: 'AUDIENCE', team: null, slotIndex: null } : u
         )
       );
     } else {
@@ -479,7 +484,7 @@ const LobbyPhase = ({
           </aside>
 
           <SoundButton
-            sfx='CLICK'
+            sfx="CLICK"
             onClick={() => {
               setIsAudienceBarOpen(!isAudienceBarOpen);
             }}
@@ -523,7 +528,7 @@ const LobbyPhase = ({
                 <div className={styles.topRight}>
                   {/* 🔇 뮤트 버튼 (설정 버튼 왼쪽) */}
                   <SoundButton
-                    sfx='CLICK'
+                    sfx="CLICK"
                     onClick={() => {
                       handleToggleMute();
                     }}
@@ -593,7 +598,7 @@ const LobbyPhase = ({
                     <label>최대 인원 (전체)</label>
                     <div className={styles.counter}>
                       <SoundButton
-                        sfx='CLICK'
+                        sfx="CLICK"
                         className={styles.countBtn}
                         onClick={() => updateConfig('maxPlayers', editConfig.maxPlayers - 1, 2, 20)}
                       >
@@ -601,7 +606,7 @@ const LobbyPhase = ({
                       </SoundButton>
                       <span className={styles.countNum}>{editConfig.maxPlayers}명</span>
                       <SoundButton
-                        sfx='CLICK'
+                        sfx="CLICK"
                         className={styles.countBtn}
                         onClick={() => updateConfig('maxPlayers', editConfig.maxPlayers + 1, 2, 20)}
                       >
@@ -618,7 +623,7 @@ const LobbyPhase = ({
                         <span>작성</span>
                         <div className={styles.counterSmall}>
                           <SoundButton
-                            sfx='CLICK'
+                            sfx="CLICK"
                             className={styles.countBtn}
                             onClick={() =>
                               updateConfig('roundTime', editConfig.roundTime - 5, 15, 45)
@@ -628,7 +633,7 @@ const LobbyPhase = ({
                           </SoundButton>
                           <span className={styles.countNum}>{editConfig.roundTime}s</span>
                           <SoundButton
-                            sfx='CLICK'
+                            sfx="CLICK"
                             className={styles.countBtn}
                             onClick={() =>
                               updateConfig('roundTime', editConfig.roundTime + 5, 15, 45)
@@ -642,7 +647,7 @@ const LobbyPhase = ({
                         <span>투표</span>
                         <div className={styles.counterSmall}>
                           <SoundButton
-                            sfx='CLICK'
+                            sfx="CLICK"
                             className={styles.countBtn}
                             onClick={() => updateConfig('voteTime', editConfig.voteTime - 5, 5, 15)}
                           >
@@ -650,7 +655,7 @@ const LobbyPhase = ({
                           </SoundButton>
                           <span className={styles.countNum}>{editConfig.voteTime}s</span>
                           <SoundButton
-                            sfx='CLICK'
+                            sfx="CLICK"
                             className={styles.countBtn}
                             onClick={() => updateConfig('voteTime', editConfig.voteTime + 5, 5, 15)}
                           >
@@ -663,7 +668,7 @@ const LobbyPhase = ({
 
                   <div className={styles.modalActions}>
                     <SoundButton
-                      sfx='CLICK'
+                      sfx="CLICK"
                       className={styles.saveButton}
                       onClick={() => {
                         handleSaveSettings();
@@ -726,12 +731,16 @@ const LobbyPhase = ({
                 <div className={styles.buttonGroup}>
                   {isMyRolePlayer && (
                     <SoundButton
-                      sfx='CLICK'
+                      sfx="CLICK"
                       onClick={() => {
                         handleReturnToAudience();
                       }}
                       className={styles.randomButton}
-                      style={{ backgroundColor: '#a7f3d0', marginRight: 'auto', marginLeft: '80px' }}
+                      style={{
+                        backgroundColor: '#a7f3d0',
+                        marginRight: 'auto',
+                        marginLeft: '80px',
+                      }}
                     >
                       관전으로 이동
                     </SoundButton>
@@ -748,7 +757,7 @@ const LobbyPhase = ({
                         랜덤 팀 배정
                       </SoundButton>
                       <SoundButton
-                        sfx='CLICK'
+                        sfx="CLICK"
                         onClick={() => {
                           handleStartGame();
                         }}
@@ -782,7 +791,7 @@ const LobbyPhase = ({
               </h2>
               <div className={styles.modalButtonGrid}>
                 <SoundButton
-                  sfx='CLICK'
+                  sfx="CLICK"
                   onClick={() => {
                     moveUserToTeam('A');
                   }}
@@ -791,7 +800,7 @@ const LobbyPhase = ({
                   A팀 배정
                 </SoundButton>
                 <SoundButton
-                  sfx='CLICK'
+                  sfx="CLICK"
                   onClick={() => {
                     moveUserToTeam('B');
                   }}
@@ -801,7 +810,7 @@ const LobbyPhase = ({
                 </SoundButton>
                 {!selectedAudience?.isHost && selectedAudience?.nickname !== myNickname && (
                   <SoundButton
-                    sfx='CLICK'
+                    sfx="CLICK"
                     onClick={() => {
                       handleKickUser();
                     }}
@@ -829,7 +838,7 @@ const LobbyPhase = ({
                   .filter((u) => u.role === 'AUDIENCE')
                   .map((user) => (
                     <SoundButton
-                      sfx='CLICK'
+                      sfx="CLICK"
                       key={user.userToken}
                       onClick={() => {
                         handleSelectPlayer(user);
@@ -851,11 +860,18 @@ const LobbyPhase = ({
       {/* ⚠️ 공통 확인 모달 */}
       <Modal isOpen={!!confirmModal?.isOpen} onClose={() => setConfirmModal(null)}>
         <div className={styles.modalContent}>
-          <h2 className={styles.modalTitle} style={{ marginBottom: '10px' }}>{confirmModal?.title}</h2>
-          <p style={{ fontSize: '1.2rem', color: '#666', marginBottom: '30px', textAlign: 'center' }}>
+          <h2 className={styles.modalTitle} style={{ marginBottom: '10px' }}>
+            {confirmModal?.title}
+          </h2>
+          <p
+            style={{ fontSize: '1.2rem', color: '#666', marginBottom: '30px', textAlign: 'center' }}
+          >
             {confirmModal?.message}
           </p>
-          <div className={styles.modalActions} style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+          <div
+            className={styles.modalActions}
+            style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}
+          >
             <SoundButton
               sfx="CLICK"
               className={styles.saveButton}
@@ -867,14 +883,14 @@ const LobbyPhase = ({
             <SoundButton
               sfx="CLICK"
               className={styles.saveButton}
-              onClick={confirmModal?.onConfirm || (() => { })}
+              onClick={confirmModal?.onConfirm || (() => {})}
             >
               확인
             </SoundButton>
           </div>
         </div>
       </Modal>
-    </Background >
+    </Background>
   );
 };
 export default LobbyPhase;

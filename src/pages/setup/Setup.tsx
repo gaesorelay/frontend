@@ -62,7 +62,7 @@ export default function Setup() {
   // ⭐️ [수정 2] 게스트 입장 시: 좀비 데이터 정리용
   useEffect(() => {
     if (paramRoomId && roomConfig) {
-      console.log('🧹 게스트 입장: 이전 방장 데이터 초기화');
+      // console.log('🧹 게스트 입장: 이전 방장 데이터 초기화');
       reset();
     }
   }, [paramRoomId, roomConfig, reset]);
@@ -105,7 +105,7 @@ export default function Setup() {
       if (isHost) {
         if (!roomConfig) return;
 
-        console.log('📡 [Host] 방 생성 요청 중...');
+        // console.log('📡 [Host] 방 생성 요청 중...');
         const res = await createRoomApi({
           title: roomTitle || '즐거운 게임',
           config: roomConfig,
@@ -114,20 +114,20 @@ export default function Setup() {
         });
 
         currentRoomId = res.roomId;
-        console.log('✅ 방 생성 완료:', currentRoomId);
+        // console.log('✅ 방 생성 완료:', currentRoomId);
       } else {
-        console.log(`📡 [Guest] 기존 방(${currentRoomId}) 입장 시도...`);
+        // console.log(`📡 [Guest] 기존 방(${currentRoomId}) 입장 시도...`);
       }
 
       // ----------------------------------------------------
       // 2. 소켓 연결 및 입장 (공통)
       // ----------------------------------------------------
       if (socket.connected) {
-        console.log('♻️ 기존 소켓 연결 정리');
+        // console.log('♻️ 기존 소켓 연결 정리');
         socket.disconnect();
       }
 
-      console.log('🔌 소켓 연결 시도...', { currentRoomId, myToken });
+      // console.log('🔌 소켓 연결 시도...', { currentRoomId, myToken });
 
       socket.auth = { token: myToken };
       socket.connect();
@@ -141,7 +141,7 @@ export default function Setup() {
           userToken: myToken || undefined,
         },
         (response: any) => {
-          console.log('📩 Gateway 응답:', response);
+          // console.log('📩 Gateway 응답:', response);
           setIsLoading(false);
 
           if (response.status === 'success') {
@@ -155,7 +155,7 @@ export default function Setup() {
 
             // 방장, 게스트 공통으로 토큰 저장하도록 변경
             if (user.userToken) {
-              console.log('🔑 토큰 저장 완료:', user.userToken);
+              // console.log('🔑 토큰 저장 완료:', user.userToken);
               setUserToken(user.userToken); // Store 저장
               socket.auth = { token: user.userToken }; // 소켓 재연결 대비
             }
@@ -171,7 +171,7 @@ export default function Setup() {
               });
             }
 
-            console.log('🚀 게임방으로 이동!');
+            // console.log('🚀 게임방으로 이동!');
             navigate(`/gameroom/${currentRoomId}`);
           } else {
             alert(`입장 실패: ${response.message}`);
