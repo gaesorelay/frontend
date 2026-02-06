@@ -74,10 +74,19 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent, isExpa
 
   // 5. [자동 스크롤] 새로운 문장이 추가되거나 타이핑 시 하단으로 스크롤 고정
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [storyLog, currentTypingText]);
+    const scrollToBottom = () => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    };
+
+    scrollToBottom();
+
+    // 레이아웃 변경 애니메이션(0.5s) 대응: 애니메이션 종료 시점에도 스크롤 보정
+    const timeoutId = setTimeout(scrollToBottom, 550);
+
+    return () => clearTimeout(timeoutId);
+  }, [storyLog, currentTypingText, isMyTurn]);
 
   // 6. [타이핑 핸들러] 글자를 칠 때마다 서버로 실시간 전송 (Broadcasting)
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -124,10 +133,10 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent, isExpa
 
           {/* 현재 입력 중인 문장 (빨간색/물결 언더라인 강조) */}
           {currentTypingText && (
-            <span style={styles.liveLine}>
+            <span style={{ ...styles.liveLine, color: team === 'A' ? '#ff4757' : '#1e90ff' }}>
               {storyLog.length > 0 ? ' ' : ''}
               {currentTypingText}
-              {!isMyTurn && <span style={styles.cursorSmall} />}
+              {!isMyTurn && <span style={{ ...styles.cursorSmall, backgroundColor: team === 'A' ? '#ff4757' : '#1e90ff' }} />}
             </span>
           )}
 
