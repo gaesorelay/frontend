@@ -504,7 +504,6 @@ const LobbyPhase = ({
               list={audienceList}
               isHost={isHost}
               onSelect={setSelectedAudience}
-              onClose={() => setIsAudienceBarOpen(false)}
             />
           </aside>
 

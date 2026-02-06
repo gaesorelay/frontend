@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from './AudienceList.module.css';
 import { useUserStore } from '@/store/useUserStore';
 
@@ -13,12 +12,11 @@ interface AudienceListProps {
   list: User[];
   isHost: boolean;
   onSelect: (user: User) => void;
-  onClose?: () => void;
   showReturnButton?: boolean;
   onReturn?: () => void;
 }
 
-export const AudienceList = ({ list, isHost, onSelect, onClose, showReturnButton, onReturn }: AudienceListProps) => {
+export const AudienceList = ({ list, isHost, onSelect, showReturnButton, onReturn }: AudienceListProps) => {
   const { nickname: myNickname, userToken: myUserToken, publicUserId: myPublicUserId } = useUserStore();
   const isSameUser = (user: User) => {
     if (myPublicUserId !== null && myPublicUserId !== undefined) {
@@ -36,11 +34,6 @@ export const AudienceList = ({ list, isHost, onSelect, onClose, showReturnButton
   });
   return (
     <div className={styles.audienceContainer}>
-      {onClose && (
-        <button onClick={onClose} className={styles.closeButton}>
-          ✕
-        </button>
-      )}
       <div className={styles.titleBar}>
         <h3 className={styles.title}>
           <span className={styles.pingDot} />
