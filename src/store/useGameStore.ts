@@ -31,6 +31,7 @@ interface GameStoreState {
   visitedRoomId: string | null;
   hasEntered: boolean;
   kickReason: string | null; // ⭐️ 강퇴 사유 (null이면 강퇴 아님)
+  kickTitle: string | null; // ⭐️ 모달 제목 (null이면 기본값 사용)
   footprints: Footprint[];
   isSabotageMode: boolean;
   toggleSabotageMode: () => void;
@@ -53,6 +54,7 @@ interface GameStoreState {
   setVisitedRoomId: (id: string | null) => void;
   setHasEntered: (entered: boolean) => void;
   setKickReason: (reason: string | null) => void; // ⭐️ 강퇴 알림 표시용
+  setKickTitle: (title: string | null) => void;
   setPlayers: (players: Player[]) => void;
   upsertPlayer: (player: Player) => void;
   removePlayer: (userToken: string) => void;
@@ -115,6 +117,7 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   resetStory: () => set({ teamAStory: [], teamBStory: [] }),
   resetMessages: () => set({ messages: [] }),
   kickReason: null,
+  kickTitle: null,
 
   draftText: '',
   setDraftText: (text) => set({ draftText: text }),
@@ -130,6 +133,7 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   setVisitedRoomId: (id) => set({ visitedRoomId: id }),
   setHasEntered: (entered) => set({ hasEntered: entered }),
   setKickReason: (reason) => set({ kickReason: reason }),
+  setKickTitle: (title) => set({ kickTitle: title }),
   setPlayers: (players) => set({ players }),
   upsertPlayer: (player) =>
     set((state) => {
@@ -172,6 +176,7 @@ export const useGameStore = create<GameStoreState>()((set) => ({
       gamePhase: 'LOBBY',
       roundData: null,
       kickReason: null,
+      kickTitle: null,
       storyReviewFinished: false,
     }),
 }));
