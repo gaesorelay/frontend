@@ -159,11 +159,10 @@ const GameRoom = () => {
     // 3.  게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
     socket.on('game_started', (data) => {
       // console.log('🎮 게임 데이터 도착:', data);
-
       // imageIds, judges 등을 스토어에 저장
       setRoundData({
         cardIds: data.imageIds,
-        judgeIds: data.judges,
+        judges: data.judges,
         // 필요한 다른 데이터 초기화
       });
     });
@@ -176,11 +175,11 @@ const GameRoom = () => {
       // ♻️ [수정] 로비로 돌아올 때(재시작 등) 상태 초기화
       if (phase === 'LOBBY') {
         const store = useGameStore.getState();
-        store.resetMessages();       // 채팅 내역 삭제
-        store.resetStory();          // 스토리 삭제
-        store.setVoteResult(null);   // 투표 결과 삭제
-        store.setGameState(null);    // 게임 상태 초기화
-        store.setRoundData(null);    // 라운드 데이터 삭제
+        store.resetMessages(); // 채팅 내역 삭제
+        store.resetStory(); // 스토리 삭제
+        store.setVoteResult(null); // 투표 결과 삭제
+        store.setGameState(null); // 게임 상태 초기화
+        store.setRoundData(null); // 라운드 데이터 삭제
       }
 
       if (data) setRoundData(data);
