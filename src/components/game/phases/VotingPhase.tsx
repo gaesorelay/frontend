@@ -23,14 +23,29 @@ const VotingPhase = () => {
 
   const { isMuted, playSFX } = useAudioStore();
 
+  // 1. 타이머 로직 개선 (0.1초 단위, Math.ceil)
   useEffect(() => {
-    if (timeLeft <= 0) {
-      setIsTimeUp(true);
-      return;
-    }
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    const startTime = Date.now();
+    const endTime = startTime + totalTime * 1000;
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const diff = endTime - now;
+      const remaining = Math.max(0, diff / 1000);
+
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        setIsTimeUp(true);
+      }
+    };
+
+    // 즉시 실행
+    updateTimer();
+
+    const timer = setInterval(updateTimer, 100);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [totalTime]);
 
   // 째깍 소리
   useEffect(() => {
@@ -74,15 +89,21 @@ const VotingPhase = () => {
 
   // 1. 단계별 흔들림 강도 결정 로직
   const getShakeClass = () => {
-    if (timeRatio <= 30) return 'shake-hard'; // 빨간색: 격렬하게
-    if (timeRatio <= 50) return 'shake-soft'; // 노란색: 미세하게
-    return ''; // 초록색: 평온
+    if (timeRatio <= 30) return 'shake-hard';
+    if (timeRatio <= 50) return 'shake-soft';
+    return '';
+  };
+
+  const formatTime = (sec: number) => {
+    if (sec <= 0) return '0.0';
+    return sec.toFixed(1);
   };
 
   return (
     <Background>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Gungsuh&display=swap');
+        // ... (styles mostly same, just ensuring context match)
         .gungsuh-font { font-family: 'Gungsuh', '궁서', serif !important; }
 
         /* 🫨 미세한 흔들림 (노란색 단계) */
@@ -122,12 +143,12 @@ const VotingPhase = () => {
             <motion.div
               initial={{ height: '100%' }}
               animate={{ height: `${timeRatio}%`, backgroundColor: getTimerColor() }}
-              transition={{ duration: 1, ease: 'linear' }}
+              transition={{ duration: 0.1, ease: 'linear' }}
               className={timeRatio <= 20 ? 'urgent-v' : ''}
               style={styles.vTimerFill}
             />
           </div>
-          <div style={{ ...styles.vTimerText, color: getTimerColor() }}>{timeLeft}</div>
+          <div style={{ ...styles.vTimerText, color: getTimerColor() }}>{Math.ceil(timeLeft)}</div>
         </div>
 
         <div style={styles.leftSection}>
