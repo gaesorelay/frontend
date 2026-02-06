@@ -124,10 +124,10 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent, isExpa
 
           {/* 현재 입력 중인 문장 (빨간색/물결 언더라인 강조) */}
           {currentTypingText && (
-            <span style={styles.liveLine}>
+            <span style={{ ...styles.liveLine, color: team === 'A' ? '#ff4757' : '#1e90ff' }}>
               {storyLog.length > 0 ? ' ' : ''}
               {currentTypingText}
-              {!isMyTurn && <span style={styles.cursorSmall} />}
+              {!isMyTurn && <span style={{ ...styles.cursorSmall, backgroundColor: team === 'A' ? '#ff4757' : '#1e90ff' }} />}
             </span>
           )}
 
