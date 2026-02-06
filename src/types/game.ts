@@ -23,6 +23,12 @@ export type RoomInfo = {
   createdAt: string;
 };
 
+export type judges = {
+  id: number;
+  name: string;
+  persona: string;
+};
+
 // ⭐️ [수정] avatar -> avatarId 로 변경 (숫자로 관리)
 export type Player = {
   userToken: string;
@@ -98,6 +104,6 @@ export type GamePhase =
 
 export interface RoundData {
   cardIds: number[];
-  judgeIds: number[];
+  judges: judges[];
   startedAt?: string; // ⭐️ 타이머 동기화용 시작 시간
 }

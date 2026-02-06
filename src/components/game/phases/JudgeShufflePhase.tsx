@@ -94,8 +94,8 @@ const JudgeShufflePhase = () => {
   const targetWinners = useMemo(() => {
     // 서버에서 온 데이터가 없으면 fallback (1,2,3번)
     // roundData.judgeIds는 [{id, name, persona}, ...] 객체 배열임
-    if (roundData?.judgeIds && roundData.judgeIds.length > 0) {
-      return roundData.judgeIds.map((j: any) => {
+    if (roundData?.judges && roundData.judges.length > 0) {
+      return roundData.judges.map((j: any) => {
         // ID로 로컬 데이터(Persona 등) 찾기
         const localInfo = ALL_JUDGES.find((aj) => aj.id === j.id);
         return {
@@ -178,7 +178,7 @@ const JudgeShufflePhase = () => {
         setHighlightId(winner.id);
         setPickedIds((prev) => [...prev, winner.id]);
         stopAllSFX();
-        playSFX('DANGCHUM')
+        playSFX('DANGCHUM');
         await wait(1200);
       }
 
