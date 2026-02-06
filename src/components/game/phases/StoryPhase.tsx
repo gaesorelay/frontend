@@ -11,8 +11,8 @@ import finishLogoImg from '@/assets/logo/logo_finish.png'; // ⭐️ 인트로 �
 import ChatArea from '../ChatArea';
 
 const StoryPhase = () => {
-  const { teamAStory, teamBStory, roundData, setStoryReviewFinished } = useGameStore();
-  const { isMuted, toggleMute, playSFX } = useAudioStore(); // ⭐️ 뮤트 상태, SFX 재생 함수 가져오기
+  const { teamAStory, teamBStory, roundData, setStoryReviewFinished, setCurrentStoryPage, resetReactionStats } = useGameStore();
+  const { isMuted, toggleMute, playSFX } = useAudioStore();
   const [currentTeam, setCurrentTeam] = useState<'A' | 'B'>('A');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
@@ -35,12 +35,19 @@ const StoryPhase = () => {
 
   // ⭐️ 인트로 타이머 (2초 후 해제)
   useEffect(() => {
-    setStoryReviewFinished(false); // ⭐️ 진입 시 초기화
+    setStoryReviewFinished(false); // 진입 시 초기화
+    resetReactionStats(); // ⭐️ 리액션 통계 초기화
+
     const timer = setTimeout(() => {
       setShowIntro(false);
     }, 2500); // 2.5초 정도 유지
     return () => clearTimeout(timer);
   }, []);
+
+  // ⭐️ 현재 페이지 상태를 전역 스토어에 동기화
+  useEffect(() => {
+    setCurrentStoryPage({ team: currentTeam, index: currentIndex });
+  }, [currentTeam, currentIndex, setCurrentStoryPage]);
 
   // 2. 페이지 자동 넘김 로직 (인트로 끝나면 시작)
   useEffect(() => {

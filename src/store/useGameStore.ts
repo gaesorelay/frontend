@@ -43,6 +43,15 @@ interface GameStoreState {
   draftText: string;
   setDraftText: (text: string) => void;
 
+  // ⭐️ [추가] 리액션 통계 관련
+  currentStoryPage: { team: 'A' | 'B'; index: number } | null;
+  setCurrentStoryPage: (page: { team: 'A' | 'B'; index: number } | null) => void;
+  reactionStats: Record<string, number>;
+  emojiStats: Record<string, number>; // ⭐️ [추가]
+  incrementReactionStat: (team: 'A' | 'B', index: number) => void;
+  incrementEmojiStat: (emoji: string) => void; // ⭐️ [추가]
+  resetReactionStats: () => void;
+
   teamAStory: string[];
   teamBStory: string[];
 
@@ -178,5 +187,31 @@ export const useGameStore = create<GameStoreState>()((set) => ({
       kickReason: null,
       kickTitle: null,
       storyReviewFinished: false,
+      currentStoryPage: null,
+      reactionStats: {},
     }),
+
+  // ⭐️ [추가] 스토리 감상 페이지 추적 및 리액션 카운트
+  currentStoryPage: null,
+  reactionStats: {},
+  emojiStats: {}, // ⭐️ [추가] 전체 게임 동안의 이모지 사용 통계
+  setCurrentStoryPage: (page) => set({ currentStoryPage: page }),
+  incrementReactionStat: (team, index) =>
+    set((state) => {
+      const key = `${team}-${index}`;
+      return {
+        reactionStats: {
+          ...state.reactionStats,
+          [key]: (state.reactionStats[key] || 0) + 1,
+        },
+      };
+    }),
+  incrementEmojiStat: (emoji) =>
+    set((state) => ({
+      emojiStats: {
+        ...state.emojiStats,
+        [emoji]: (state.emojiStats[emoji] || 0) + 1,
+      },
+    })),
+  resetReactionStats: () => set({ reactionStats: {}, emojiStats: {} }), // 같이 초기화
 }));

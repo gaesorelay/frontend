@@ -14,7 +14,6 @@ import WritingPhase from '@/components/game/phases/WritingPhase';
 import StoryPhase from '@/components/game/phases/StoryPhase';
 import VotingPhase from '@/components/game/phases/VotingPhase';
 import JudgeResultPhase from '@/components/game/phases/JudgeResultPhase';
-import FinalResultPhase from '@/components/game/phases/FinalResultPhase';
 
 // 더미 데이터 프로필 이미지
 import dog1 from '@/assets/dog/dog1.png';
@@ -237,7 +236,6 @@ const GameRoom = () => {
     'STORY',
     'VOTING',
     'JUDGE_RESULT',
-    'FINAL_RESULT',
   ];
 
   // 🛠️ [개발용] 제어 상태
@@ -337,8 +335,7 @@ const GameRoom = () => {
         return <VotingPhase />;
       case 'JUDGE_RESULT':
         return <JudgeResultPhase />;
-      case 'FINAL_RESULT':
-        return <FinalResultPhase />;
+
 
       default:
         return (

@@ -7,8 +7,10 @@ import { useUserStore } from '@/store/useUserStore';
 import { socket } from '@/lib/socket';
 import { getResultJudgeImage } from '@/lib/judgeMapper'; // 이미지 매퍼
 import { getAvatarSrc } from '@/lib/avatarMapper';
+import { getStoryteller } from '@/lib/gameLogic'; // ⭐️ 추가
 import { useAudioStore } from '@/store/useAudioStore'; // 🔊 추가
 import tadaMp3 from '@/assets/sound/tada.mp3';
+import { REACTION_MAP } from '../ChatArea'; // ⭐️ 추가
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
 const getAvatarUrl = getAvatarSrc;
@@ -35,14 +37,58 @@ const WIN_MENTS = [
 
 const JudgeResultPhase = () => {
   // 1. Store에서 투표 결과(voteResult)와 게임 정보(roundData) 둘 다 가져옴
-  const { voteResult, roundData, players } = useGameStore();
+  const { voteResult, roundData, players, emojiStats, reactionStats } = useGameStore();
   const { isHost } = useUserStore();
   const { playSFX, isMuted } = useAudioStore(); // 🔊 func + state
+
+  // ⭐️ 최애 이모지 계산
+  const bestEmoji = useMemo(() => {
+    let maxCount = 0;
+    let bestKey = '';
+    Object.entries(emojiStats).forEach(([key, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        bestKey = key;
+      }
+    });
+    if (!bestKey || maxCount === 0) return null;
+    return { key: bestKey, count: maxCount, img: REACTION_MAP[bestKey] };
+  }, [emojiStats]);
+
+  // ⭐️ [추가] 최고의 리액션 순간 계산
+  const bestMoment = useMemo(() => {
+    let maxCount = 0;
+    let bestKey = '';
+
+    Object.entries(reactionStats).forEach(([key, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        bestKey = key;
+      }
+    });
+
+    if (maxCount === 0 || !bestKey) return null;
+
+    const [team, indexStr] = bestKey.split('-');
+    const index = parseInt(indexStr);
+    const turnNumber = index + 1;
+    const teamType = team as 'A' | 'B';
+
+    const teller = getStoryteller(players, teamType, turnNumber);
+
+    return {
+      team: teamType,
+      turn: turnNumber,
+      count: maxCount,
+      tellerName: teller?.nickname || '알 수 없음',
+      avatarId: teller?.avatarId || 1,
+    };
+  }, [reactionStats, players]);
 
   // 🎵 Mount 시 짜잔 효과음
   useEffect(() => {
     if (!isMuted) {
-      new Audio(tadaMp3).play().catch(() => {});
+      new Audio(tadaMp3).play().catch(() => { });
     }
   }, [isMuted]);
 
@@ -616,91 +662,190 @@ const JudgeResultPhase = () => {
               </>
             ) : (
               // Phase 7: 우승 팀 멤버들 (NEW!)
-              <div
-                style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both', width: '100%' }}
-              >
-                {/* 1. Final Score Comparison */}
+              introPhase === 7 && (
                 <div
-                  style={{
-                    fontSize: '5vmin',
-                    fontWeight: 900,
-                    color: '#fff',
-                    textShadow: '0.4vmin 0.4vmin 0 #000',
-                    marginBottom: '1vmin',
-                  }}
+                  style={{ textAlign: 'center', animation: 'zoom-in-judge 0.5s both', width: '100%', position: 'relative' }}
                 >
-                  <span style={{ color: '#ff7f7f' }}>{totalA}</span> :{' '}
-                  <span style={{ color: '#7fb2ff' }}>{totalB}</span>
-                </div>
-
-                {/* 2. Winner Declaration */}
-                <div
-                  style={{
-                    fontSize: '7vmin',
-                    fontWeight: 900,
-                    color: '#facc15',
-                    textShadow: '0.5vmin 0.5vmin 0 #000',
-                    marginBottom: '2vmin',
-                  }}
-                >
-                  🎉 {finalWinnerTeam === 'A' ? 'A팀' : 'B팀'} 승리! 🎉
-                </div>
-
-                {/* 3. Random Ment (smaller) & Dog Score (Winning Team's Score) */}
-                <div
-                  style={{
-                    position: 'relative',
-                    fontSize: '3vmin',
-                    fontWeight: 900,
-                    color: '#facc15',
-                    textShadow: '0.3vmin 0.3vmin 0 #000',
-                    marginBottom: '2vmin',
-                    display: 'inline-block',
-                  }}
-                >
-                  "{randomWinMent}"
+                  {/* 1. Final Score Comparison */}
                   <div
                     style={{
-                      fontSize: '2.5vmin',
+                      fontSize: '5vmin',
+                      fontWeight: 900,
                       color: '#fff',
-                      marginTop: '1vmin',
-                      textShadow: '0.2vmin 0.2vmin 0 #000',
+                      textShadow: '0.4vmin 0.4vmin 0 #000',
+                      marginBottom: '1vmin',
                     }}
                   >
-                    🏆 Dog Score: {finalWinnerTeam === 'A' ? totalA : totalB} 점 🏆
+                    <span style={{ color: '#ff7f7f' }}>{totalA}</span> :{' '}
+                    <span style={{ color: '#7fb2ff' }}>{totalB}</span>
+                  </div>
+
+                  {/* 2. Main Center Area: [Stats Left] [Winner Text] [Stats Right] */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4vmin',
+                    width: '100%',
+                    marginBottom: '2vmin',
+                  }}>
+
+                    {/* Left: Best Emoji (Swapped) */}
+                    <div style={{ width: '25vmin', display: 'flex', justifyContent: 'flex-end' }}>
+                      {bestEmoji ? (
+                        <div style={{
+                          width: '100%', // Flexible width inside 25vmin
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          animation: 'slide-in-right 0.5s 0.2s both', // Left side animation
+                        }}>
+                          <div className="gungsuh-font" style={{
+                            fontSize: '1.5vmin',
+                            fontWeight: '900',
+                            color: '#000',
+                            background: '#fffdf0',
+                            padding: '0.5vmin 1vmin',
+                            borderRadius: '1vmin',
+                            border: '0.5vmin solid #111',
+                            marginBottom: '0.5vmin',
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0.5vmin 0.5vmin 0 rgba(0,0,0,0.2)'
+                          }}>
+                            최애 리액션!
+                          </div>
+                          <div style={{ position: 'relative' }}>
+                            <img
+                              src={bestEmoji.img}
+                              style={{
+                                width: '8vmin',
+                                height: '8vmin',
+                                objectFit: 'contain',
+                                filter: 'drop-shadow(0.5vmin 0.5vmin 0 rgba(0,0,0,0.3))',
+                                animation: 'float 3s infinite ease-in-out'
+                              }}
+                            />
+                            <div style={{
+                              position: 'absolute',
+                              bottom: '-1vmin',
+                              right: '-1vmin',
+                              background: '#ff4444',
+                              color: '#fff',
+                              fontWeight: '900',
+                              fontSize: '1.2vmin',
+                              padding: '0.2vmin 0.6vmin',
+                              borderRadius: '1vmin',
+                              border: '0.2vmin solid #fff'
+                            }}>
+                              {bestEmoji.count}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Center: Winner Declaration */}
+                    <div
+                      style={{
+                        fontSize: '10vmin',
+                        fontWeight: 900,
+                        color: finalWinnerTeam === 'A' ? '#ff4444' : '#3b82f6',
+                        whiteSpace: 'nowrap',
+                        WebkitTextStroke: '0.2vmin #fff',
+                        paintOrder: 'stroke fill',
+                        zIndex: 20
+                      }}
+                    >
+                      🎉 {finalWinnerTeam === 'A' ? 'A팀' : 'B팀'} 승리! 🎉
+                    </div>
+
+                    {/* Right: Best Reaction Moment (Swapped) */}
+                    <div style={{ width: '25vmin', display: 'flex', justifyContent: 'flex-start' }}>
+                      {bestMoment && (
+                        <div style={{
+                          width: '100%',
+                          background: '#fffdf0',
+                          border: '0.5vmin solid #111',
+                          borderRadius: '2vmin',
+                          padding: '1vmin',
+                          boxShadow: '0.5vmin 0.5vmin 0 rgba(0,0,0,0.2)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          animation: 'slide-in-left 0.5s 0.4s both', // Right side animation
+                        }}>
+                          <div style={{ fontSize: '3vmin' }}>🔥</div>
+                          <div className="gungsuh-font" style={{ fontSize: '1.2vmin', color: '#666', fontWeight: 'bold' }}>
+                            반응 폭발! ({bestMoment.count}회)
+                          </div>
+                          <div className="gungsuh-font" style={{ fontSize: '1.4vmin', fontWeight: 900, color: '#333' }}>
+                            {bestMoment.team}팀 {bestMoment.turn}번째<br />{bestMoment.tellerName}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+
+                  {/* 3. Random Ment (smaller) & Dog Score (Winning Team's Score) */}
+                  <div
+                    style={{
+                      position: 'relative',
+                      fontSize: '3vmin',
+                      fontWeight: 900,
+                      // 색상 변경: 팀 컬러
+                      color: finalWinnerTeam === 'A' ? '#ff4444' : '#3b82f6',
+                      // 그림자 제거
+                      textShadow: 'none',
+                      marginBottom: '2vmin',
+                      display: 'inline-block',
+                    }}
+                  >
+                    "{randomWinMent}"
+                    <div
+                      style={{
+                        fontSize: '2.5vmin',
+                        color: '#fff',
+                        marginTop: '1vmin',
+                        textShadow: '0.2vmin 0.2vmin 0 #000',
+                      }}
+                    >
+                      🏆 Dog Score: {finalWinnerTeam === 'A' ? totalA : totalB} 점 🏆
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '3vmin',
+                      justifyContent: 'center',
+                      marginTop: '0', // 기존 2vmin에서 제거하여 위로 붙임
+                      transform: 'translateY(-15px)', // 15px 위로 올림 요청 반영
+                    }}
+                  >
+                    {winningPlayers.map((p, i) => (
+                      <div
+                        key={p.userToken}
+                        className="winner-card"
+                        style={{ animation: `elastic-zoomies 0.6s ${i * 0.15}s both` }}
+                      >
+                        <img
+                          src={getAvatarUrl(p.avatarId)}
+                          style={{
+                            width: '10vmin',
+                            height: '10vmin',
+                            borderRadius: '50%',
+                            border: '0.5vmin solid #facc15',
+                            marginBottom: '1vmin',
+                            boxShadow: '0 0.5vmin 1vmin rgba(0,0,0,0.2)',
+                          }}
+                        />
+                        <div style={{ fontSize: '1.8vmin', fontWeight: 900 }}>{p.nickname}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '3vmin',
-                    justifyContent: 'center',
-                    marginTop: '2vmin',
-                  }}
-                >
-                  {winningPlayers.map((p, i) => (
-                    <div
-                      key={p.userToken}
-                      className="winner-card"
-                      style={{ animation: `elastic-zoomies 0.6s ${i * 0.15}s both` }}
-                    >
-                      <img
-                        src={getAvatarUrl(p.avatarId)}
-                        style={{
-                          width: '10vmin',
-                          height: '10vmin',
-                          borderRadius: '50%',
-                          border: '0.5vmin solid #facc15',
-                          marginBottom: '1vmin',
-                          boxShadow: '0 0.5vmin 1vmin rgba(0,0,0,0.2)',
-                        }}
-                      />
-                      <div style={{ fontSize: '1.8vmin', fontWeight: 900 }}>{p.nickname}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )
             )}
           </div>
 
