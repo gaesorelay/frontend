@@ -171,20 +171,30 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     const startTime = roundData?.startedAt ? new Date(roundData.startedAt).getTime() : Date.now();
     const endTime = startTime + roundDuration * 1000;
 
-    // 2. 인터벌 설정
-    const interval = setInterval(() => {
+    // 2. 인터벌 설정 (0.1초 단위 업데이트)
+    const updateTimer = () => {
       const now = Date.now();
-      const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
-
+      const diff = endTime - now;
+      const remaining = Math.max(0, diff / 1000);
       setTimeLeft(remaining);
       setIsUrgent(remaining <= 7 && remaining > 0);
+      return remaining;
+    };
 
+    // ⭐️ 즉시 실행 (렌더링 직후 타이머 갱신으로 깜빡임 방지)
+    const initialRemaining = updateTimer();
+
+    // 남은 시간이 없으면 인터벌 돌리지 않음
+    if (initialRemaining <= 0) return;
+
+    const interval = setInterval(() => {
+      const remaining = updateTimer();
       if (remaining <= 0) {
         clearInterval(interval);
       }
-    }, 1000);
+    }, 100);
 
-    // 3. 클린업 (중요: currentRound가 바뀔 때 이전 인터벌을 확실히 죽임)
+    // 3. 클린업
     return () => clearInterval(interval);
   }, [roundData?.startedAt, roundDuration, currentRound]); // 👈 여기에 currentRound를 추가하세요!
 
@@ -219,7 +229,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     if (isUrgent && !isMuted) {
       audio = new Audio(clockMp3);
       audio.volume = 0.6;
-      audio.play().catch(() => {});
+      audio.play().catch(() => { });
     }
 
     return () => {
@@ -281,10 +291,12 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   }, []);
 
   const formatTime = (sec: number) => {
-    const m = Math.floor(sec / 60)
+    // 소수점은 안 보이길 원하심 + 0초가 너무 빨리 뜨는 것 방지(Math.ceil)
+    const val = Math.ceil(sec);
+    const m = Math.floor(val / 60)
       .toString()
       .padStart(2, '0');
-    const s = (sec % 60).toString().padStart(2, '0');
+    const s = (val % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
