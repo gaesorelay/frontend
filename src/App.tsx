@@ -19,7 +19,6 @@ import JudgeShufflePhase from './components/game/phases/JudgeShufflePhase.tsx';
 import CardShufflePhase from './components/game/phases/CardShufflePhase.tsx';
 import VotingPhase from './components/game/phases/VotingPhase.tsx';
 import JudgeResultPhase from './components/game/phases/JudgeResultPhase.tsx';
-import FinalResultPhase from './components/game/phases/FinalResultPhase.tsx';
 import { RoomValidationGuard, GameEntryGuard } from '@/components/routes/RouteGuards';
 import KickModal from '@/components/common/KickModal';
 import BGMPlayer from '@/components/common/BGMPlayer'; // 🎵 추가
@@ -90,12 +89,11 @@ function App() {
                     */}
           <Route path="/setup" element={<Setup />} />
 
-          {/* 개발용 임시 라우트 */}
+          {/* 개발용 임시 라우트
           <Route path="/test/cardshuffle" element={<CardShufflePhase />} />
           <Route path="/test/judgeshuffle" element={<JudgeShufflePhase />} />
           <Route path="/test/voting" element={<VotingPhase />} />
-          <Route path="/test/judgeresult" element={<JudgeResultPhase />} />
-          <Route path="/test/finalresult" element={<FinalResultPhase />} />
+          <Route path="/test/judgeresult" element={<JudgeResultPhase />} /> */}
 
           {/* 없는 주소면 홈으로 */}
           <Route path="*" element={<NotFound />} />

@@ -50,7 +50,7 @@ import dujjonkuImg from '@/assets/decorations/emoji/dujjonku.png';
 const getAvatarUrl = getAvatarSrc;
 
 // 🐶 이모지 대신 이미지 매핑 (Key -> Image Source)
-const REACTION_MAP: Record<string, string> = {
+export const REACTION_MAP: Record<string, string> = {
   'bone': boneImg,
   'heart': heartImg,
   'star': starImg,
@@ -168,9 +168,21 @@ const ChatArea = () => {
     // 서버에서는 { emoji: 'bone' } 형태로 보내줌 (기존 emoji 필드 재사용)
     const handleReaction = (data: { emoji: string }) => {
       if (data.emoji.includes('|')) return; // 구분자(|)가 있으면 방해 공작이므로 무시
+
       // 🐶 이모지 효과음 재생 (모든 사용자)
       useAudioStore.getState().playSFX('BUTTON_BEEP');
       triggerFloatingReaction(data.emoji);
+
+      // ⭐️ [추가] 스토리 감상 중이라면 리액션 카운트 집계 (Frontend Only)
+      const { currentStoryPage, incrementReactionStat, incrementEmojiStat } = useGameStore.getState();
+
+      // 1. 전체 게임 통계 (이모지 종류별 카운트)
+      incrementEmojiStat(data.emoji);
+
+      // 2. 스토리 감상 중 통계 (페이지별 카운트)
+      if (currentStoryPage) {
+        incrementReactionStat(currentStoryPage.team, currentStoryPage.index);
+      }
     };
 
     socket.on('chat_message', handleChatMessage);
