@@ -35,8 +35,6 @@ import sojungImg from '@/assets/decorations/emoji/sojung_princess.gif';
 import taeheeConImg from '@/assets/decorations/emoji/taehee_con.png';
 import taeheeLoveImg from '@/assets/decorations/emoji/taehee_lovebeam.gif';
 import yejinClapImg from '@/assets/decorations/emoji/yejin_clap.gif';
-
-//new
 import junyoungImg from '@/assets/decorations/emoji/junyoung.png';
 import hamzziImg from '@/assets/decorations/emoji/hamzzi.png';
 import penguinDanceImg from '@/assets/decorations/emoji/penguin_dance.gif';
@@ -45,6 +43,8 @@ import signMinjunImg from '@/assets/decorations/emoji/sign_minjun.gif';
 import sparkleTaekwooImg from '@/assets/decorations/emoji/sparkle_taekwoo.gif';
 import zoomHajunImg from '@/assets/decorations/emoji/zoom_hajun.gif';
 
+//new
+import dujjonkuImg from '@/assets/decorations/emoji/dujjonku.png';
 
 // avatarId (1-based) -> Image URL (Alias for consistency with internal usage)
 const getAvatarUrl = getAvatarSrc;
@@ -73,7 +73,6 @@ const REACTION_MAP: Record<string, string> = {
   'taehee_con': taeheeConImg,
   'taehee_love': taeheeLoveImg,
   'yejin_clap': yejinClapImg,
-  //new
   'junyoung': junyoungImg,
   'hamzzi': hamzziImg,
   'penguin_dance': penguinDanceImg,
@@ -81,6 +80,8 @@ const REACTION_MAP: Record<string, string> = {
   'sign_minjun': signMinjunImg,
   'sparkle_taekwoo': sparkleTaekwooImg,
   'zoom_hajun': zoomHajunImg,
+  //new
+  'dujjonku': dujjonkuImg,
 };
 
 const REACTION_KEYS = Object.keys(REACTION_MAP);
@@ -203,16 +204,16 @@ const ChatArea = () => {
     const id = Date.now() + Math.random();
     // ⭐️ X값 랜덤 범위 대폭 확대 (5% ~ 95%) -> 더 정신없게!
     const x = Math.floor(Math.random() * 90) + 5;
-    // 사이즈도 약간 랜덤 (0.8 ~ 1.5배)
-    const size = 0.7 + Math.random() * 0.5;
-    // ⭐️ Y값 랜덤 시작점 (-50px ~ 화면의 70%)
+    // 사이즈도 약간 랜덤 (0.8 ~ 1.5배) -> 기존보다 10% 정도 키움
+    const size = 1.3 + Math.random() * 0.5;
+    // ⭐️ Y값 랜덤 시작점 (-50px ~ 화면의 90%)
     const maxY = typeof window !== 'undefined' ? window.innerHeight * 0.9 : 500;
     const startY = Math.floor(Math.random() * maxY) - 50;
 
     setFloatingReactions((prev) => [...prev, { id, reactionKey, x, size, startY }]);
     setTimeout(() => {
       setFloatingReactions((prev) => prev.filter((r) => r.id !== id));
-    }, 1200);
+    }, 1300);
   };
 
   const handleSendReaction = (reactionKey: string) => {
@@ -311,7 +312,7 @@ const ChatArea = () => {
                   scale: [0.5, r.size, r.size, r.size * 0.8],
                   rotate: [0, -20, 20, -10, 0],
                 }}
-                transition={{ duration: 4, ease: 'easeOut' }}
+                transition={{ duration: 8, ease: 'easeOut' }}
                 style={{
                   position: 'absolute',
                   left: `${r.x}%`,
