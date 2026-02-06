@@ -733,86 +733,93 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
             </div>
 
             <div style={centerColumnStyle}>
-              <div style={{
-                ...teamSectionStyle,
-                // ✨ [동적 사이즈 조절] 내 턴이고 내가 A팀이면 2배로 확대, 아니면 기본 1
-                flex: (isMyTurn && myTeam === 'A') ? 2 : 1,
-                transition: 'flex 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)', // 부드러운 전환 효과
-              }}>
-                <div style={teamHeaderStyle}>
-                  <div style={teamIndicatorStyle('#ef4444')} />
-                  <span style={{ color: '#ef4444' }}>A팀</span>
-                </div>
-                {/* ⭐️ 작성자 슬롯 + 작성 중 표시 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '50px' }}>
-                  <div style={storytellersStyle}>
-                    {renderTeamAvatars(teamAPlayers, activeUserA, '#ef4444')}
+              {/* --- A팀 구역 --- */}
+              {/* 내 턴이 아니거나(관전/대기), 내 팀이 A팀일 때만 표시 */}
+              {(!isMyTurn || myTeam === 'A') && (
+                <div style={{
+                  ...teamSectionStyle,
+                  flex: 1, // 하나만 보일 땐 꽉 차게, 둘 다 보일 땐 1:1 (아래 로직 상 자동 처리)
+                  transition: 'all 0.5s ease',
+                }}>
+                  <div style={teamHeaderStyle}>
+                    <div style={teamIndicatorStyle('#ef4444')} />
+                    <span style={{ color: '#ef4444' }}>A팀</span>
                   </div>
-                  {activeUserA && (
-                    <div
-                      style={{
-                        fontSize: '1.0rem',
-                        fontWeight: 'bold',
-                        color: '#ef4444',
-                        animation: 'pulse-soft 2s infinite',
-                      }}
-                    >
-                      ✍️ {activeUserA.nickname} 짖는 중...
+                  {/* ⭐️ 작성자 슬롯 */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '50px' }}>
+                    <div style={storytellersStyle}>
+                      {renderTeamAvatars(teamAPlayers, activeUserA, '#ef4444')}
                     </div>
-                  )}
+                    {activeUserA && (
+                      <div
+                        style={{
+                          fontSize: '1.0rem',
+                          fontWeight: 'bold',
+                          color: '#ef4444',
+                          animation: 'pulse-soft 2s infinite',
+                        }}
+                      >
+                        ✍️ {activeUserA.nickname} 짖는 중...
+                      </div>
+                    )}
+                  </div>
+                  {/* ⭐️ 스토리 보드 A */}
+                  <div style={{ flex: 1, minHeight: 0 }}>
+                    <StoryBoardArea
+                      team="A"
+                      activeUser={activeUserA}
+                      roomId={players[0]?.roomUuid || ''}
+                      turnNumber={turnNumber}
+                      isUrgent={isUrgent}
+                      isExpanded={!isMyTurn || myTeam === 'A'}
+                    />
+                  </div>
                 </div>
-                {/* ⭐️ [교체] 스토리 보드 A */}
-                {/* roomUuid는 roundData나 store에서 가져오거나 props로 받아야 함 */}
-                <div style={{ flex: 1, minHeight: 0 }}>
-                  <StoryBoardArea
-                    team="A"
-                    activeUser={activeUserA}
-                    roomId={players[0]?.roomUuid || ''} // 유저 정보에 roomUuid가 있으니 그걸 씀
-                    turnNumber={turnNumber} // ⭐️ 추가
-                    isUrgent={isUrgent}
-                  />
-                </div>
-              </div>
+              )}
 
-              <div style={{
-                ...teamSectionStyle,
-                // ✨ [동적 사이즈 조절] 내 턴이고 내가 B팀이면 2배로 확대, 아니면 기본 1
-                flex: (isMyTurn && myTeam === 'B') ? 2 : 1,
-                transition: 'flex 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)',
-              }}>
-                <div style={teamHeaderStyle}>
-                  <div style={teamIndicatorStyle('#3b82f6')} />
-                  <span style={{ color: '#3b82f6' }}>B팀</span>
-                </div>
-                {/* ⭐️ 작성자 슬롯 + 작성 중 표시 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '50px' }}>
-                  <div style={storytellersStyle}>
-                    {renderTeamAvatars(teamBPlayers, activeUserB, '#3b82f6')}
+              {/* --- B팀 구역 --- */}
+              {/* 내 턴이 아니거나(관전/대기), 내 팀이 B팀일 때만 표시 */}
+              {(!isMyTurn || myTeam === 'B') && (
+                <div style={{
+                  ...teamSectionStyle,
+                  flex: 1,
+                  transition: 'all 0.5s ease',
+                }}>
+                  <div style={teamHeaderStyle}>
+                    <div style={teamIndicatorStyle('#3b82f6')} />
+                    <span style={{ color: '#3b82f6' }}>B팀</span>
                   </div>
-                  {activeUserB && (
-                    <div
-                      style={{
-                        fontSize: '1.0rem',
-                        fontWeight: 'bold',
-                        color: '#3b82f6',
-                        animation: 'pulse-soft 2s infinite',
-                      }}
-                    >
-                      ✍️ {activeUserB.nickname} 짖는 중...
+                  {/* ⭐️ 작성자 슬롯 */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '50px' }}>
+                    <div style={storytellersStyle}>
+                      {renderTeamAvatars(teamBPlayers, activeUserB, '#3b82f6')}
                     </div>
-                  )}
+                    {activeUserB && (
+                      <div
+                        style={{
+                          fontSize: '1.0rem',
+                          fontWeight: 'bold',
+                          color: '#3b82f6',
+                          animation: 'pulse-soft 2s infinite',
+                        }}
+                      >
+                        ✍️ {activeUserB.nickname} 짖는 중...
+                      </div>
+                    )}
+                  </div>
+                  {/* ⭐️ 스토리 보드 B */}
+                  <div style={{ flex: 1, minHeight: 0 }}>
+                    <StoryBoardArea
+                      team="B"
+                      activeUser={activeUserB}
+                      roomId={players[0]?.roomUuid || ''}
+                      turnNumber={turnNumber}
+                      isUrgent={isUrgent}
+                      isExpanded={!isMyTurn || myTeam === 'B'}
+                    />
+                  </div>
                 </div>
-                {/* ⭐️ [교체] 스토리 보드 B */}
-                <div style={{ flex: 1, minHeight: 0 }}>
-                  <StoryBoardArea
-                    team="B"
-                    activeUser={activeUserB}
-                    roomId={players[0]?.roomUuid || ''}
-                    turnNumber={turnNumber} // ⭐️ 추가
-                    isUrgent={isUrgent}
-                  />
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

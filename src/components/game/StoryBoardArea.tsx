@@ -9,14 +9,15 @@ interface StoryBoardProps {
   team: 'A' | 'B';
   activeUser: any;
   roomId: string;
-  turnNumber?: number; // WritingPhase에서 넘겨주는 현재 턴 번호 (1~6)
-  isUrgent?: boolean;  // 10초 미만 긴급 상태 여부
+  turnNumber?: number;
+  isUrgent?: boolean;
+  isExpanded?: boolean;
 }
 
-const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent }: StoryBoardProps) => {
+const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent, isExpanded = true }: StoryBoardProps) => {
   const { userToken } = useUserStore();
   const { teamAStory, teamBStory, addStoryLine, setDraftText } = useGameStore();
-  const { playSFX } = useAudioStore(); // 🔊 SFX
+  const { playSFX } = useAudioStore();
 
   // 1. [데이터 선택] 현재 팀(A/B)에 해당하는 스토리 로그를 스토어에서 가져옴
   const storyLog = team === 'A' ? teamAStory : teamBStory;
@@ -106,7 +107,15 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent }: Stor
       </style>
 
       {/* 📜 1. 스토리 히스토리 영역: 지금까지 쌓인 문장들을 보여줌 */}
-      <div style={styles.logSection} ref={scrollRef} className="custom-scroll">
+      {/* 컴팩트 모드일 때는 패딩을 줄여서 공간 확보 */}
+      <div
+        style={{
+          ...styles.logSection,
+          padding: isExpanded ? '20px' : '10px 15px'
+        }}
+        ref={scrollRef}
+        className="custom-scroll"
+      >
         <div style={styles.storyParagraph}>
           {/* 확정된 문장들 (검정색) */}
           <span style={styles.historyText}>
@@ -122,33 +131,36 @@ const StoryBoardArea = ({ team, activeUser, roomId, turnNumber, isUrgent }: Stor
             </span>
           )}
 
-          {/* 데이터가 아예 없을 때의 가이드 문구 */}
-          {storyLog.length === 0 && !currentTypingText && (
+          {/* 데이터가 아예 없을 때의 가이드 문구 - 컴팩트 모드에선 숨김 */}
+          {storyLog.length === 0 && !currentTypingText && isExpanded && (
             <span style={styles.placeholder}>어서 개소리의 서막을 열어주개... 🐾</span>
           )}
         </div>
       </div>
 
       {/* ⌨️ 2. 입력 영역: 내 턴이면 textarea, 아니면 대기 메시지 노출 */}
-      <div style={{ ...styles.inputWrapper, ...(isMyTurn ? styles.myTurn : {}) }}>
-        {isMyTurn ? (
-          <textarea
-            style={styles.textarea}
-            value={currentTypingText}
-            onChange={handleChange}
-            placeholder="아무 말이나 짖어보세요! 턴이 끝나면 자동으로 박제됩니다."
-            autoFocus
-            spellCheck={false}
-            className={isUrgent ? 'border-flash' : ''} // 10초 미만 시 번쩍임 효과
-          />
-        ) : (
-          <div style={styles.waitMessage}>
-            <span style={styles.waitText}>
-              {activeUser ? `🐶 ${activeUser.nickname}님이 열정적으로 짖는 중...` : "차례를 기다리는 중"}
-            </span>
-          </div>
-        )}
-      </div>
+      {/* ✨ [핵심 수정] isExpanded가 false이면(상대방 칸 등) 아예 렌더링 안 함 -> 공간 확보 */}
+      {isExpanded && (
+        <div style={{ ...styles.inputWrapper, ...(isMyTurn ? styles.myTurn : {}) }}>
+          {isMyTurn ? (
+            <textarea
+              style={styles.textarea}
+              value={currentTypingText}
+              onChange={handleChange}
+              placeholder="아무 말이나 짖어보세요! 턴이 끝나면 자동으로 박제됩니다."
+              autoFocus
+              spellCheck={false}
+              className={isUrgent ? 'border-flash' : ''} // 10초 미만 시 번쩍임 효과
+            />
+          ) : (
+            <div style={styles.waitMessage}>
+              <span style={styles.waitText}>
+                {activeUser ? `🐶 ${activeUser.nickname}님이 열정적으로 짖는 중...` : "차례를 기다리는 중"}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -166,7 +178,6 @@ const styles: { [key: string]: React.CSSProperties } = {
   logSection: {
     flex: 1,
     overflowY: 'auto',
-    padding: '20px',
     backgroundColor: '#fff',
     border: '3px solid #000',
     borderRadius: '15px',
@@ -175,8 +186,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundSize: '100% 1.8rem',
     lineHeight: '1.8rem',
     boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)',
-    transition: 'flex 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-    minHeight: '100px',
+    transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)', // 패딩 변경 등 애니메이션
+    minHeight: '0px', // 0으로 변경하여 flex 컨테이너 안에서 자유롭게 줄어들게 함
     boxSizing: 'border-box',
   },
   storyParagraph: {
