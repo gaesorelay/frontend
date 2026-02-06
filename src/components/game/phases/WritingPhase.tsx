@@ -100,7 +100,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
   // 3. ⭐️ [핵심] 심사위원 리스트 가져오기
   const judges = useMemo(() => {
     // roundData.judgeIds는 실제로는 Judge 객체 배열 [{id, name, persona}, ...]
-    return roundData?.judgeIds || [];
+    return roundData?.judges || [];
   }, [roundData]);
 
   // 4. ⭐️ [수정] players 배열을 필터링합니다.

@@ -57,8 +57,8 @@ const CardShufflePhase = () => {
     const maxAvatarIndex = totalAvatars > 0 ? totalAvatars : 1;
 
     let targetJudgeIds: number[] = [];
-    if (roundData?.judgeIds && roundData.judgeIds.length >= TARGET_COUNT) {
-      targetJudgeIds = roundData.judgeIds;
+    if (roundData?.judges && roundData.judges.length >= TARGET_COUNT) {
+      targetJudgeIds = roundData.judges.map((judge: any) => judge.id);
     } else {
       const dogIndices = new Set<number>();
       while (dogIndices.size < TARGET_COUNT) {
@@ -277,8 +277,7 @@ const CardShufflePhase = () => {
                 display: 'flex',
                 justifyContent: 'center',
               }}
-            >
-            </div>
+            ></div>
           </div>
         )}
       </div>
