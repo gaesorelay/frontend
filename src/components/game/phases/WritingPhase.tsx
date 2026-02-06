@@ -133,7 +133,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
 
   // 6. ⭐️ 타이머 로직
   const roundTime = roomConfig?.roundTime || 60;
-  const roundDuration = roundTime + (turnNumber === 1 ? 3 : 0);
+  const roundDuration = roundTime + (turnNumber === 1 ? 4 : 0);
   const [timeLeft, setTimeLeft] = useState(roundTime);
   const [isUrgent, setIsUrgent] = useState(false);
 
@@ -219,7 +219,7 @@ const WritingPhase = ({ currentRound }: WritingPhaseProps) => {
     if (isUrgent && !isMuted) {
       audio = new Audio(clockMp3);
       audio.volume = 0.6;
-      audio.play().catch(() => {});
+      audio.play().catch(() => { });
     }
 
     return () => {
