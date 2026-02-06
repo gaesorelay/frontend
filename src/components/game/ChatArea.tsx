@@ -116,7 +116,7 @@ const ChatArea = () => {
   // 1. 소켓 이벤트 리스너 설정
   useEffect(() => {
     const handleChatMessage = (data: any) => {
-      console.log('[chat_message]', data);
+      // console.log('[chat_message]', data);
       const rawPublicUserId = data.publicUserId ?? data.public_user_id ?? null;
       const senderToken = data.senderId ?? data.sender_id ?? data.userToken ?? data.user_token ?? 'unknown';
       let resolvedPublicUserId: string | number | null = rawPublicUserId ?? null;
