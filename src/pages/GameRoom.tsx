@@ -159,31 +159,10 @@ const GameRoom = () => {
     // 3.  게임 시작 데이터 수신 (이게 없으면 카드가 안 보임!)
     socket.on('game_started', (data) => {
       // console.log('🎮 게임 데이터 도착:', data);
-      console.log(data.judges);
-      const democards = [1, 2, 3, 4, 5, 6];
-
-      const demojudges = [
-        {
-          id: 1,
-          name: '개소리 미식가 멍성재',
-          persona: '저는 완결성과 창의성을 중요하게 생각하걸랑요.',
-        },
-        {
-          id: 2,
-          name: '침소리 성급맨',
-          persona: '이런 말씀을 드리고 싶어요. 말이 안돼도 뻔뻔하게 밀고나가라.',
-        },
-        {
-          id: 3,
-          name: '과몰입 F 공감이',
-          persona: '저는 짠하고 눈물나는 이야기에 너무 약한거 같아요. 흐어엉 ㅠㅠ',
-        },
-      ];
-
       // imageIds, judges 등을 스토어에 저장
       setRoundData({
-        cardIds: democards,
-        judges: demojudges,
+        cardIds: data.imageIds,
+        judges: data.judges,
         // 필요한 다른 데이터 초기화
       });
     });
