@@ -110,7 +110,7 @@ const ChatArea = () => {
   const [showReactions, setShowReactions] = useState(false);
   // emoji string 대신 image key를 저장
   const [floatingReactions, setFloatingReactions] = useState<
-    { id: number; reactionKey: string; x: number; size: number }[]
+    { id: number; reactionKey: string; x: number; size: number; startY: number }[]
   >([]);
 
   // 1. 소켓 이벤트 리스너 설정
@@ -205,8 +205,11 @@ const ChatArea = () => {
     const x = Math.floor(Math.random() * 90) + 5;
     // 사이즈도 약간 랜덤 (0.8 ~ 1.5배)
     const size = 0.7 + Math.random() * 0.5;
+    // ⭐️ Y값 랜덤 시작점 (-50px ~ 화면의 70%)
+    const maxY = typeof window !== 'undefined' ? window.innerHeight * 0.9 : 500;
+    const startY = Math.floor(Math.random() * maxY) - 50;
 
-    setFloatingReactions((prev) => [...prev, { id, reactionKey, x, size }]);
+    setFloatingReactions((prev) => [...prev, { id, reactionKey, x, size, startY }]);
     setTimeout(() => {
       setFloatingReactions((prev) => prev.filter((r) => r.id !== id));
     }, 1200);
@@ -312,7 +315,7 @@ const ChatArea = () => {
                 style={{
                   position: 'absolute',
                   left: `${r.x}%`,
-                  bottom: '-50px',
+                  bottom: `${r.startY}px`,
                 }}
               >
                 <img
