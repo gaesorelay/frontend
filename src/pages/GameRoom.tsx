@@ -161,6 +161,7 @@ const GameRoom = () => {
       // console.log('🎮 게임 데이터 도착:', data);
       console.log(data.judges);
       const democards = [1, 2, 3, 4, 5, 6];
+
       const demojudges = [
         {
           id: 1,
