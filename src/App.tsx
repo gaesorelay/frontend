@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import ReactGA from 'react-ga4';
+import AnalyticsTracker from '@/components/common/AnalyticsTracker';
+
+if (import.meta.env.PROD) {
+  ReactGA.initialize('G-D9P6R2RSCB');
+}
 import { Intro } from './pages/Intro.tsx';
 import Create from './pages/create/Create.tsx';
 import Setup from './pages/setup/Setup.tsx';
@@ -58,6 +64,7 @@ function App() {
         {/* <DevRemote /> */}
         <BGMPlayer /> {/* 🎵 전역 BGM 플레이어 */}
         <KickModal />
+        <AnalyticsTracker />
         <Routes>
           {/* 1. 메인화면 */}
           <Route path="/" element={<Intro />} />
