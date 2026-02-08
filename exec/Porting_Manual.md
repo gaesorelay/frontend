@@ -1,8 +1,8 @@
 # 포팅 매뉴얼 (Frontend)
 
 ## 1. 프로젝트 개요
-- **프로젝트명**: 개소릴레이 (Gaeso Relay) - Frontend
-- **서비스 설명**: 실시간 다중 사용자 스토리 릴레이 게임 웹 클라이언트
+- **프로젝트명**: 개소릴레이 (Gaesorelay) - Frontend
+- **서비스 설명**: 개소릴레이는 랜덤 이미지를 기반으로 하여 여러 플레이어가 실시간으로 턴을 이어가며 하나의 엉뚱하고 재미있는 이야기를 완성하는 "웹 기반 멀티플레이어 게임"입니다.
 
 ## 2. 개발 환경
 | 항목 | 내용 | 비고 |
@@ -54,10 +54,10 @@ npm run dev
 ## 6. 시연 시나리오
 | 시나리오 | 화면 | 내용 |
 | --- | --- | --- |
-| **메인 화면** | ![](https://velog.velcdn.com/images/zhy2on/post/2a29fca2-2903-4eee-96e9-e95ec74379d8/image.png) | '방 만들기' 버튼 클릭 |
-| **방 만들기** |![](https://velog.velcdn.com/images/zhy2on/post/a8245597-9f82-4017-8f96-516fea87dc95/image.png) | 방 만들기 |
-| **로비 진입** |![](https://velog.velcdn.com/images/zhy2on/post/db5fccd3-945e-4b8d-af73-bfc4891d3c25/image.png) | 닉네임 설정 후 로비 입장 (배경음악 재생 확인) |
-| **게임 플레이** |![](https://velog.velcdn.com/images/zhy2on/post/6aa40077-804a-4eba-ab39-aae7ba5d5710/image.png) ![](https://velog.velcdn.com/images/zhy2on/post/4b411654-9db5-40bc-9e0f-0482004e039f/image.png) ![](https://velog.velcdn.com/images/zhy2on/post/87ea48c9-6ad8-42c2-8667-e9758ea4d0da/image.png) ![](https://velog.velcdn.com/images/zhy2on/post/9d577f72-5d8a-4930-a8a7-40a8abda0d4e/image.png) | 게임 플레이 |
+| **메인 화면** | <img src="https://velog.velcdn.com/images/zhy2on/post/2a29fca2-2903-4eee-96e9-e95ec74379d8/image.png" width=500> | '방 만들기' 버튼 클릭 |
+| **방 만들기** | <img src="https://velog.velcdn.com/images/zhy2on/post/a8245597-9f82-4017-8f96-516fea87dc95/image.png" width=500> | 방 만들기 |
+| **로비 진입** | <img src="https://velog.velcdn.com/images/zhy2on/post/db5fccd3-945e-4b8d-af73-bfc4891d3c25/image.png" width=500> | 닉네임 설정 후 로비 입장 (배경음악 재생 확인) |
+| **게임 플레이** | <img src="https://velog.velcdn.com/images/zhy2on/post/6aa40077-804a-4eba-ab39-aae7ba5d5710/image.png" width=500> <img src="https://velog.velcdn.com/images/zhy2on/post/4b411654-9db5-40bc-9e0f-0482004e039f/image.png" width=500> <img src="https://velog.velcdn.com/images/zhy2on/post/87ea48c9-6ad8-42c2-8667-e9758ea4d0da/image.png" width=500> <img src="https://velog.velcdn.com/images/zhy2on/post/9d577f72-5d8a-4930-a8a7-40a8abda0d4e/image.png" width=500> | 게임 플레이 |
 
 
 * 발표자는 서비스 메인 화면에 접속한다.
