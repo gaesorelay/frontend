@@ -1,14 +1,18 @@
 # 🐶 개소릴레이 (Gaeso Relay) - Frontend
 
-> **"상상력의 한계를 넘는 릴레이 소설 창작 게임"**  
+> **"말이 되든 말든 이어가라! 개연성은 없어도 재미는 확실한 릴레이 스토리 게임"**  
+> 
 > 개소릴레이는 여러 플레이어가 실시간으로 턴을 이어가며 하나의 엉뚱하고 재미있는 이야기를 완성하는 **웹 기반 멀티플레이어 게임**입니다.
 
 ---
 
 ## 📖 프로젝트 소개
 
-**개소릴레이**는 "개소리"와 "릴레이"의 합성어로, 친구들과 함께 예측 불가능한 스토리 흐름을 즐길 수 있는 서비스입니다. 
-플레이어들은 제한된 시간 내에 자신의 문장을 이어 써야 하며, AI 심사위원이 문맥과 재미를 평가하거나 투표를 통해 승자를 결정합니다.
+**개소릴레이**는 "개소리"와 "릴레이"의 합성어로, 여러 유저들과 함께 예측 불가능한 스토리 흐름을 즐길 수 있는 서비스입니다. 
+
+플레이어들은 제한된 시간 내에 랜덤 이미지를 보고 자신의 문장을 이어 써야 하며, 관객 투표와 AI 심사위원의 평가를 통해 승자를 결정합니다.
+
+유저들이 즉흥적으로 이야기를 잇고 서로 반응하는 과정에서 끊임없는 유저 인터랙션이 발생하는 것이 서비스의 핵심 포인트입니다.
 
 ### 🎯 기획 의도
 - 아이스브레이킹을 위한 게임
@@ -23,7 +27,6 @@
 ### 1. 🎨 몰입감 있는 UI/UX
 - 키치(Kitsch)하고 유머러스한 디자인 컨셉
 - 상황에 따른 다양한 애니메이션 및 시각 효과 (타이핑, 타이머 긴박감 등)
-- 반응형 디자인으로 다양한 화면 크기 대응
 
 ### 2. 🕒 실시간 상호작용
 - Socket.IO 클라이언트를 통한 서버와의 실시간 데이터 동기화
@@ -49,7 +52,6 @@
 | **Language** | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white) | |
 | **Framework** | ![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black) | Frontend Library (v19) |
 | **Build Tool** | ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white) | High Performance Bundler |
-| **Styling** | ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?style=flat&logo=tailwindcss&logoColor=white) | Utility-first CSS Framework |
 | **State Management** | ![Zustand](https://img.shields.io/badge/Zustand-443E38?style=flat&logo=react&logoColor=white) | Global State Store |
 | **Communication** | ![Socket.IO Client](https://img.shields.io/badge/Socket.io-010101?style=flat&logo=socketdotio&logoColor=white) | Real-time WebSocket |
 
