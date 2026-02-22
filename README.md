@@ -26,21 +26,26 @@
 
 |메인페이지|방 만들기|
 |:---:|:---:|
-|<img src="https://velog.velcdn.com/images/zhy2on/post/d88dd8bc-fe51-4fb9-8861-32d170c84c90/image.gif" width=500> |<img src="https://velog.velcdn.com/images/zhy2on/post/81312fa0-8571-4414-84e0-37e2edf22ce6/image.gif" width=500> | 
-|코드로 입장 & 닉네임 설정| 대기실|
-|<img src="https://velog.velcdn.com/images/zhy2on/post/5a1129ae-0d0d-48c7-b97d-dfb7d2f9882b/image.gif" width=500>|<img src="https://velog.velcdn.com/images/zhy2on/post/1641be49-5b00-4943-975c-e2093beed551/image.gif" width=500>|
-|실시간 릴레이 글쓰기 (A팀)| 실시간 릴레이 글쓰기 (B팀)|
-|<img src="https://velog.velcdn.com/images/zhy2on/post/9bf3e103-5173-4fca-9e27-5082c51f0a79/image.gif" width=500> |<img src="https://velog.velcdn.com/images/zhy2on/post/6b6a39b9-54be-4e6d-96b1-2cda5c1c7962/image.gif" width=500> |
-|실시간 관객 참여 (댓글 / 반응)| 실시간 관객 참여 (투표)|
-|<img src="https://velog.velcdn.com/images/zhy2on/post/ceebb347-db84-4300-a3f9-a284d043f826/image.gif" width=150> | <img src="https://velog.velcdn.com/images/zhy2on/post/315c62a5-e1b4-4b79-b298-eb55bce120e5/image.gif" width=500> |
-|스토리북|AI 심사 결과|
-|<img src="https://velog.velcdn.com/images/zhy2on/post/97805140-d391-4e42-ad9a-1dbf5a144168/image.gif" width=500> | <img src="https://velog.velcdn.com/images/zhy2on/post/34d73816-248b-47e7-a109-be5ce8bb60e6/image.gif" width=500> |
+|<img src="https://github.com/user-attachments/assets/9807786b-d0a3-458d-8eeb-b8d880c6858f" width=400> |<img src="https://velog.velcdn.com/images/zhy2on/post/81312fa0-8571-4414-84e0-37e2edf22ce6/image.gif" width=400> | 
 
+|코드로 입장 & 닉네임 설정| 대기실|
+|:---:|:---:|
+|<img src="https://velog.velcdn.com/images/zhy2on/post/5a1129ae-0d0d-48c7-b97d-dfb7d2f9882b/image.gif" width=400>|<img src="https://velog.velcdn.com/images/zhy2on/post/1641be49-5b00-4943-975c-e2093beed551/image.gif" width=400>|
+
+|실시간 릴레이 글쓰기 (A팀)| 실시간 릴레이 글쓰기 (B팀)|
+|:---:|:---:|
+|<img src="https://velog.velcdn.com/images/zhy2on/post/9bf3e103-5173-4fca-9e27-5082c51f0a79/image.gif" width=400> |<img src="https://velog.velcdn.com/images/zhy2on/post/6b6a39b9-54be-4e6d-96b1-2cda5c1c7962/image.gif" width=400> |
+
+|실시간 관객 참여 (댓글 / 반응)| 실시간 관객 참여 (투표)|
+|:---:|:---:|
+|<img src="https://velog.velcdn.com/images/zhy2on/post/ceebb347-db84-4300-a3f9-a284d043f826/image.gif" width=150> | <img src="https://velog.velcdn.com/images/zhy2on/post/315c62a5-e1b4-4b79-b298-eb55bce120e5/image.gif" width=400> |
+|스토리북|AI 심사 결과|
+|<img src="https://github.com/user-attachments/assets/42e864a9-5aa7-4a5b-ae56-0a154db016b2" width=400> | <img src="https://velog.velcdn.com/images/zhy2on/post/34d73816-248b-47e7-a109-be5ce8bb60e6/image.gif" width=400> |
 
 ---
 
 ## ⚙️ 시스템 아키텍쳐
-<img src="https://velog.velcdn.com/images/zhy2on/post/b50f6681-86c3-4f1a-a72a-318956dc9883/image.png" width=700>
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/0d3539d4-1c00-4b5b-a1e8-22cd4429e35c" />
 
 ## 🧱 ERD
 <img src="https://velog.velcdn.com/images/zhy2on/post/8c536f6e-cabe-48b6-a4a6-d4781bcf0c45/image.png" width=800>
@@ -1056,7 +1061,6 @@ components:
 
 ```bash
 frontend
-├── 📂 exec                 # 포팅 매뉴얼 및 산출물 폴더
 ├── 📂 public               # 정적 리소스 (images, sounds 등)
 ├── 📂 src
 │   ├── 📂 assets           # 컴포넌트 내 사용 에셋
@@ -1077,7 +1081,6 @@ frontend
 
 ```bash
 backend
-├── 📂 exec                 # 포팅 매뉴얼 및 산출물 폴더
 ├── 📂 src
 │   ├── 📂 common           # 공통 모듈 (Filters, Guards, Pipes 등)
 │   ├── 📂 config           # 환경 변수 및 설정 파일
@@ -1187,9 +1190,9 @@ GMS_API_KEY=your_api_key_here
 
   <!-- 2행: 이름 -->
   <tr>
-    <td align="center"><b>김민준</b></td>
-    <td align="center"><b>배현지</b></td>
-    <td align="center"><b>진준영</b></td>
+    <td align="center"><b><a href="https://github.com/may0na1se">김민준</a></b></td>
+    <td align="center"><b><a href="https://github.com/hyundingi">배현지</a></b></td>
+    <td align="center"><b><a href="https://github.com/kkaemong">진준영</a></b></td>
   </tr>
 
   <!-- 3행: 역할 -->
@@ -1221,7 +1224,7 @@ GMS_API_KEY=your_api_key_here
   <!-- 5행: 이미지 -->
   <tr>
     <td align="center">
-      <img src="https://velog.velcdn.com/images/zhy2on/post/a05e5f92-6bea-4723-bfec-53b893e832b5/image.png" width="130" />
+      <img src="https://github.com/user-attachments/assets/0116af6c-e5e0-4b9a-a3f2-e00872a4167a" width="135" />
     </td>
     <td align="center">
       <img src="https://velog.velcdn.com/images/zhy2on/post/8d5b9d47-0b7a-4f80-a20b-19984ce24070/image.png" width="120" />
@@ -1233,14 +1236,14 @@ GMS_API_KEY=your_api_key_here
 
   <!-- 6행: 이름 -->
   <tr>
-    <td align="center"><b>오지현</b></td>
-    <td align="center"><b>김택우</b></td>
-    <td align="center"><b>송하준</b></td>
+    <td align="center"><b><a href="https://github.com/zhy2on">오지현 (팀장)</a></b></td>
+    <td align="center"><b><a href="https://github.com/twkim991">김택우</a></b></td>
+    <td align="center"><b><a href="https://github.com/songhj0427">송하준</a></b></td>
   </tr>
 
   <!-- 7행: 역할 -->
   <tr>
-    <td align="center">Infra / BE</td>
+    <td align="center">Infra</td>
     <td align="center">BE</td>
     <td align="center">BE</td>
   </tr>
@@ -1249,7 +1252,10 @@ GMS_API_KEY=your_api_key_here
   <tr>
     <td style="text-align:left; vertical-align:top;">
       - AWS·Docker 기반 인프라 구축<br>
-      - Jenkins CI/CD 배포 자동화
+      - Jenkins CI/CD 배포 자동화 
+      <a href="https://velog.io/@zhy2on/Jenkins-파이프라인-구성-CICD-자동화" target="_blank">[1]</a>
+      <a href="https://velog.io/@zhy2on/Jenkins로-GitLab-CICD-구성하기" target="_blank">[2]</a><br>
+      - 프론트엔드·백엔드 기능 구현 및 API/Socket 연동 일부 지원
     </td>
     <td style="text-align:left; vertical-align:top;">
       - Socket.IO 기반 실시간 게임 아키텍처 설계 및 동기화 기능 구현<br>
